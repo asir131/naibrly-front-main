@@ -1,11 +1,42 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import BundleDetailModal from '@/components/Global/Modals/BundleDetailModal';
 
 export default function NaibrlybundelOfferSection() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState(null);
+
+  const handleViewDetails = (offer) => {
+    // Add participants data for the modal
+    const bundleWithParticipants = {
+      ...offer,
+      participants: [
+        {
+          name: 'John Smith',
+          image: offer.images[0],
+          location: offer.location
+        },
+        {
+          name: 'Sarah Johnson',
+          image: offer.images[1],
+          location: offer.location
+        },
+        {
+          name: 'Open Spot',
+          image: offer.images[2],
+          location: offer.location
+        }
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop'
+    };
+    setSelectedBundle(bundleWithParticipants);
+    setIsModalOpen(true);
+  };
+
   const offers = [
     {
       id: 1,
@@ -154,7 +185,10 @@ export default function NaibrlybundelOfferSection() {
                     {offer.savings}
                   </span>
                 </div>
-                <Button className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-6 py-2">
+                <Button
+                  onClick={() => handleViewDetails(offer)}
+                  className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-6 py-2"
+                >
                   View details
                 </Button>
               </div>
@@ -165,7 +199,7 @@ export default function NaibrlybundelOfferSection() {
         {/* CTA Button */}
         <div className="text-center">
             <Link href="/bunddle-offer">
-              <Button 
+              <Button
                 variant="outline"
                 className="border-2 border-teal-600 text-teal-600 hover:bg-teal-50 rounded-full px-8 py-6 text-base font-semibold"
               >
@@ -174,6 +208,13 @@ export default function NaibrlybundelOfferSection() {
             </Link>
           </div>
       </div>
+
+      {/* Bundle Detail Modal */}
+      <BundleDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        bundleData={selectedBundle}
+      />
     </div>
   );
 }

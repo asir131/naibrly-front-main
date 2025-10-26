@@ -51,10 +51,16 @@ export default function Navbar() {
     const [isSignInMenuOpen, setIsSignInMenuOpen] = useState(false);
     const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
     const [userTypeModalMode, setUserTypeModalMode] = useState('signup'); // 'signup' or 'signin'
+    const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
 
     // Get authentication state (now using Redux under the hood)
     const { isAuthenticated, user, userType, logout } = useAuth();
+
+    // Prevent hydration mismatch by waiting for mount
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const isHomePage = pathname === '/' || pathname === '/login' || pathname === '/signup';
 
@@ -286,25 +292,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(0)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                            <span className="group-hover:text-[#00CD49]">Home Repairs & Maintenance</span>
-                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                        <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                            <span className="group-hover:text-teal-600">Home Repairs & Maintenance</span>
+                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                         </button>
                                         {hoveredService === 0 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[0].subServices.map((sub, idx) => (
-                                                        sub.path ? (
-                                                            <Link href={sub.path} key={idx}>
-                                                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                                    {sub.name}
-                                                                </button>
-                                                            </Link>
-                                                        ) : (
-                                                            <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
                                                                 {sub.name}
                                                             </button>
-                                                        )
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -315,17 +315,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(1)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                            <span className="group-hover:text-[#00CD49]">Cleaning & Organization</span>
-                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                        <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                            <span className="group-hover:text-teal-600">Cleaning & Organization</span>
+                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                         </button>
                                         {hoveredService === 1 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[1].subServices.map((sub, idx) => (
-                                                        <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                            {sub.name}
-                                                        </button>
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                                {sub.name}
+                                                            </button>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -336,17 +338,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(2)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                            <span className="group-hover:text-[#00CD49]">Renovations & Upgrades</span>
-                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                        <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                            <span className="group-hover:text-teal-600">Renovations & Upgrades</span>
+                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                         </button>
                                         {hoveredService === 2 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[2].subServices.map((sub, idx) => (
-                                                        <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                            {sub.name}
-                                                        </button>
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                                {sub.name}
+                                                            </button>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -360,17 +364,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(3)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                    <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                        <span className="group-hover:text-[#00CD49]">Exterior Home Care</span>
-                                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                        <span className="group-hover:text-teal-600">Exterior Home Care</span>
+                                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                     </button>
                                     {hoveredService === 3 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[3].subServices[0].subServices.map((sub, idx) => (
-                                                        <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                            {sub.name}
-                                                        </button>
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                                {sub.name}
+                                                            </button>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -381,17 +387,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(4)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                            <span className="group-hover:text-[#00CD49]">Landscaping & Outdoor Services</span>
-                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                        <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                            <span className="group-hover:text-teal-600">Landscaping & Outdoor Services</span>
+                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                         </button>
                                         {hoveredService === 4 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[3].subServices[1].subServices.map((sub, idx) => (
-                                                        <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                            {sub.name}
-                                                        </button>
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                                {sub.name}
+                                                            </button>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -405,17 +413,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(5)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                            <span className="group-hover:text-[#00CD49]">Moving</span>
-                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                        <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                            <span className="group-hover:text-teal-600">Moving</span>
+                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                         </button>
                                         {hoveredService === 5 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[4].subServices[0].subServices.map((sub, idx) => (
-                                                        <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                            {sub.name}
-                                                        </button>
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                                {sub.name}
+                                                            </button>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -426,17 +436,19 @@ export default function Navbar() {
                                         onMouseEnter={() => setHoveredService(6)}
                                         onMouseLeave={() => setHoveredService(null)}
                                     >
-                                        <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center group">
-                                            <span className="group-hover:text-[#00CD49]">Installation & Assembly</span>
-                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#00CD49]" />
+                                        <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                            <span className="group-hover:text-teal-600">Installation & Assembly</span>
+                                            <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                                         </button>
                                         {hoveredService === 6 && (
                                             <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                                 <div className="p-2">
                                                     {services[4].subServices[1].subServices.map((sub, idx) => (
-                                                        <button key={idx} className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                                            {sub.name}
-                                                        </button>
+                                                        <Link href="/our-services" key={idx}>
+                                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                                {sub.name}
+                                                            </button>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -451,18 +463,18 @@ export default function Navbar() {
                     </div>
 
                     {/* REQUEST button - For all states */}
-                    <Link href={isAuthenticated ? (userType === 'provider' ? '/provider/requests' : '/request') : '/join-provider'}>
+                    <Link href={mounted && isAuthenticated ? (userType === 'provider' ? '/provider/requests' : '/request') : '/join-provider'}>
                         <Button className={`${
                             isActive('/request') || isActive('/provider/requests') || isActive('/join-provider')
                                 ? 'text-teal-600 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-600'
                                 : 'text-gray-700 hover:text-teal-600'
                         } bg-transparent text-base px-3 sm:px-4 transition-all border-0 shadow-none hover:bg-transparent`}>
-                            {isAuthenticated ? 'Request' : 'Become a Pro'}
+                            {mounted && isAuthenticated ? 'Request' : 'Become a Pro'}
                         </Button>
                     </Link>
 
                     {/* BUNDLES button - Only for authenticated user type */}
-                    {isAuthenticated && userType === 'user' && (
+                    {mounted && isAuthenticated && userType === 'user' && (
                         <Link href="/bundles">
                             <Button className={`${
                                 isActive('/bundles')
@@ -475,50 +487,9 @@ export default function Navbar() {
                     )}
 
                     {/* Authentication Section - Shows different UI based on login state */}
-                    {isAuthenticated ? (
-                        // LOGGED IN STATE - Show user profile and menu
-                        <div className="relative user-menu-container">
-                            <button
-                                className="rounded-full border-2 border-teal-600 hover:border-teal-700 transition-colors p-0"
-                                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                            >
-                                <Image
-                                    src={user?.profileImage || "/logo.png"}
-                                    alt="User Profile"
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full w-10 h-10 object-cover"
-                                />
-                            </button>
-
-                            {isUserMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[110]">
-                                    <div className="py-2">
-                                        <Link href="/userProfile">
-                                            <button
-                                                onClick={() => setIsUserMenuOpen(false)}
-                                                className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-gray-700 hover:text-teal-600 flex items-center gap-2"
-                                            >
-                                                <UserIcon className="w-4 h-4" />
-                                                My Profile
-                                            </button>
-                                        </Link>
-                                        <button
-                                            onClick={() => {
-                                                setIsUserMenuOpen(false);
-                                                logout();
-                                            }}
-                                            className="w-full text-left px-4 py-2 border-t hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2"
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            Logout
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
+                    {!mounted || !isAuthenticated ? (
                         // NOT LOGGED IN STATE - Show Sign In and Create Account buttons
+                        // Also shown during initial mount to prevent hydration mismatch
                         <>
                             <Button
                                 onClick={() => {
@@ -540,6 +511,49 @@ export default function Navbar() {
                                 Create Account
                             </Button>
                         </>
+                    ) : (
+                        // LOGGED IN STATE - Show user profile and menu
+                        <div className="relative user-menu-container">
+                            <button
+                                className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
+                                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                            >
+                                <Image
+                                    src="/provider/Ellipse  (2).png"
+                                    alt="User Profile"
+                                    width={40}
+                                    height={40}
+                                    className="rounded-full w-10 h-10 object-cover"
+                                />
+                                <ChevronDown className={`w-5 h-5 text-gray-700 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isUserMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[110]">
+                                    <div className="py-2">
+                                        <Link href="/user-profile">
+                                            <button
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                                className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-gray-700 hover:text-teal-600 flex items-center gap-2"
+                                            >
+                                                <UserIcon className="w-4 h-4" />
+                                                Profile
+                                            </button>
+                                        </Link>
+                        <button
+                                            onClick={() => {
+                                                setIsUserMenuOpen(false);
+                                                logout();
+                                            }}
+                                            className="w-full text-left px-4 py-2 border-t hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Logout
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
@@ -549,20 +563,7 @@ export default function Navbar() {
                 <div className="md:hidden bg-white border-t border-gray-200 absolute top-full left-0 right-0 max-h-[calc(100vh-80px)] overflow-y-auto shadow-lg">
                     <div className="px-4 py-4 space-y-3">
                         {/* HOME - All states */}
-                        {isAuthenticated ? (
-                            <Link href="/" passHref>
-                                <Button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className={`w-full ${
-                                        isActive('/')
-                                            ? 'bg-teal-600 text-white'
-                                            : 'bg-white text-gray-800 hover:text-teal-600'
-                                    } text-sm px-4 rounded-md border border-transparent`}
-                                >
-                                    Home
-                                </Button>
-                            </Link>
-                        ) : (
+                        {!mounted || !isAuthenticated ? (
                             <Button
                                 onClick={() => {
                                     setIsMobileMenuOpen(false);
@@ -578,6 +579,19 @@ export default function Navbar() {
                             >
                                 Home
                             </Button>
+                        ) : (
+                            <Link href="/" passHref>
+                                <Button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={`w-full ${
+                                        isActive('/')
+                                            ? 'bg-teal-600 text-white'
+                                            : 'bg-white text-gray-800 hover:text-teal-600'
+                                    } text-sm px-4 rounded-md border border-transparent`}
+                                >
+                                    Home
+                                </Button>
+                            </Link>
                         )}
 
                         {/* EXPLORE SERVICES - Accessible to ALL user types */}
@@ -598,7 +612,7 @@ export default function Navbar() {
                         </Button>
 
                         {/* BUNDLES - Only for user type */}
-                        {isAuthenticated && userType === 'user' && (
+                        {mounted && isAuthenticated && userType === 'user' && (
                             <Link href="/bundles">
                                 <Button
                                     onClick={() => setIsMobileMenuOpen(false)}
@@ -615,7 +629,7 @@ export default function Navbar() {
                         )}
 
                         {/* REQUEST - For all states */}
-                        <Link href={isAuthenticated ? (userType === 'provider' ? '/provider/requests' : '/request') : '/join-provider'}>
+                        <Link href={mounted && isAuthenticated ? (userType === 'provider' ? '/provider/requests' : '/request') : '/join-provider'}>
                             <Button
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 variant="outline"
@@ -625,33 +639,11 @@ export default function Navbar() {
                                         : 'bg-white text-gray-800 hover:text-teal-600'
                                 } text-sm px-4 rounded-md border border-transparent`}
                             >
-                                {isAuthenticated ? 'Request' : 'Become a Pro'}
+                                {mounted && isAuthenticated ? 'Request' : 'Become a Pro'}
                             </Button>
                         </Link>
 
-                        {isAuthenticated ? (
-                            <div className="border-t pt-3 space-y-2">
-                                <Link href="/profile" className="block">
-                                    <button
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-gray-700 hover:text-teal-600 flex items-center gap-2 rounded-md"
-                                    >
-                                        <UserIcon className="w-4 h-4" />
-                                        My Profile
-                                    </button>
-                                </Link>
-                                <button
-                                    onClick={() => {
-                                        setIsMobileMenuOpen(false);
-                                        logout();
-                                    }}
-                                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2 rounded-md"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    Logout
-                                </button>
-                            </div>
-                        ) : (
+                        {!mounted || !isAuthenticated ? (
                             <div className="border-t pt-3 space-y-2">
                                 <Button
                                     onClick={() => {
@@ -675,13 +667,35 @@ export default function Navbar() {
                                     Create Account
                                 </Button>
                             </div>
+                        ) : (
+                            <div className="border-t pt-3 space-y-2">
+                                <Link href="/user-profile" className="block">
+                                    <button
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-gray-700 hover:text-teal-600 flex items-center gap-2 rounded-md"
+                                    >
+                                        <UserIcon className="w-4 h-4" />
+                                        Profile
+                                    </button>
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        setIsMobileMenuOpen(false);
+                                        logout();
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2 rounded-md"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    Logout
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
             )}
 
             {/* Only show modal when NOT authenticated */}
-            {isModalOpen && !isAuthenticated && <ModalComponent />}
+            {isModalOpen && (!mounted || !isAuthenticated) && <ModalComponent />}
 
             {/* Bundle Offer Modal */}
             <BundleOfferModal

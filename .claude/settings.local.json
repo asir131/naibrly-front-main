@@ -43,7 +43,8 @@
       "Bash(mkdir:*)",
       "Bash(del \"c:\\Users\\rahma\\Desktop\\naibrly\\naibrly\\components\\User\\LandingPage\\Navbar.jsx\")",
       "Bash(del:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

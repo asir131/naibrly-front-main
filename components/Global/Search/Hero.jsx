@@ -1,13 +1,14 @@
-'use client';
-import React, { useState, useRef, useEffect } from 'react';
-import { Clock, MapPin, Calendar, Search, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import Rectangle1  from "@/public/Home/Rectangle a.png";
-import Rectangle2  from "@/public/Home/Rectangle b.png";
-import Rectangle3  from "@/public/Home/Rectangle c.png";
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import { Clock, MapPin, Calendar, Search, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import Rectangle1 from "@/public/Home/Rectangle a.png";
+import Rectangle2 from "@/public/Home/Rectangle b.png";
+import Rectangle3 from "@/public/Home/Rectangle c.png";
 import MapBg from "@/public/map image.png";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from "next/navigation";
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 
 export default function NaibrlyHeroSection() {
   const router = useRouter();
@@ -15,41 +16,41 @@ export default function NaibrlyHeroSection() {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [zipOpen, setZipOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [zipCode, setZipCode] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [zipCode, setZipCode] = useState("");
 
   const searchRef = useRef(null);
   const zipRef = useRef(null);
 
   // Sample dropdown options
   const serviceOptions = [
-    'IKEA Assembly',
-    'TV Mounting',
-    'Furniture Assembly',
-    'General Mounting',
-    'Truck Assisted Help Moving',
-    'Help Moving',
-    'Cleaning',
-    'Door, Cabinet, & Furniture Repair',
-    'Heavy Lifting & Loading',
-    'Electrical help'
+    "IKEA Assembly",
+    "TV Mounting",
+    "Furniture Assembly",
+    "General Mounting",
+    "Truck Assisted Help Moving",
+    "Help Moving",
+    "Cleaning",
+    "Door, Cabinet, & Furniture Repair",
+    "Heavy Lifting & Loading",
+    "Electrical help",
   ];
 
   const zipCodeOptions = [
-    '10001',
-    '10002',
-    '10003',
-    '90001',
-    '90002',
-    '60601',
-    '77001',
-    '33101'
+    "10001",
+    "10002",
+    "10003",
+    "90001",
+    "90002",
+    "60601",
+    "77001",
+    "33101",
   ];
 
   // Load search params from URL on mount
   useEffect(() => {
-    const service = searchParams.get('service');
-    const zip = searchParams.get('zip');
+    const service = searchParams.get("service");
+    const zip = searchParams.get("zip");
     if (service) setSearchQuery(service);
     if (zip) setZipCode(zip);
   }, [searchParams]);
@@ -65,9 +66,9 @@ export default function NaibrlyHeroSection() {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -91,16 +92,16 @@ export default function NaibrlyHeroSection() {
           <div className="space-y-8">
             <h1
               style={{
-                color: 'var(--Text-Primary-Text, #333)',
-                fontFamily: 'var(--Family-Font, Inter)',
-                fontSize: '38px',
-                fontStyle: 'normal',
+                color: "var(--Text-Primary-Text, #333)",
+                fontFamily: "var(--Family-Font, Inter)",
+                fontSize: "38px",
+                fontStyle: "normal",
                 fontWeight: 600,
-                lineHeight: 'normal',
-                alignSelf: 'stretch',
+                lineHeight: "normal",
+                alignSelf: "stretch",
               }}
             >
-              You. Your Neighbors. Saving time and money on home services with{' '}
+              You. Your Neighbors. Saving time and money on home services with{" "}
               <span className="text-teal-600">Naibrly.</span>
             </h1>
 
@@ -117,7 +118,13 @@ export default function NaibrlyHeroSection() {
                     }}
                     className="flex items-center justify-between w-full h-full px-6"
                   >
-                    <span className={searchQuery ? "text-gray-900" : "text-gray-400 text-base"}>
+                    <span
+                      className={
+                        searchQuery
+                          ? "text-gray-900"
+                          : "text-gray-400 text-base"
+                      }
+                    >
                       {searchQuery || "What do you need help With?"}
                     </span>
                   </button>
@@ -144,7 +151,10 @@ export default function NaibrlyHeroSection() {
                 <div className="w-px h-10 bg-[#EBEBEB] ml-2"></div>
 
                 {/* Zip Code Section */}
-                <div ref={zipRef} className="h-full relative flex items-center pr-24">
+                <div
+                  ref={zipRef}
+                  className="h-full relative flex items-center pr-24"
+                >
                   <button
                     onClick={() => {
                       setZipOpen(!zipOpen);
@@ -153,7 +163,13 @@ export default function NaibrlyHeroSection() {
                     className="flex items-center gap-2"
                   >
                     <MapPin className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    <span className={zipCode ? "text-gray-900 font-medium" : "text-gray-900 font-medium"}>
+                    <span
+                      className={
+                        zipCode
+                          ? "text-gray-900 font-medium"
+                          : "text-gray-900 font-medium"
+                      }
+                    >
                       {zipCode || "152643"}
                     </span>
                   </button>
@@ -185,8 +201,8 @@ export default function NaibrlyHeroSection() {
                   setZipOpen(false);
                   // Update URL with search parameters
                   const params = new URLSearchParams();
-                  if (searchQuery) params.set('service', searchQuery);
-                  if (zipCode) params.set('zip', zipCode);
+                  if (searchQuery) params.set("service", searchQuery);
+                  if (zipCode) params.set("zip", zipCode);
                   router.push(`/find-area?${params.toString()}`);
                 }}
                 className="w-full bg-teal-700 hover:bg-teal-800 h-[56px] rounded-xl flex items-center justify-center gap-2 shadow-sm text-base font-medium"
@@ -200,56 +216,76 @@ export default function NaibrlyHeroSection() {
           {/* Right Images Grid */}
           <div className="relative h-[640px] hidden lg:block">
             <div className="relative w-full h-full max-w-[520px] mx-auto">
-              {/* Top Row - Two images side by side */}
-              <div className="absolute top-10 left-4 right-0 flex gap-4 justify-center">
-                {/* Kitchen Installation - Top Left */}
-                <div
-                  className="rounded-3xl overflow-hidden shadow-xl"
-                  style={{
-                    width: '320px',
-                    height: '280px',
-                  }}
-                >
-                  <Image
-                    src={Rectangle3}
-                    alt="Kitchen installation service"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Furniture Assembly - Top Right */}
-                <div
-                  className="rounded-3xl mt-0 ml-2 overflow-hidden shadow-xl"
-                  style={{
-                    width: '260px',
-                    height: '500px',
-                  }}
-                >
-                  <Image
-                    src={Rectangle2}
-                    alt="Cleaning service"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              {/* Kitchen Installation - Top Left with 3D Card Effect */}
+              <div className="absolute top-10 left-4">
+                <CardContainer containerClassName="py-0 flex items-center justify-center">
+                  <CardBody className="w-fit h-fit">
+                    <CardItem translateZ="50" className="w-fit h-fit">
+                      <div
+                        className="rounded-3xl overflow-hidden shadow-xl"
+                        style={{
+                          width: "240px",
+                          height: "280px",
+                        }}
+                      >
+                        <Image
+                          src={Rectangle3}
+                          alt="Kitchen installation service"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </CardItem>
+                  </CardBody>
+                </CardContainer>
               </div>
 
-              {/* Bottom Left - Cleaning Service */}
-              <div
-                className="absolute bottom-25 ml-49 transform -translate-x-[calc(50%+48px)] rounded-3xl overflow-hidden shadow-xl"
-                style={{
-                  width: '260px',
-                  height: '200px',
-                }}
-              >
-                <Image
-                  src={Rectangle1}
-                  alt="Cleaning service"
-                  className="w-full h-full object-cover"
-                />
+              {/* Furniture Assembly - Top Right with 3D Card Effect */}
+              <div className="absolute top-10 left-70">
+                <CardContainer containerClassName="py-0 flex items-center justify-center">
+                  <CardBody className="w-fit h-fit">
+                    <CardItem translateZ="50" className="w-fit h-fit">
+                      <div
+                        className="rounded-3xl mt-0 overflow-hidden shadow-xl"
+                        style={{
+                          width: "240px",
+                          height: "500px",
+                        }}
+                      >
+                        <Image
+                          src={Rectangle2}
+                          alt="Cleaning service"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </CardItem>
+                  </CardBody>
+                </CardContainer>
+              </div>
+
+              {/* Bottom Left - Cleaning Service with 3D Card Effect */}
+              <div className="absolute bottom-25 ml-46 transform -translate-x-[calc(50%+48px)]">
+                <CardContainer containerClassName="py-0 flex items-center justify-center">
+                  <CardBody className="w-fit h-fit">
+                    <CardItem translateZ="80" className="w-fit h-fit">
+                      <div
+                        className="rounded-3xl overflow-hidden shadow-xl"
+                        style={{
+                          width: "250px",
+                          height: "200px",
+                        }}
+                      >
+                        <Image
+                          src={Rectangle1}
+                          alt="Cleaning service"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </CardItem>
+                  </CardBody>
+                </CardContainer>
               </div>
 
               {/* Join Now Badge - Centered */}
-              
             </div>
           </div>
         </div>

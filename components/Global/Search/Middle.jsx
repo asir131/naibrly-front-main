@@ -1,14 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'next/navigation';
+import BundleDetailModal from '@/components/Global/Modals/BundleDetailModal';
 
 export default function NaibrlybundelOfferSection() {
   const searchParams = useSearchParams();
   const serviceParam = searchParams.get('service');
   const zipParam = searchParams.get('zip');
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBundle, setSelectedBundle] = useState(null);
   const offers = [
     {
       id: 1,
@@ -22,6 +26,19 @@ export default function NaibrlybundelOfferSection() {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=600&fit=crop',
+      participants: [
+        {
+          name: 'Moniru',
+          image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+          location: 'Street Springfield, IL 62704'
+        },
+        {
+          name: 'Shuvos',
+          image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+          location: 'Street Springfield, IL 62704'
+        }
       ]
     },
     {
@@ -36,6 +53,11 @@ export default function NaibrlybundelOfferSection() {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=600&fit=crop',
+      participants: [
+        { name: 'Moniru', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' },
+        { name: 'Shuvos', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' }
       ]
     },
     {
@@ -50,6 +72,11 @@ export default function NaibrlybundelOfferSection() {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=600&fit=crop',
+      participants: [
+        { name: 'Moniru', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' },
+        { name: 'Shuvos', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' }
       ]
     },
     {
@@ -64,6 +91,11 @@ export default function NaibrlybundelOfferSection() {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=600&fit=crop',
+      participants: [
+        { name: 'Moniru', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' },
+        { name: 'Shuvos', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' }
       ]
     },
     {
@@ -78,6 +110,11 @@ export default function NaibrlybundelOfferSection() {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=600&fit=crop',
+      participants: [
+        { name: 'Moniru', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' },
+        { name: 'Shuvos', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' }
       ]
     },
     {
@@ -92,11 +129,32 @@ export default function NaibrlybundelOfferSection() {
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ],
+      modalImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=600&fit=crop',
+      participants: [
+        { name: 'Moniru', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' },
+        { name: 'Shuvos', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', location: 'Street Springfield, IL 62704' }
       ]
     }
   ];
 
+  const handleViewDetails = (offer) => {
+    setSelectedBundle(offer);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedBundle(null);
+  };
+
   return (
+    <>
+      <BundleDetailModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        bundleData={selectedBundle}
+      />
     <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -160,7 +218,10 @@ export default function NaibrlybundelOfferSection() {
                     {offer.savings}
                   </span>
                 </div>
-                <Button className="bg-[#EBEBEB] hover:bg-teal-100 text-teal-600 rounded-lg px-5 py-2 font-medium shadow-none border-0">
+                <Button
+                  onClick={() => handleViewDetails(offer)}
+                  className="bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-lg px-5 py-2 font-medium shadow-none border-0"
+                >
                   View details
                 </Button>
               </div>
@@ -170,7 +231,7 @@ export default function NaibrlybundelOfferSection() {
 
         {/* CTA Button */}
         <div className="text-center">
-          <Button 
+          <Button
             variant="outline"
             className="border-2 border-teal-600 text-teal-600 hover:bg-teal-50 rounded-full px-8 py-6 text-base font-semibold"
           >
@@ -179,5 +240,6 @@ export default function NaibrlybundelOfferSection() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -10,32 +10,32 @@ export default function OurServicesSection() {
     {
       title: 'Appliance Repairs',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (1).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'House Cleaning',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (2).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'Window Washing',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (3).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'Bathroom Remodeling',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (4).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'Landscaping Design',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (5).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
   ];
 
