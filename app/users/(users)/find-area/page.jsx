@@ -1,7 +1,7 @@
 "use client"
 import { Images } from '@/public/usersImg/ExportImg'
 import Image from 'next/image'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { bundlesData } from '../constants';
 import NaibrlyLanding from '@/components/User/LandingPage/Mobileapp';
 import TopProsSection from '@/components/User/FindArea/TopProsSection';
@@ -123,7 +123,8 @@ const BundleCard = ({ setOpen, modaData }) => {
         </div>
     );
 };
-const FindArea = () => {
+// Component that uses useSearchParams
+const FindAreaContent = () => {
     const searchParams = useSearchParams();
 
     // Get search parameters from URL
@@ -281,6 +282,15 @@ const FindArea = () => {
                 open && <BundleCard setOpen={setOpen} modaData={modaData} />
             }
         </div>
+    );
+};
+
+// Wrapper component with Suspense
+const FindArea = () => {
+    return (
+        <Suspense fallback={<div className="w-full px-[126px] py-20">Loading...</div>}>
+            <FindAreaContent />
+        </Suspense>
     );
 };
 
