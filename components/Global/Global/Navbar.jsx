@@ -475,7 +475,7 @@ export default function Navbar() {
 
                     {/* BUNDLES button - Only for authenticated user type */}
                     {mounted && isAuthenticated && userType === 'user' && (
-                        <Link href="/bundles">
+                        <Link href="/bunddle-offer">
                             <Button className={`${
                                 isActive('/bundles')
                                     ? 'text-teal-600 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-teal-600'

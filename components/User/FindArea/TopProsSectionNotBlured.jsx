@@ -207,7 +207,12 @@ const TopProsSectionNotBlured = ({ showPagination = false }) => {
                                         <span className='text-[18px] font-medium text-[#676D73]'>Estimated price</span>
                                     </div>
                                     <div className='mt-auto'>
-                                        <button className='view_button text-[18px] font-medium text-[#FFFFFF]'>View Profile</button>
+                                        <button
+                                            onClick={() => router.push('/providerprofile')}
+                                            className='view_button text-[18px] font-medium text-[#FFFFFF] bg-teal-600 hover:bg-teal-700 px-6 py-3 rounded-lg transition-colors duration-200 cursor-pointer shadow-md hover:shadow-lg'
+                                        >
+                                            View Profile
+                                        </button>
                                     </div>
                                 </div>
                             </div>
