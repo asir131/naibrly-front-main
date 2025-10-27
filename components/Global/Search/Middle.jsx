@@ -155,7 +155,7 @@ export default function NaibrlybundelOfferSection() {
         onClose={handleCloseModal}
         bundleData={selectedBundle}
       />
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-12">
@@ -175,7 +175,7 @@ export default function NaibrlybundelOfferSection() {
           {offers.map((offer) => (
             <div
               key={offer.id}
-              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-shadow duration-300"
+              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300"
             >
               {/* Header with Service Name and Images */}
               <div className="flex items-start justify-between mb-5">

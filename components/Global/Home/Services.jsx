@@ -40,7 +40,7 @@ export default function OurServicesSection() {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         {/* Decorative dotted border container */}
         <div className="">
@@ -59,11 +59,11 @@ export default function OurServicesSection() {
             {services.map((service, index) => (
               <div
                 key={index}
-                className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
               >
                 {/* Image Container with padding */}
                 <div className="pt-6 px-6">
-                  <div className="relative w-full h-48 rounded-2xl overflow-hidden">
+                  <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
                     <Image
                       src={service.image}
                       alt={service.title}

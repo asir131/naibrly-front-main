@@ -76,14 +76,39 @@ export default function NaibrlyHeroSection() {
     <div className="min-h-8 relative p-2 lg:p-10">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
-        <Image
-          src={MapBg}
-          alt="Map background"
-          fill
-          className="object-cover opacity-100"
-          priority
-        />
-      </div>
+              <style jsx>{`
+                @keyframes moveMap {
+                  0% {
+                    transform: translateX(0);
+                  }
+                  100% {
+                    transform: translateX(-50%);
+                  }
+                }
+                .animate-map {
+                  animation: moveMap 60s linear infinite;
+                }
+              `}</style>
+              <div className="flex w-[200%] h-full animate-map">
+                <div className="relative w-1/2 h-full shrink-0">
+                  <Image
+                    src={MapBg}
+                    alt="Map background"
+                    fill
+                    className="object-cover opacity-100"
+                    priority
+                  />
+                </div>
+                <div className="relative w-1/2 h-full shrink-0">
+                  <Image
+                    src={MapBg}
+                    alt="Map background"
+                    fill
+                    className="object-cover opacity-100"
+                  />
+                </div>
+              </div>
+            </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto relative z-10">

@@ -3,95 +3,96 @@
 import React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function OurServicesSection() {
   const services = [
     {
       title: 'Appliance Repairs',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (1).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'House Cleaning',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (2).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'Window Washing',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (3).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'Bathroom Remodeling',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (4).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'Landscaping Design',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (5).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
     ,
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     },
     {
       title: 'TV Mounting',
       description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      image: "/LandingService/image (6).png",
+      image: "/LandingService/image (7).png",
     }
   ];
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         {/* Decorative dotted border container */}
         <div className="">
@@ -110,11 +111,11 @@ export default function OurServicesSection() {
             {services.map((service, index) => (
               <div
                 key={index}
-                className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
               >
                 {/* Image Container with padding */}
                 <div className="pt-6 px-6">
-                  <div className="relative w-full h-48 rounded-2xl overflow-hidden">
+                  <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
                     <Image
                       src={service.image}
                       alt={service.title}
@@ -138,16 +139,6 @@ export default function OurServicesSection() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* CTA Button */}
-          <div className="text-center">
-            <Button 
-              variant="outline"
-              className="border-2 border-teal-600 text-teal-600 hover:bg-teal-50 rounded-full px-8 py-6 text-base font-semibold"
-            >
-              Explore more service
-            </Button>
           </div>
         </div>
       </div>

@@ -6,9 +6,15 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield } from 'lucide-react';
 
 export default function PaymentInformationModal({ isOpen, onClose, onConfirm }) {
+  const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [cvv, setCvv] = useState('');
+
+  const formatCardName = (value) => {
+    // Only allow letters and spaces, capitalize first letter of each word
+    return value.replace(/[^a-zA-Z\s]/g, '').substring(0, 50);
+  };
 
   const formatCardNumber = (value) => {
     const cleaned = value.replace(/\s/g, '');
@@ -25,7 +31,7 @@ export default function PaymentInformationModal({ isOpen, onClose, onConfirm }) 
   };
 
   const handleConfirm = () => {
-    onConfirm({ cardNumber, expirationDate, cvv });
+    onConfirm({ cardName, cardNumber, expirationDate, cvv });
   };
 
   return (
@@ -46,9 +52,20 @@ export default function PaymentInformationModal({ isOpen, onClose, onConfirm }) 
             Please enter payment information
           </h3>
 
-          {/* Pay With Label */}
+          {/* Name of the card */}
           <div className="mb-6">
-            <label className="text-base font-medium text-gray-900 mb-4 block">Pay With:</label>
+            <div className="mb-4">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Card Name</label>
+              <input
+                type="text"
+                value={cardName}
+                onChange={(e) => setCardName(formatCardName(e.target.value))}
+                placeholder="John Doe"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                maxLength="50"
+              />
+            </div>
+            
 
             {/* Card Number */}
             <div className="mb-4">

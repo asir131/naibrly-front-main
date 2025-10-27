@@ -1,4 +1,4 @@
-import Text from "@/components/User/Privacy-Policy/Text.jsx";
+import Text from "@/components/Global/Privacy-Policy/Text.jsx";
 
 export default function PrivacyPolicy() {
     return (
