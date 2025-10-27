@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import clean from "@/public/clean.png";
 
 export default function JacobsOtherServices() {
@@ -7,50 +8,59 @@ export default function JacobsOtherServices() {
       id: 1,
       title: "Appliance Repairs",
       description: "Please add your content here. Keep it short and simple. And smile :)",
-      image: clean.src
+      image: clean
     },
     {
       id: 2,
       title: "Appliance Repairs",
       description: "Please add your content here. Keep it short and simple. And smile :)",
-      image: clean.src
+      image: clean
     },
     {
       id: 3,
       title: "Appliance Repairs",
       description: "Please add your content here. Keep it short and simple. And smile :)",
-      image: clean.src
+      image: clean
     }
   ];
 
   return (
-    <div className="w-full bg-gray-50 ">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Jacob's Other Services</h2>
-        
+    <div className="w-full bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
+            Jacob's Other Services
+          </h2>
+        </div>
+
+        {/* Services List */}
         <div className="space-y-4">
           {services.map((service) => (
-            <div 
+            <div
               key={service.id}
-              className="bg-white rounded-lg p-6 flex gap-6 items-start hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
             >
-              {/* Service Image */}
-              <img 
-                  src={service.image}
-                  alt={service.title}
-                  className="w-28 h-28 rounded-lg object-cover"
-                />
-              
-              
+              <div className="flex gap-6 items-start">
+                {/* Service Image */}
+                <div className="relative w-28 h-28 rounded-xl overflow-hidden flex-shrink-0">
+                  <Image
+                    src={service.image}
+                    alt={service.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
 
-              {/* Service Details */}
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  {service.title}
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {service.description}
-                </p>
+                {/* Service Details */}
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {service.description}
+                  </p>
+                </div>
               </div>
             </div>
           ))}
