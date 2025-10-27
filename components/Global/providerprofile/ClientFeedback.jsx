@@ -87,12 +87,12 @@ const ClientFeedback = () => {
                 ))}
                 {hasHalfStar && (
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 1.66669L12.575 6.88335L18.3333 7.72502L14.1667 11.7834L15.15 17.5167L10 14.8084L4.85 17.5167L5.83333 11.7834L1.66667 7.72502L7.425 6.88335L10 1.66669Z" fill="#FFB800" fillOpacity="0.5" stroke="#FFB800" strokeWidth="1"/>
+                        <path d="M10 1.66669L12.575 6.88335L18.3333 7.72502L14.1667 11.7834L15.15 17.5167L10 14.8084L4.85 17.5167L5.83333 11.7834L1.66667 7.72502L7.425 6.88335L10 1.66669Z" fill="#FFB800" fillOpacity="0.5" stroke="#FFB800" strokeWidth={1}/>
                     </svg>
                 )}
                 {[...Array(emptyStars)].map((_, i) => (
                     <svg key={`empty-${i}`} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 1.66669L12.575 6.88335L18.3333 7.72502L14.1667 11.7834L15.15 17.5167L10 14.8084L4.85 17.5167L5.83333 11.7834L1.66667 7.72502L7.425 6.88335L10 1.66669Z" stroke="#D1D5DB" strokeWidth="1"/>
+                        <path d="M10 1.66669L12.575 6.88335L18.3333 7.72502L14.1667 11.7834L15.15 17.5167L10 14.8084L4.85 17.5167L5.83333 11.7834L1.66667 7.72502L7.425 6.88335L10 1.66669Z" stroke="#D1D5DB" strokeWidth={1}/>
                     </svg>
                 ))}
             </div>
