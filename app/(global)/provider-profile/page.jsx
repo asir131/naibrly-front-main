@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import ProviderSidebar from '@/components/Global/ProviderProfile/ProviderSidebar';
-import Account from '@/components/Global/ProviderProfile/Account';
-import Services from '@/components/Global/ProviderProfile/Services';
-import ZipCode from '@/components/Global/ProviderProfile/ZipCode';
-import Withdraw from '@/components/Global/ProviderProfile/Withdraw';
+import ProviderSidebar from '@/components/Global/providerprofile/ProviderSidebar';
+import Account from '@/components/Global/providerprofile/Account';
+import Services from '@/components/Global/providerprofile/Services';
+import ZipCode from '@/components/Global/providerprofile/ZipCode';
+import Withdraw from '@/components/Global/providerprofile/Withdraw';
 import Notifications from '@/components/Global/Profile/Notifications';
 import PaymentsHistory from '@/components/Global/Profile/PaymentsHistory';
 import ContactSupport from '@/components/Global/Profile/ContactSupport';
