@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, User as UserIcon, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -13,9 +13,16 @@ export default function ProviderNavbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
 
     // Get authentication state
     const { isAuthenticated, user, logout } = useAuth();
+
+    // Handle logout with redirect
+    const handleLogout = () => {
+        logout();
+        router.push('/');
+    };
 
     // Close dropdowns when pathname changes
     useEffect(() => {
@@ -88,7 +95,7 @@ export default function ProviderNavbar() {
                     </Link>
 
                     {/* Order Button */}
-                    <Link href="/provider/orders">
+                    <Link href="/provider/signup/order">
                         <Button className="bg-transparent text-gray-700 hover:text-teal-600 text-base px-3 sm:px-4 transition-all border-0 shadow-none hover:bg-transparent">
                             Order
                         </Button>
@@ -151,7 +158,7 @@ export default function ProviderNavbar() {
                                         <button
                                             onClick={() => {
                                                 setIsUserMenuOpen(false);
-                                                logout();
+                                                handleLogout();
                                             }}
                                             className="w-full text-left px-4 py-2 border-t hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2"
                                         >
@@ -205,7 +212,7 @@ export default function ProviderNavbar() {
                         </Link>
 
                         {/* Order Button */}
-                        <Link href="/provider/orders" passHref>
+                        <Link href="/provider/signup/order" passHref>
                             <Button
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 variant="outline"
@@ -230,7 +237,7 @@ export default function ProviderNavbar() {
                                 <button
                                     onClick={() => {
                                         setIsMobileMenuOpen(false);
-                                        logout();
+                                        handleLogout();
                                     }}
                                     className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2 rounded-md"
                                 >

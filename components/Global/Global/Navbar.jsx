@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronRight,
   ChevronDown,
@@ -66,9 +66,16 @@ export default function Navbar() {
   const [isNaibrlyNowModalOpen, setIsNaibrlyNowModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   // Get authentication state (now using Redux under the hood)
   const { isAuthenticated, user, userType, logout } = useAuth();
+
+  // Handle logout with redirect
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
 
   // Prevent hydration mismatch by waiting for mount
   useEffect(() => {
@@ -690,7 +697,7 @@ export default function Navbar() {
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
-                          logout();
+                          handleLogout();
                         }}
                         className="w-full text-left px-4 py-2 border-t hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2"
                       >
@@ -926,7 +933,7 @@ export default function Navbar() {
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
-                    logout();
+                    handleLogout();
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-gray-700 hover:text-red-600 flex items-center gap-2 rounded-md"
                 >
