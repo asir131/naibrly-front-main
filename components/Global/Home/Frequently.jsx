@@ -34,7 +34,7 @@ export default function FAQSection() {
   };
 
   return (
-    <div className="bg-white py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-gray-50 to-teal-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-5 gap-12">
           {/* Left Side - Title */}

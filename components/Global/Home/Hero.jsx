@@ -63,7 +63,7 @@ export default function NaibrlyHeroSection() {
   }, []);
 
   return (
-    <div className="min-h-8 relative p-2 lg:p-10 overflow-hidden">
+    <div className=" min-h-8 relative p-2 lg:p-10 overflow-hidden">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <style jsx>{`

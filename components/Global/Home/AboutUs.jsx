@@ -142,7 +142,7 @@ export default function TestimonialsSection() {
         }
       `}</style>
 
-    <div className="bg-gray-100 py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
