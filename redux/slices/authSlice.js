@@ -57,6 +57,8 @@ const authSlice = createSlice({
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
         localStorage.removeItem('userType');
+        // Reload page to update UI
+        window.location.reload();
       }
     },
     updateUser: (state, action) => {

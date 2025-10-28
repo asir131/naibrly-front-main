@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, ChevronDown, LogOut, User as UserIcon, Menu, X } from 'lucide-react';
+import { ChevronRight, ChevronDown, LogOut, User as UserIcon, Menu, X, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SignInModal from '@/components/Global/Modals/WithoutSignUpModal';
 import BundleOfferModal from '@/components/Global/Modals/BundleOfferModal';
 import NotificationModal from '@/components/Global/Modals/NotificationModal';
 import UserTypeSelectionModal from '@/components/Global/Modals/UserTypeSelectionModal';
+import NotificationDropdown from '@/components/Global/Modals/NotificationDropdown';
+import NaibrlyNowModal from '@/components/Global/Modals/NaibrlyNowModal';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -51,6 +53,8 @@ export default function Navbar() {
     const [isSignInMenuOpen, setIsSignInMenuOpen] = useState(false);
     const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
     const [userTypeModalMode, setUserTypeModalMode] = useState('signup'); // 'signup' or 'signin'
+    const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
+    const [isNaibrlyNowModalOpen, setIsNaibrlyNowModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
 
@@ -75,6 +79,8 @@ export default function Navbar() {
         setIsMobileMenuOpen(false);
         setIsSignInMenuOpen(false);
         setIsUserTypeModalOpen(false);
+        setIsNotificationDropdownOpen(false);
+        setIsNaibrlyNowModalOpen(false);
     }, [pathname]);
 
     // Close dropdowns when clicking outside
@@ -92,11 +98,15 @@ export default function Navbar() {
             if (isSignInMenuOpen && !event.target.closest('.signin-menu-container')) {
                 setIsSignInMenuOpen(false);
             }
+            // Close notification dropdown if clicked outside
+            if (isNotificationDropdownOpen && !event.target.closest('.notification-container')) {
+                setIsNotificationDropdownOpen(false);
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isServiceOpen, isUserMenuOpen, isSignInMenuOpen]);
+    }, [isServiceOpen, isUserMenuOpen, isSignInMenuOpen, isNotificationDropdownOpen]);
 
     // Prevent body scroll when mobile menu is open
     useEffect(() => {
@@ -512,21 +522,23 @@ export default function Navbar() {
                             </Button>
                         </>
                     ) : (
-                        // LOGGED IN STATE - Show user profile and menu
-                        <div className="relative user-menu-container">
-                            <button
-                                className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
-                                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                            >
-                                <Image
-                                    src="/provider/Ellipse  (2).png"
-                                    alt="User Profile"
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full w-10 h-10 object-cover"
-                                />
-                                <ChevronDown className={`w-5 h-5 text-gray-700 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-                            </button>
+                        // LOGGED IN STATE - Show user profile and notification bell
+                        <div className="flex items-center gap-3">
+                            {/* User Profile Menu */}
+                            <div className="relative user-menu-container">
+                                <button
+                                    className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                >
+                                    <Image
+                                        src="/provider/Ellipse  (2).png"
+                                        alt="User Profile"
+                                        width={40}
+                                        height={40}
+                                        className="rounded-full w-10 h-10 object-cover"
+                                    />
+                                    <ChevronDown className={`w-5 h-5 text-gray-700 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                                </button>
 
                             {isUserMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[110]">
@@ -553,6 +565,29 @@ export default function Navbar() {
                                     </div>
                                 </div>
                             )}
+                            </div>
+
+                            {/* Notification Bell Button */}
+                            <div className="relative notification-container">
+                                <button
+                                    onClick={() => setIsNotificationDropdownOpen(!isNotificationDropdownOpen)}
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+                                >
+                                    <Bell className="w-6 h-6 text-gray-700" />
+                                    {/* Notification Badge */}
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-teal-600 rounded-full"></span>
+                                </button>
+
+                                {/* Notification Dropdown */}
+                                <NotificationDropdown
+                                    isOpen={isNotificationDropdownOpen}
+                                    onClose={() => setIsNotificationDropdownOpen(false)}
+                                    onNotificationClick={(notificationId) => {
+                                        setIsNotificationDropdownOpen(false);
+                                        setIsNaibrlyNowModalOpen(true);
+                                    }}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
@@ -714,6 +749,12 @@ export default function Navbar() {
                 isOpen={isUserTypeModalOpen}
                 onClose={() => setIsUserTypeModalOpen(false)}
                 mode={userTypeModalMode}
+            />
+
+            {/* Naibrly Now Modal */}
+            <NaibrlyNowModal
+                isOpen={isNaibrlyNowModalOpen}
+                onClose={() => setIsNaibrlyNowModalOpen(false)}
             />
         </nav>
     );

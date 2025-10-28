@@ -14,14 +14,6 @@ export default function NaibrlyHeroSection() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [zipOpen, setZipOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [zipCode, setZipCode] = useState("");
-
-  const searchRef = useRef(null);
-  const zipRef = useRef(null);
-
   // Sample dropdown options
   const serviceOptions = [
     "IKEA Assembly",
@@ -46,6 +38,36 @@ export default function NaibrlyHeroSection() {
     "77001",
     "33101",
   ];
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [zipOpen, setZipOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [filteredServices, setFilteredServices] = useState(serviceOptions);
+  const [filteredZipCodes, setFilteredZipCodes] = useState(zipCodeOptions);
+
+  const searchRef = useRef(null);
+  const zipRef = useRef(null);
+
+  // Filter services based on search query
+  const handleServiceSearch = (value) => {
+    setSearchQuery(value);
+    const filtered = serviceOptions.filter((service) =>
+      service.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredServices(filtered);
+    setSearchOpen(true);
+  };
+
+  // Filter zip codes based on input
+  const handleZipSearch = (value) => {
+    setZipCode(value);
+    const filtered = zipCodeOptions.filter((zip) =>
+      zip.includes(value)
+    );
+    setFilteredZipCodes(filtered);
+    setZipOpen(true);
+  };
 
   // Load search params from URL on mount
   useEffect(() => {
@@ -73,7 +95,7 @@ export default function NaibrlyHeroSection() {
   }, []);
 
   return (
-    <div className="min-h-8 relative p-2 lg:p-10">
+    <div className="bg-linear-to-br from-gray-50 to-teal-50 min-h-8 relative p-2 lg:p-10 overflow-hidden">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
               <style jsx>{`
@@ -116,10 +138,10 @@ export default function NaibrlyHeroSection() {
           {/* Left Content */}
           <div className="space-y-8">
             <h1
+              className="text-2xl sm:text-3xl lg:text-[38px] font-semibold text-gray-800"
               style={{
                 color: "var(--Text-Primary-Text, #333)",
                 fontFamily: "var(--Family-Font, Inter)",
-                fontSize: "38px",
                 fontStyle: "normal",
                 fontWeight: 600,
                 lineHeight: "normal",
@@ -133,31 +155,25 @@ export default function NaibrlyHeroSection() {
             {/* Search Bar */}
             <div className="space-y-3">
               {/* Search Bar Container */}
-              <div className="flex items-center shadow-lg rounded-[20px] bg-[#F4F7FE] border border-[#EBEBEB] h-[70px]">
-                {/* Service Dropdown Button */}
-                <div ref={searchRef} className="flex-1 h-full relative">
-                  <button
-                    onClick={() => {
-                      setSearchOpen(!searchOpen);
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center shadow-lg rounded-[20px] bg-[#F4F7FE] border border-[#EBEBEB] min-h-[70px]">
+                {/* Service Search Input */}
+                <div ref={searchRef} className="flex-1 h-full relative min-h-[60px] sm:min-h-0">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleServiceSearch(e.target.value)}
+                    onFocus={() => {
+                      setSearchOpen(true);
                       setZipOpen(false);
                     }}
-                    className="flex items-center justify-between w-full h-full px-6"
-                  >
-                    <span
-                      className={
-                        searchQuery
-                          ? "text-gray-900"
-                          : "text-gray-400 text-base"
-                      }
-                    >
-                      {searchQuery || "What do you need help With?"}
-                    </span>
-                  </button>
+                    placeholder="What do you need help With?"
+                    className="w-full h-full px-4 sm:px-6 py-4 sm:py-0 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+                  />
 
                   {/* Service Dropdown */}
-                  {searchOpen && (
+                  {searchOpen && filteredServices.length > 0 && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {serviceOptions.map((service, index) => (
+                      {filteredServices.map((service, index) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -173,36 +189,33 @@ export default function NaibrlyHeroSection() {
                   )}
                 </div>
 
-                <div className="w-px h-10 bg-[#EBEBEB] ml-2"></div>
+                <div className="hidden sm:block w-px h-10 bg-[#EBEBEB] ml-2"></div>
+                <div className="block sm:hidden w-full h-px bg-[#EBEBEB]"></div>
 
-                {/* Zip Code Section */}
+                {/* Zip Code Search Input */}
                 <div
                   ref={zipRef}
-                  className="h-full relative flex items-center pr-24"
+                  className="h-full relative flex items-center pr-4 sm:pr-24 min-h-[60px] sm:min-h-0"
                 >
-                  <button
-                    onClick={() => {
-                      setZipOpen(!zipOpen);
-                      setSearchOpen(false);
-                    }}
-                    className="flex items-center gap-2"
-                  >
+                  <div className="flex items-center gap-2 px-4 sm:px-0 w-full sm:w-auto py-4 sm:py-0">
                     <MapPin className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    <span
-                      className={
-                        zipCode
-                          ? "text-gray-900 font-medium"
-                          : "text-gray-900 font-medium"
-                      }
-                    >
-                      {zipCode || "152643"}
-                    </span>
-                  </button>
+                    <input
+                      type="text"
+                      value={zipCode}
+                      onChange={(e) => handleZipSearch(e.target.value)}
+                      onFocus={() => {
+                        setZipOpen(true);
+                        setSearchOpen(false);
+                      }}
+                      placeholder="152643"
+                      className="flex-1 sm:w-24 bg-transparent border-none outline-none text-gray-900 font-medium placeholder:text-gray-900 placeholder:font-medium text-sm sm:text-base"
+                    />
+                  </div>
 
                   {/* Zip Code Dropdown */}
-                  {zipOpen && (
+                  {zipOpen && filteredZipCodes.length > 0 && (
                     <div className="absolute top-full right-0 w-44 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {zipCodeOptions.map((zip, index) => (
+                      {filteredZipCodes.map((zip, index) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -230,7 +243,7 @@ export default function NaibrlyHeroSection() {
                   if (zipCode) params.set("zip", zipCode);
                   router.push(`/find-area?${params.toString()}`);
                 }}
-                className="w-full bg-teal-700 hover:bg-teal-800 h-[56px] rounded-xl flex items-center justify-center gap-2 shadow-sm text-base font-medium"
+                className="w-full bg-teal-700 hover:bg-teal-800 h-14 rounded-xl flex items-center justify-center gap-2 shadow-sm text-sm sm:text-base font-medium"
               >
                 <Search className="w-5 h-5" />
                 Find your area

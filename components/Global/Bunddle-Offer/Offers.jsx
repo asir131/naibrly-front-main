@@ -3,15 +3,18 @@
 import React, { useState } from "react";
 import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import BundleDetailModal from "@/components/Global/Modals/BundleDetailModal";
 import CreateBundleModal from "@/components/Global/Modals/CreateBundleModal";
 import BundlePublishedModal from "@/components/Global/Modals/BundlePublishedModal";
 import ShareBundleModal from "@/components/Global/Modals/ShareBundleModal";
+import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
 
 export default function NaibrlybundelOfferSection() {
+  const { isAuthenticated } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Create Bundle Modal Flow States
   const [isCreateBundleOpen, setIsCreateBundleOpen] = useState(false);
@@ -20,6 +23,16 @@ export default function NaibrlybundelOfferSection() {
   const [createdBundleData, setCreatedBundleData] = useState(null);
 
   const handleViewDetails = (offer) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      const serviceData = {
+        title: offer.service,
+        image: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
+      };
+      setSelectedBundle(serviceData);
+      setIsAuthModalOpen(true);
+      return;
+    }
     // Add participants data for the modal
     const bundleWithParticipants = {
       ...offer,
@@ -49,6 +62,11 @@ export default function NaibrlybundelOfferSection() {
 
   // Handler for Create Bundle flow
   const handleCreateBundle = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     setIsCreateBundleOpen(true);
   };
 
@@ -157,7 +175,7 @@ export default function NaibrlybundelOfferSection() {
   ];
 
   return (
-    <div className="bg-linear-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-accent mb-12">
@@ -269,6 +287,13 @@ export default function NaibrlybundelOfferSection() {
         isOpen={isShareBundleOpen}
         onClose={() => setIsShareBundleOpen(false)}
         bundleData={createdBundleData}
+      />
+
+      {/* Auth Prompt Modal */}
+      <AuthPromptModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        serviceData={selectedBundle}
       />
     </div>
   );

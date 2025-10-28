@@ -43,12 +43,6 @@ export default function ShareBundleModal({ isOpen, onClose, bundleData }) {
           <h2 className="text-lg font-semibold text-gray-900">
             Share {bundleTitle} with Your neighbors
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
         </div>
 
         {/* Content */}
@@ -56,36 +50,13 @@ export default function ShareBundleModal({ isOpen, onClose, bundleData }) {
           {/* QR Code */}
           <div className="flex justify-center mb-6">
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              {/* QR Code Placeholder - In production, you'd use a QR code library like 'qrcode.react' */}
-              <div className="w-64 h-64 bg-black flex items-center justify-center">
-                <svg
-                  viewBox="0 0 256 256"
-                  className="w-full h-full"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Simplified QR Code Pattern - Replace with actual QR code library */}
-                  <rect width="256" height="256" fill="white" />
-                  <rect x="20" y="20" width="60" height="60" fill="black" />
-                  <rect x="30" y="30" width="40" height="40" fill="white" />
-                  <rect x="176" y="20" width="60" height="60" fill="black" />
-                  <rect x="186" y="30" width="40" height="40" fill="white" />
-                  <rect x="20" y="176" width="60" height="60" fill="black" />
-                  <rect x="30" y="186" width="40" height="40" fill="white" />
-                  {/* Add more QR pattern squares as needed */}
-                  <rect x="90" y="20" width="10" height="10" fill="black" />
-                  <rect x="110" y="20" width="10" height="10" fill="black" />
-                  <rect x="130" y="20" width="10" height="10" fill="black" />
-                  <rect x="150" y="20" width="10" height="10" fill="black" />
-                  <rect x="90" y="40" width="10" height="10" fill="black" />
-                  <rect x="110" y="40" width="10" height="10" fill="black" />
-                  <rect x="130" y="40" width="10" height="10" fill="black" />
-                  <rect x="150" y="40" width="10" height="10" fill="black" />
-                  {/* More pattern elements */}
-                  <rect x="100" y="90" width="56" height="56" fill="black" />
-                  <rect x="110" y="100" width="36" height="36" fill="white" />
-                  <rect x="120" y="110" width="16" height="16" fill="black" />
-                </svg>
-              </div>
+              <Image
+                src="/QR Code.png"
+                alt="QR Code"
+                width={256}
+                height={256}
+                className="w-64 h-64 object-contain"
+              />
             </div>
           </div>
 

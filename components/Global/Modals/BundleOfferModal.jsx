@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Image from 'next/image';
+import Link from 'next/link';
 
 // Step 1: Bundle List Component
 function BundleListStep({ onSelectBundle, onClose }) {
@@ -118,12 +119,14 @@ function BundleListStep({ onSelectBundle, onClose }) {
                     </div>
                     <span className="text-xs text-green-600 font-medium">{bundle.savings}</span>
                   </div>
-                  <Button
-                    onClick={() => onSelectBundle(bundle)}
-                    className="bg-white text-teal-600 border-2 border-teal-600 hover:bg-teal-600 hover:text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors h-auto"
-                  >
-                    Join Bundle
-                  </Button>
+                  <Link href="/request">
+                    <Button
+                      onClick={() => onSelectBundle(bundle)}
+                      className="bg-white text-teal-600 border-2 border-teal-600 hover:bg-teal-600 hover:text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors h-auto"
+                    >
+                      Join Bundle
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

@@ -12,13 +12,6 @@ import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 
 export default function NaibrlyHeroSection() {
   const router = useRouter();
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [zipOpen, setZipOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [zipCode, setZipCode] = useState("");
-
-  const searchRef = useRef(null);
-  const zipRef = useRef(null);
 
   // Sample dropdown options
   const serviceOptions = [
@@ -45,6 +38,36 @@ export default function NaibrlyHeroSection() {
     "33101",
   ];
 
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [zipOpen, setZipOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [filteredServices, setFilteredServices] = useState(serviceOptions);
+  const [filteredZipCodes, setFilteredZipCodes] = useState(zipCodeOptions);
+
+  const searchRef = useRef(null);
+  const zipRef = useRef(null);
+
+  // Filter services based on search query
+  const handleServiceSearch = (value) => {
+    setSearchQuery(value);
+    const filtered = serviceOptions.filter((service) =>
+      service.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredServices(filtered);
+    setSearchOpen(true);
+  };
+
+  // Filter zip codes based on input
+  const handleZipSearch = (value) => {
+    setZipCode(value);
+    const filtered = zipCodeOptions.filter((zip) =>
+      zip.includes(value)
+    );
+    setFilteredZipCodes(filtered);
+    setZipOpen(true);
+  };
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -63,7 +86,8 @@ export default function NaibrlyHeroSection() {
   }, []);
 
   return (
-    <div className=" min-h-8 relative p-2 lg:p-10 overflow-hidden">
+    <div className="">
+      <div className="flex items-center justify-center bg-linear-to-br from-gray-50 to-teal-50 min-h-screen relative overflow-hidden px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12 lg:py-16">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <style jsx>{`
@@ -101,21 +125,11 @@ export default function NaibrlyHeroSection() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-7xl mx-auto relative z-10 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 md:gap-12 items-center">
           {/* Left Content */}
-          <div className="space-y-8">
-            <h1
-              style={{
-                color: "var(--Text-Primary-Text, #333)",
-                fontFamily: "var(--Family-Font, Inter)",
-                fontSize: "38px",
-                fontStyle: "normal",
-                fontWeight: 600,
-                lineHeight: "normal",
-                alignSelf: "stretch",
-              }}
-            >
+          <div className="space-y-6 sm:space-y-7 md:space-y-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[38px] font-semibold text-gray-800 leading-tight">
               You. Your Neighbors. Saving time and money on home services with{" "}
               <span className="text-teal-600">Naibrly.</span>
             </h1>
@@ -123,29 +137,25 @@ export default function NaibrlyHeroSection() {
             {/* Search Bar */}
             <div className="relative">
               {/* Search Bar Container */}
-              <div className="flex items-center shadow-lg rounded-[20px] bg-[#F4F7FE] border border-[#EBEBEB] h-[70px]">
-                {/* Service Dropdown Button */}
-                <div ref={searchRef} className="flex-1 h-full relative">
-                  <button
-                    onClick={() => {
-                      setSearchOpen(!searchOpen);
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center shadow-lg rounded-xl sm:rounded-[20px] bg-[#F4F7FE] border border-[#EBEBEB] min-h-[60px] sm:min-h-[70px]">
+                {/* Service Search Input */}
+                <div ref={searchRef} className="flex-1 h-full relative min-h-[50px] sm:min-h-[60px]">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleServiceSearch(e.target.value)}
+                    onFocus={() => {
+                      setSearchOpen(true);
                       setZipOpen(false);
                     }}
-                    className="flex items-center justify-between w-full h-full px-6"
-                  >
-                    <span
-                      className={
-                        searchQuery ? "text-gray-900" : "text-gray-400"
-                      }
-                    >
-                      {searchQuery || "What do you need help with?"}
-                    </span>
-                  </button>
+                    placeholder="What do you need help with?"
+                    className="w-full h-full px-4 sm:px-6 py-3 sm:py-4 md:py-0 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+                  />
 
                   {/* Service Dropdown */}
-                  {searchOpen && (
+                  {searchOpen && filteredServices.length > 0 && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {serviceOptions.map((service, index) => (
+                      {filteredServices.map((service, index) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -161,29 +171,30 @@ export default function NaibrlyHeroSection() {
                   )}
                 </div>
 
-                <div className="w-px h-10 bg-[#EBEBEB]"></div>
+                <div className="hidden sm:block w-px h-10 bg-[#EBEBEB]"></div>
+                <div className="block sm:hidden w-full h-px bg-[#EBEBEB]"></div>
 
-                {/* Zip Code Dropdown Button */}
-                <div ref={zipRef} className="h-full relative">
-                  <button
-                    onClick={() => {
-                      setZipOpen(!zipOpen);
-                      setSearchOpen(false);
-                    }}
-                    className="flex items-center gap-10 px-6 h-full"
-                  >
-                    <MapPin className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    <span
-                      className={zipCode ? "text-gray-900" : "text-gray-400"}
-                    >
-                      {zipCode || "Zip code"}
-                    </span>
-                  </button>
+                {/* Zip Code Search Input */}
+                <div ref={zipRef} className="h-full relative min-h-[50px] sm:min-h-[60px]">
+                  <div className="flex items-center gap-3 px-4 sm:px-6 h-full py-3 sm:py-4 md:py-0">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600 shrink-0" />
+                    <input
+                      type="text"
+                      value={zipCode}
+                      onChange={(e) => handleZipSearch(e.target.value)}
+                      onFocus={() => {
+                        setZipOpen(true);
+                        setSearchOpen(false);
+                      }}
+                      placeholder="Zip code"
+                      className="flex-1 sm:w-32 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+                    />
+                  </div>
 
                   {/* Zip Code Dropdown */}
-                  {zipOpen && (
+                  {zipOpen && filteredZipCodes.length > 0 && (
                     <div className="absolute top-full right-0 w-44 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {zipCodeOptions.map((zip, index) => (
+                      {filteredZipCodes.map((zip, index) => (
                         <button
                           key={index}
                           onClick={() => {
@@ -212,25 +223,26 @@ export default function NaibrlyHeroSection() {
                       router.push(`/find-area?${params.toString()}`);
                     }
                   }}
-                  className="bg-teal-600 hover:bg-teal-700 w-[56px] h-[56px] rounded-[14px] mr-2 flex items-center justify-center shadow-md"
+                  className="bg-teal-600 hover:bg-teal-700 w-full sm:w-12 md:w-14 h-12 sm:h-12 md:h-14 rounded-xl sm:rounded-[14px] m-2 flex items-center justify-center shadow-md gap-2 sm:gap-0"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="sm:hidden">Search</span>
                 </Button>
               </div>
             </div>
 
             {/* Features */}
-            <div className="flex flex-wrap ml-16 gap-8">
+            <div className="flex flex-wrap justify-center sm:justify-start ml-0 sm:ml-8 md:ml-12 lg:ml-16 gap-3 sm:gap-5 md:gap-6 lg:gap-8">
               <CardContainer containerClassName="py-0 flex items-center justify-center">
                 <CardBody className="w-fit h-fit">
                   <CardItem translateZ="50" className="w-fit h-fit">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-teal-600 rounded-full p-3">
-                        <Clock className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="bg-teal-600 rounded-full p-2 sm:p-2.5 md:p-3">
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">24H</div>
-                        <div className="text-sm text-gray-600">
+                        <div className="font-semibold text-gray-900 text-sm sm:text-base">24H</div>
+                        <div className="text-xs sm:text-sm text-gray-600">
                           Availability
                         </div>
                       </div>
@@ -242,15 +254,15 @@ export default function NaibrlyHeroSection() {
               <CardContainer containerClassName="py-0 flex items-center justify-center">
                 <CardBody className="w-fit h-fit">
                   <CardItem translateZ="50" className="w-fit h-fit">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-teal-600 rounded-full p-3">
-                        <MapPin className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="bg-teal-600 rounded-full p-2 sm:p-2.5 md:p-3">
+                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 text-sm sm:text-base">
                           Local US
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-xs sm:text-sm text-gray-600">
                           Professional
                         </div>
                       </div>
@@ -262,15 +274,15 @@ export default function NaibrlyHeroSection() {
               <CardContainer containerClassName="py-0 flex items-center justify-center">
                 <CardBody className="w-fit h-fit">
                   <CardItem translateZ="50" className="w-fit h-fit">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-teal-600 rounded-full p-3">
-                        <Calendar className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="bg-teal-600 rounded-full p-2 sm:p-2.5 md:p-3">
+                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 text-sm sm:text-base">
                           Flexible
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-xs sm:text-sm text-gray-600">
                           Appointments
                         </div>
                       </div>
@@ -281,9 +293,9 @@ export default function NaibrlyHeroSection() {
             </div>
           </div>
 
-          {/* Right Images Grid */}
-          <div className="relative h-[640px] hidden lg:block">
-            <div className="relative w-full h-full max-w-[520px] mx-auto">
+          {/* Right Images Grid - Hidden on mobile/tablet, visible on desktop */}
+          <div className="relative h-[500px] md:h-[580px] lg:h-[640px] hidden lg:block">
+            <div className="relative w-full h-full max-w-[420px] lg:max-w-[480px] xl:max-w-[520px] mx-auto">
               {/* Kitchen Installation - Top Left with 3D Card Effect */}
               <div className="absolute top-10 left-4">
                 <CardContainer containerClassName="py-0 flex items-center justify-center">
@@ -358,6 +370,7 @@ export default function NaibrlyHeroSection() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

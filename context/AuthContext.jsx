@@ -51,6 +51,8 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(false);
         // Remove from localStorage
         localStorage.removeItem('user');
+        // Reload page to update UI
+        window.location.reload();
     };
 
     // Update user profile

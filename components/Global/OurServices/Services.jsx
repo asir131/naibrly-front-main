@@ -1,11 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
+import { useRouter } from 'next/navigation';
 
 export default function OurServicesSection() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
   const services = [
     {
       title: 'Appliance Repairs',
@@ -108,40 +114,61 @@ export default function OurServicesSection() {
 
           {/* Services Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {services.map((service, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-              >
-                {/* Image Container with padding */}
-                <div className="pt-6 px-6">
-                  <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
-                    <Image
-                      src={service.image}
-                      alt={service.title}
-                      fill
-                      className="object-cover"
-                    />
+            {services.map((service, index) => {
+              const handleClick = (e) => {
+                e.preventDefault();
+                if (!isAuthenticated) {
+                  setSelectedService(service);
+                  setIsAuthModalOpen(true);
+                } else {
+                  // Route to provider profile for authenticated users
+                  router.push('/providerprofile');
+                }
+              };
+
+              return (
+                <div
+                  key={index}
+                  onClick={handleClick}
+                  className="bg-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer"
+                >
+                  {/* Image Container with padding */}
+                  <div className="pt-6 px-6">
+                    <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
+                      <Image
+                        src={service.image}
+                        alt={service.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    {/* Title */}
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      {service.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-gray-600 text-base leading-relaxed">
+                      {service.description}
+                    </p>
                   </div>
                 </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  {/* Title */}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    {service.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-base leading-relaxed">
-                    {service.description}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
+
+      {/* Auth Prompt Modal */}
+      <AuthPromptModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        serviceData={selectedService}
+      />
     </div>
   );
 }

@@ -34,19 +34,19 @@ export default function FAQSection() {
   };
 
   return (
-    <div className="bg-linear-to-br from-gray-50 to-teal-50 py-16 px-8 lg:px-16">
+    <div className="bg-linear-to-br from-gray-50 to-teal-50 py-8 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8 md:gap-10 lg:gap-12">
           {/* Left Side - Title */}
-          <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 text-center lg:text-left">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2 sm:px-0">
               Frequently Asked Questions
             </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600">Still need help?</span>
-              <a 
-                href="#contact" 
-                className="text-teal-600 font-semibold hover:text-teal-700 transition-colors"
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-1 sm:gap-2">
+              <span className="text-gray-600 text-sm sm:text-base">Still need help?</span>
+              <a
+                href="#contact"
+                className="text-teal-600 font-semibold hover:text-teal-700 transition-colors text-sm sm:text-base"
               >
                 Get Help Now
               </a>
@@ -54,37 +54,37 @@ export default function FAQSection() {
           </div>
 
           {/* Right Side - Accordion */}
-          <div className="lg:col-span-3 space-y-4">
+          <div className="lg:col-span-3 space-y-3 sm:space-y-4">
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className={`rounded-2xl transition-all ${
-                  openIndex === index 
-                    ? 'bg-blue-50 shadow-md' 
+                className={`rounded-xl sm:rounded-2xl transition-all ${
+                  openIndex === index
+                    ? 'bg-blue-50 shadow-md'
                     : 'bg-gray-50 hover:bg-gray-100'
                 }`}
               >
                 {/* Question Header */}
                 <button
                   onClick={() => toggleAccordion(index)}
-                  className="w-full flex items-center justify-between p-6 text-left"
+                  className="w-full flex items-center justify-between p-4 sm:p-5 md:p-6 text-left"
                 >
-                  <span className="text-lg font-bold text-gray-900 pr-4">
+                  <span className="text-sm sm:text-base md:text-lg font-bold text-gray-900 pr-3 sm:pr-4">
                     {faq.question}
                   </span>
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     {openIndex === index ? (
-                      <ChevronUp className="w-6 h-6 text-gray-600" />
+                      <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                     ) : (
-                      <ChevronDown className="w-6 h-6 text-gray-600" />
+                      <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                     )}
                   </div>
                 </button>
 
                 {/* Answer Content */}
                 {openIndex === index && (
-                  <div className="px-6 pb-6 animate-in slide-in-from-top">
-                    <p className="text-gray-600 leading-relaxed">
+                  <div className="px-4 sm:px-5 md:px-6 pb-4 sm:pb-5 md:pb-6 animate-in slide-in-from-top">
+                    <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
                       {faq.answer}
                     </p>
                   </div>

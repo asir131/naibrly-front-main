@@ -100,13 +100,13 @@ function SignupFormContent() {
 
       setIsLoading(false);
 
-      // Redirect based on user type
+      // Use window.location.href for hard navigation to ensure state updates
       if (userType === 'provider') {
         console.log('SignupForm - Redirecting to /business');
-        router.push('/business');
+        window.location.href = '/business'; // Hard navigation to business page
       } else {
         console.log('SignupForm - Redirecting to /');
-        router.push('/');
+        window.location.href = '/'; // Hard navigation to home page
       }
     }, 1000); // Simulate network delay
   };
