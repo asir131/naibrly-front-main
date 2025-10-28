@@ -16,7 +16,7 @@ export default function PayoutInfo() {
     } = useForm();
     const onSubmit = async (data) => {
         console.log(data);
-        router.push('/provider/signup/service_area')
+        router.push('/provider/signup/analytics')
         // (optional) formData upload example here
     };
     return (
