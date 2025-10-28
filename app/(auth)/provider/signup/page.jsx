@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Eye, EyeOff, Upload, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { Eye, EyeOff, Upload, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 export default function ProviderSignupPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    businessName: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phoneNumber: '',
-    countryCode: '+1',
-    businessAddress: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    serviceCategory: '',
+    businessName: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phoneNumber: "",
+    countryCode: "+1",
+    businessAddress: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    serviceCategory: "",
     agreeToTerms: false,
     profileImage: null,
   });
@@ -32,16 +32,16 @@ export default function ProviderSignupPage() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({ ...prev, profileImage: file }));
+      setFormData((prev) => ({ ...prev, profileImage: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -52,13 +52,13 @@ export default function ProviderSignupPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Provider signup:', formData);
+    console.log("Provider signup:", formData);
     // Navigate to provider dashboard or information page
-    router.push('/business');
+    // router.push("/provider/signup/user_info");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-10">
         {/* Header */}
         <div className="text-center mb-8">
@@ -76,13 +76,20 @@ export default function ProviderSignupPage() {
             <div className="relative">
               <div className="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center overflow-hidden border-2 border-teal-200">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Profile" className="w-full h-full object-cover" />
+                  <img
+                    src={imagePreview}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <User className="w-10 h-10 text-teal-600" />
                 )}
               </div>
             </div>
-            <label htmlFor="profileImage" className="mt-3 text-sm text-teal-600 hover:text-teal-700 cursor-pointer flex items-center gap-1">
+            <label
+              htmlFor="profileImage"
+              className="mt-3 text-sm text-teal-600 hover:text-teal-700 cursor-pointer flex items-center gap-1"
+            >
               <Upload className="w-4 h-4" />
               upload Image
             </label>
@@ -179,7 +186,11 @@ export default function ProviderSignupPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -204,7 +215,11 @@ export default function ProviderSignupPage() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -334,13 +349,22 @@ export default function ProviderSignupPage() {
               className="mt-1 w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer"
               required
             />
-            <label htmlFor="agreeToTerms" className="text-sm text-slate-600 cursor-pointer">
-              I agree to the{' '}
-              <a href="/terms-of-use" className="text-teal-600 hover:text-teal-700 underline">
+            <label
+              htmlFor="agreeToTerms"
+              className="text-sm text-slate-600 cursor-pointer"
+            >
+              I agree to the{" "}
+              <a
+                href="/terms-of-use"
+                className="text-teal-600 hover:text-teal-700 underline"
+              >
                 Terms of Service
               </a>
-              {' & '}
-              <a href="/privacy-policy" className="text-teal-600 hover:text-teal-700 underline">
+              {" & "}
+              <a
+                href="/privacy-policy"
+                className="text-teal-600 hover:text-teal-700 underline"
+              >
                 Privacy Policy
               </a>
             </label>
@@ -357,8 +381,11 @@ export default function ProviderSignupPage() {
 
           {/* Login Link */}
           <p className="text-center text-slate-600 text-sm">
-            Already have an account?{' '}
-            <a href="/provider/login" className="text-teal-600 hover:text-teal-700 font-medium">
+            Already have an account?{" "}
+            <a
+              href="/provider/login"
+              className="text-teal-600 hover:text-teal-700 font-medium"
+            >
               Login
             </a>
           </p>

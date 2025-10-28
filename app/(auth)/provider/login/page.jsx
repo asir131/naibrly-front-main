@@ -32,7 +32,7 @@ export default function ProviderLoginPage() {
 
       login({ user: mockProvider, userType: 'provider' });
       setIsLoading(false);
-      router.push('/business');
+      router.push('/provider/signup/analytics');
     }, 1000);
   };
 

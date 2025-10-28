@@ -23,7 +23,7 @@ export default function UserTypeSelectionModal({ isOpen, onClose, mode = 'signup
         router.push(`/create-account?type=${typeParam}`);
       } else if (userType === 'provider') {
         // Route to provider signup: app/(auth)/provider/signup/page.jsx
-        router.push(`/provider/signup?type=${typeParam}`);
+        router.push(`provider/signup/user_info`);
       }
     } else if (mode === 'signin') {
       if (userType === 'customer') {

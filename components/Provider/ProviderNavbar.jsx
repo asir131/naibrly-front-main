@@ -55,7 +55,7 @@ export default function ProviderNavbar() {
     return (
         <nav className="sticky top-0 bg-white border-b border-gray-200 z-[100] shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-                <Link href="/" className='cursor-pointer'>
+                <Link href="/provider/signup/analytics" className='cursor-pointer'>
                     <div className="inline-flex items-center gap-1">
                         <Image
                             src="/logo.png"
@@ -81,42 +81,65 @@ export default function ProviderNavbar() {
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex gap-2 sm:gap-4 items-center">
                     {/* Home Button */}
-                    <Link href="/">
-                        <Button className="bg-white text-teal-600 hover:bg-teal-700 hover:text-white text-xs sm:text-sm px-3 sm:px-4 rounded-md border border-teal-600">
+                    <Link href="/provider/signup/analytics">
+                        <Button className="bg-transparent text-gray-700 hover:text-teal-600 text-base px-3 sm:px-4 transition-all border-0 shadow-none hover:bg-transparent">
                             Home
                         </Button>
                     </Link>
 
-                    {/* Request Button */}
-                    <Link href="/Request-Section">
-                        <Button
-                            variant="outline"
-                            className="bg-white text-teal-600 hover:bg-teal-700 hover:text-white text-xs sm:text-sm px-3 sm:px-4 rounded-md border border-teal-600"
-                        >
-                            Request
+                    {/* Order Button */}
+                    <Link href="/provider/orders">
+                        <Button className="bg-transparent text-gray-700 hover:text-teal-600 text-base px-3 sm:px-4 transition-all border-0 shadow-none hover:bg-transparent">
+                            Order
                         </Button>
                     </Link>
+
+                    {/* Balance Display */}
+                    {mounted && isAuthenticated && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
+                            <span className="text-gray-900 font-semibold text-base">
+                                ${user?.balance || "1258"}
+                            </span>
+                        </div>
+                    )}
 
                     {/* User Profile Section */}
                     {mounted && isAuthenticated && (
                         <div className="relative user-menu-container">
                             <button
-                                className="rounded-full border-2 border-teal-600 hover:border-teal-700 transition-colors p-0"
+                                className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                             >
                                 <Image
-                                    src={user?.profileImage || "/logo.png"}
+                                    src={user?.profileImage || "/provider/Ellipse  (2).png"}
                                     alt="Provider Profile"
                                     width={40}
                                     height={40}
                                     className="rounded-full w-10 h-10 object-cover"
                                 />
+                                <span className="text-gray-900 font-medium text-base">
+                                    {user?.name || user?.email?.split('@')[0] || "Jacob"}
+                                </span>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className={`w-5 h-5 text-gray-700 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                                >
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
                             </button>
 
                             {isUserMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[110]">
                                     <div className="py-2">
-                                        <Link href="/Provider-Profile">
+                                        <Link href="/provider-profile">
                                             <button
                                                 onClick={() => setIsUserMenuOpen(false)}
                                                 className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-gray-700 hover:text-teal-600 flex items-center gap-2"
@@ -140,6 +163,30 @@ export default function ProviderNavbar() {
                             )}
                         </div>
                     )}
+
+                    {/* Help Button */}
+                    <button
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-1"
+                        title="Help"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="w-6 h-6 text-gray-700"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                            <path d="M12 17h.01" />
+                        </svg>
+                        <span className="text-gray-700 font-medium">Help</span>
+                    </button>
                 </div>
             </div>
 
@@ -148,7 +195,7 @@ export default function ProviderNavbar() {
                 <div className="md:hidden bg-white border-t border-gray-200 absolute top-full left-0 right-0 max-h-[calc(100vh-80px)] overflow-y-auto shadow-lg">
                     <div className="px-4 py-4 space-y-3">
                         {/* Home Button */}
-                        <Link href="/" passHref>
+                        <Link href="/provider/signup/analytics" passHref>
                             <Button
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="w-full bg-white text-teal-600 hover:bg-teal-700 hover:text-white text-sm px-4 rounded-md border border-teal-600"
@@ -157,21 +204,21 @@ export default function ProviderNavbar() {
                             </Button>
                         </Link>
 
-                        {/* Request Button */}
-                        <Link href="/Request-Section" passHref>
+                        {/* Order Button */}
+                        <Link href="/provider/orders" passHref>
                             <Button
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 variant="outline"
                                 className="w-full bg-white text-teal-600 hover:bg-teal-700 hover:text-white text-sm px-4 rounded-md border border-teal-600"
                             >
-                                Request
+                                Order
                             </Button>
                         </Link>
 
                         {/* User Profile Section */}
                         {isAuthenticated && (
                             <div className="border-t pt-3 space-y-2">
-                                <Link href="/Provider-Profile" className="block">
+                                <Link href="/provider-profile" className="block">
                                     <button
                                         onClick={() => setIsMobileMenuOpen(false)}
                                         className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm text-gray-700 hover:text-teal-600 flex items-center gap-2 rounded-md"
