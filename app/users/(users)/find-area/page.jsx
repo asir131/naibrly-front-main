@@ -2,7 +2,10 @@
 import { Images } from '@/public/usersImg/ExportImg'
 import Image from 'next/image'
 import React, { useState, useEffect, Suspense } from 'react'
-import { bundlesData } from '../constants';
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import { IoArrowForwardSharp } from "react-icons/io5";
+import { IoArrowBack } from "react-icons/io5";
+import { bundlesData } from '../constans';
 import NaibrlyLanding from '@/components/User/LandingPage/Mobileapp';
 import TopProsSection from '@/components/User/FindArea/TopProsSection';
 import TestimonialsSection from '@/components/User/FindArea/TestimonialsSection';

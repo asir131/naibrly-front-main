@@ -513,3 +513,402 @@
   /* Drop Shadow/drop-shadow */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.10), 0 1px 1px 0 rgba(0, 0, 0, 0.06);
 }
+
+/* this is for provider page user info styling */
+.user_info_input {
+  display: flex;
+  padding: 100px 200px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  flex: 1 0 0;
+  border-radius: 12px;
+  background: var(--White, #FFF);
+}
+
+.user_info_layout {
+  display: flex;
+  padding: 80px 126px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  background: linear-gradient(180deg, rgba(14, 122, 96, 0.10) 0%, rgba(14, 122, 96, 0.00) 100%);
+}
+
+.analytics_layout {
+  padding: 80px 126px;
+  gap: 10px;
+  align-self: stretch;
+  background: linear-gradient(180deg, rgba(14, 122, 96, 0.10) 0%, rgba(14, 122, 96, 0.00) 100%);
+}
+
+/* this is for user info heading  */
+.user_info_heading {
+  color: #000;
+  font-family: var(--Family-Font, Inter);
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+/* this is for upload busniess */
+.upload_business {
+  display: flex;
+  height: 186px;
+  padding: 8px 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 2px dashed var(--black-white-dark-gray, #7A7A7A);
+  background: var(--White, #FFF);
+}
+
+.input_box {
+  display: flex;
+  height: 48px;
+  padding: 6px 16px;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  align-self: stretch;
+  border-radius: 12px;
+  border: 1px solid var(--black-white-light-gray, #EBEBEB);
+}
+
+select {
+  appearance: none;
+  /* Removes default styling (modern browsers) */
+  -webkit-appearance: none;
+  /* For Safari & Chrome */
+  -moz-appearance: none;
+  /* For Firefox */
+  background: none;
+  /* Optional: remove default background */
+  background-image: none;
+  /* Hide arrow icon */
+}
+
+input[type="number"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  background: none;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+/* this is for some stataus */
+.home_status {
+  padding: var(--spacing-05, 2px) var(--spacing-25, 10px) var(--spacing-05, 2px) var(--spacing-2, 8px);
+  gap: var(--spacing-0, 0);
+  border-radius: 8px;
+  background: var(--Status-Light-Orange, #FCE8D9);
+  color: #F3934F;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.home_status2 {
+  padding: var(--spacing-05, 2px) var(--spacing-25, 10px) var(--spacing-05, 2px) var(--spacing-2, 8px);
+  gap: var(--spacing-0, 0);
+  border-radius: 8px;
+  background: var(--Status-Light-Orange, #FFF7D6);
+  color: #F1C400;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.home_status3 {
+  padding: var(--spacing-05, 2px) var(--spacing-25, 10px) var(--spacing-05, 2px) var(--spacing-2, 8px);
+  gap: var(--spacing-0, 0);
+  border-radius: 8px;
+  background: var(--Status-Light-Orange, #FFF0EE);
+  color: #F34F4F;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* next button */
+.next_button {
+  display: flex;
+  height: 48px;
+  padding: 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  border-radius: 10px;
+  background: var(--Primary, #0E7A60);
+}
+
+/* this is for edit button */
+.edit_button {
+  display: flex;
+  height: 48px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--Primary, #0E7A60);
+}
+
+/* this is for verify  info page  */
+.verify_info_layout {
+  display: flex;
+  padding: 80px 126px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  background: linear-gradient(180deg, rgba(14, 122, 96, 0.10) 0%, rgba(14, 122, 96, 0.00) 100%);
+}
+
+.verify_info_form {
+  display: flex;
+  padding: 100px 200px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  border-radius: 12px;
+  background: var(--White, #FFF);
+}
+
+.upload_verify {
+  display: flex;
+  height: 168px;
+  padding: 8px 16px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  border-radius: 12px;
+  border: 1px solid var(--black-white-light-gray, #EBEBEB);
+}
+
+/* this is for verify costom checkbox */
+.verify_checkbox {
+  appearance: none;
+  /* ✅ Remove default checkbox UI */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  display: flex;
+  width: 16px;
+  height: 16px;
+  padding: 2px;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 2px;
+  border: 1.5px solid #0E7A60;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* ✅ When checked */
+.verify_checkbox:checked {
+  background: #0E7A60;
+  border-color: #0E7A60;
+}
+
+/* ✅ Optional check mark using pseudo-element */
+.verify_checkbox:checked::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* this is for Information of the Registered Owner/Operator is different 
+than you card */
+.nid_upload {
+  display: flex;
+  padding: 20px 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  align-self: stretch;
+  border-radius: 12px;
+  border-top: 0.6px solid var(--Primary, #0E7A60);
+  border-right: 3px solid var(--Primary, #0E7A60);
+  border-bottom: 0.6px solid var(--Primary, #0E7A60);
+  border-left: 3px solid var(--Primary, #0E7A60);
+}
+
+/* this is for zip code  */
+.zip_code {
+  display: flex;
+  padding: var(--spacing-05, 2px) var(--spacing-25, 10px) var(--spacing-05, 2px) var(--spacing-2, 8px);
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-0, 0);
+  border-radius: 8px;
+  background: var(--Status-Light-Green, #E4F6E8);
+}
+
+/* this is for heading text */
+.confirm_info_heading {
+  color: var(--Black, #000);
+
+  /* H6/12 MEDIUM */
+  font-family: Inter;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.confirm_info_text {
+  color: var(--Black, #000);
+
+  /* H6/12 REGULAR */
+  font-family: var(--Family-Font, Inter);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.confirm_info_layout {
+  display: flex;
+  padding: 100px 200px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  border-radius: 12px;
+  background: var(--White, #FFF);
+}
+
+/* this is for secure info info  */
+.secure_info {
+  display: flex;
+  padding: 16px 10px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  border-radius: 12px;
+  background: var(--Primary-Hover, rgba(14, 122, 96, 0.10));
+}
+
+/* this is for analytics heading text*/
+.analytics_heading {
+  color: var(--Black, #000);
+
+  /* H3/24 SEMI BOLD */
+  font-family: var(--Family-Font, Inter);
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+/* this is for analytics card */
+.analytics_card {
+  display: flex;
+  padding: 48px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  border-radius: 12px;
+  border-bottom: 2px solid var(--Primary, #0E7A60);
+  background: var(--White, #FFF);
+}
+
+/* this is for decline btn */
+.decline_btn {
+  display: flex;
+  padding: 8px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  background: var(--Status-Red, #F34F4F);
+  color: var(--black-white-white, #FFF);
+  text-align: center;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.accept_btn {
+  display: flex;
+  padding: 8px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  background: var(--Status-Red, #0E7A60);
+  color: var(--black-white-white, #FFF);
+  text-align: center;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* this is for client feedback card */
+.client_feedback_card {
+  display: flex;
+  padding: 24px 16px;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  border-radius: 12px;
+  background: var(--black-white-white, #FFF);
+
+  /* Drop Shadow / drop-shadow-sm */
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
+
+}
+
+/* this is for request card */
+.request_card {
+  display: flex;
+  padding: 32px;
+  align-items: center;
+  gap: 16px;
+  align-self: stretch;
+  border-radius: 12px;
+  border: 0.6px solid var(--black-white-light-gray, #EBEBEB);
+  background: var(--black-white-white, #FFF);
+
+  /* Box Shadow/shadow */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10);
+}
+
+/* this is for open button */
+.open_button {
+  display: flex;
+  padding: 8px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  background: var(--Primary, #0E7A60);
+}
+
+/* this is for ready message */
+.ready_message {
+  display: flex;
+  padding: 6px 12px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  align-self: stretch;
+  border-radius: 8px;
+  border: 1px solid var(--Status-Yellow, #F1C400);
+  background: var(--Status-Light-Yellow, #FFF7D6);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.08);
+}
