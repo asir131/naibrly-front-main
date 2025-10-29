@@ -5,7 +5,7 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { IoArrowForwardSharp } from "react-icons/io5";
 import { IoArrowBack } from "react-icons/io5";
-import { bundlesData } from '../constans';
+import { bundlesData } from '../constants';
 import NaibrlyLanding from '@/components/User/LandingPage/Mobileapp';
 import TopProsSection from '@/components/User/FindArea/TopProsSection';
 import TestimonialsSection from '@/components/User/FindArea/TestimonialsSection';
