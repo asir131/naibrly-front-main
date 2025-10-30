@@ -22,6 +22,14 @@ export default function NaibrlybundelOfferSection() {
   const [isShareBundleOpen, setIsShareBundleOpen] = useState(false);
   const [createdBundleData, setCreatedBundleData] = useState(null);
 
+  // Custom Location Icon Component
+const LocationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+    <path d="M11.9999 13.4295C13.723 13.4295 15.1199 12.0326 15.1199 10.3095C15.1199 8.58633 13.723 7.18945 11.9999 7.18945C10.2768 7.18945 8.87988 8.58633 8.87988 10.3095C8.87988 12.0326 10.2768 13.4295 11.9999 13.4295Z" stroke="#292D32" strokeWidth="1.5"/>
+    <path d="M3.61995 8.49C5.58995 -0.169998 18.42 -0.159997 20.38 8.5C21.53 13.58 18.37 17.88 15.6 20.54C13.59 22.48 10.41 22.48 8.38995 20.54C5.62995 17.88 2.46995 13.57 3.61995 8.49Z" stroke="#292D32" strokeWidth="1.5"/>
+  </svg>
+);
+
   const handleViewDetails = (offer) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
@@ -89,89 +97,95 @@ export default function NaibrlybundelOfferSection() {
 
   const offers = [
     {
-      id: 1,
-      service: "Window Washing",
-      bundle: "3-Person Bundle (2 Joined, 1 Spot Open)",
-      location: "Street Springfield, IL 62704",
-      originalPrice: "$68/hr",
-      discountedPrice: "$55/hr",
-      savings: "-$13",
+      id: 6,
+      service: 'Window Washing',
+      bundle: '3-Person Bundle (1 Spot Open)',
+      date: 'Service Date: jun 10, 2025',
+      location: 'Street Springfield, IL 62704',
+      rate: 'Standard rates est.',
+      originalPrice: '$68/hr',
+      discountedPrice: '5-10% off',
       images: [
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-      ],
-    },
-    {
-      id: 2,
-      service: "Window Washing",
-      bundle: "3-Person Bundle (2 Joined, 1 Spot Open)",
-      location: "Street Springfield, IL 62704",
-      originalPrice: "$68/hr",
-      discountedPrice: "$55/hr",
-      savings: "-$13",
-      images: [
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-      ],
-    },
-    {
-      id: 3,
-      service: "Window Washing",
-      bundle: "3-Person Bundle (2 Joined, 1 Spot Open)",
-      location: "Street Springfield, IL 62704",
-      originalPrice: "$68/hr",
-      discountedPrice: "$55/hr",
-      savings: "-$13",
-      images: [
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-      ],
-    },
-    {
-      id: 4,
-      service: "Window Washing",
-      bundle: "3-Person Bundle (2 Joined, 1 Spot Open)",
-      location: "Street Springfield, IL 62704",
-      originalPrice: "$68/hr",
-      discountedPrice: "$55/hr",
-      savings: "-$13",
-      images: [
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-      ],
-    },
-    {
-      id: 5,
-      service: "Window Washing",
-      bundle: "3-Person Bundle (2 Joined, 1 Spot Open)",
-      location: "Street Springfield, IL 62704",
-      originalPrice: "$68/hr",
-      discountedPrice: "$55/hr",
-      savings: "-$13",
-      images: [
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-      ],
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ]
     },
     {
       id: 6,
-      service: "Window Washing",
-      bundle: "3-Person Bundle (2 Joined, 1 Spot Open)",
-      location: "Street Springfield, IL 62704",
-      originalPrice: "$68/hr",
-      discountedPrice: "$55/hr",
-      savings: "-$13",
+      service: 'Window Washing',
+      bundle: '3-Person Bundle (1 Spot Open)',
+      date: 'Service Date: jun 10, 2025',
+      location: 'Street Springfield, IL 62704',
+      rate: 'Standard rates est.',
+      originalPrice: '$68/hr',
+      discountedPrice: '5-10% off',
       images: [
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop",
-      ],
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ]
     },
+    {
+      id: 6,
+      service: 'Window Washing',
+      bundle: '3-Person Bundle (1 Spot Open)',
+      date: 'Service Date: jun 10, 2025',
+      location: 'Street Springfield, IL 62704',
+      rate: 'Standard rates est.',
+      originalPrice: '$68/hr',
+      discountedPrice: '5-10% off',
+      images: [
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ]
+    },
+    {
+      id: 6,
+      service: 'Window Washing',
+      bundle: '3-Person Bundle (1 Spot Open)',
+      date: 'Service Date: jun 10, 2025',
+      location: 'Street Springfield, IL 62704',
+      rate: 'Standard rates est.',
+      originalPrice: '$68/hr',
+      discountedPrice: '5-10% off',
+      images: [
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ]
+    },
+    {
+      id: 6,
+      service: 'Window Washing',
+      bundle: '3-Person Bundle (1 Spot Open)',
+      date: 'Service Date: jun 10, 2025',
+      location: 'Street Springfield, IL 62704',
+      rate: 'Standard rates est.',
+      originalPrice: '$68/hr',
+      discountedPrice: '5-10% off',
+      images: [
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ]
+    },
+    {
+      id: 6,
+      service: 'Window Washing',
+      bundle: '3-Person Bundle (1 Spot Open)',
+      date: 'Service Date: jun 10, 2025',
+      location: 'Street Springfield, IL 62704',
+      rate: 'Standard rates est.',
+      originalPrice: '$68/hr',
+      discountedPrice: '5-10% off',
+      images: [
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
+      ]
+    }
   ];
 
   return (
@@ -203,62 +217,75 @@ export default function NaibrlybundelOfferSection() {
         </div>
 
         {/* Offers Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {offers.map((offer) => (
-            <div
-              key={offer.id}
-              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300"
-            >
-              {/* Header with Service Name and Images */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {offer.service}
-                </h3>
-                <div className="flex -space-x-2">
-                  {offer.images.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`Person ${idx + 1}`}
-                      className="w-10 h-10 rounded-full border-2 border-white object-cover"
-                    />
+        {/* Offers Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-8 sm:mb-10 md:mb-12">
+                  {offers.map((offer, index) => (
+                    <div
+                      key={`${offer.id}-${index}`}
+                      className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
+                    >
+                      {/* Header with Service Name and Images */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                            {offer.service}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-500">
+                            Published 1hr ago
+                          </p>
+                        </div>
+                        <div className="flex -space-x-2 ml-3">
+                          {offer.images.map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={img}
+                              alt={`Person ${idx + 1}`}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
+                            />
+                          ))}
+                        </div>
+                      </div>
+        
+                      {/* Bundle Info */}
+                      <p className="text-base sm:text-lg text-gray-900 font-semibold mb-3">
+                        {offer.bundle}
+                      </p>
+        
+                      {/* Service Date */}
+                      <p className="text-sm sm:text-base text-gray-600 mb-3">
+                        {offer.date}
+                      </p>
+        
+                      {/* Location */}
+                      <div className="flex items-start gap-2 text-sm sm:text-base text-gray-700 mb-4">
+                        <LocationIcon />
+                        <span className="leading-snug">{offer.location}</span>
+                      </div>
+        
+                      {/* Rate Info and CTA Button */}
+                      <div className="flex items-center justify-between mt-4">
+                        <div>
+                          <p className="text-base sm:text-lg text-gray-900 font-semibold">
+                            {offer.rate}
+                          </p>
+                          <p className="text-sm sm:text-base text-gray-600">
+                            {offer.discountedPrice}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => handleViewDetails(offer)}
+                          className="bg-[#0E7A601A] text-teal-700 font-semibold rounded-xl px-6 py-2.5 text-sm transition-colors whitespace-nowrap hover:bg-[#0E7A60] hover:text-white"
+                          style={{
+                            border: 'none'
+                          }}
+                        >
+                          View details
+                        </Button>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Bundle Info */}
-              <p className="text-sm text-gray-700 font-medium mb-2">
-                {offer.bundle}
-              </p>
-
-              {/* Location */}
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                <MapPin className="w-4 h-4" />
-                <span>{offer.location}</span>
-              </div>
-
-              {/* Pricing and CTA */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500 line-through font-medium">
-                    {offer.originalPrice}
-                  </span>
-                  <span className="text-xl font-bold text-gray-900">
-                    {offer.discountedPrice}
-                  </span>
-                  <span className="text-sm text-gray-500">{offer.savings}</span>
                 </div>
-                <Button
-                  onClick={() => handleViewDetails(offer)}
-                  className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-6 py-2"
-                >
-                  View details
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Bundle Detail Modal */}
       <BundleDetailModal

@@ -149,7 +149,7 @@ export default function NaibrlyHeroSection() {
                       setZipOpen(false);
                     }}
                     placeholder="What do you need help with?"
-                    className="w-full h-full px-4 sm:px-6 py-3 sm:py-4 md:py-0 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base placeholder:text-center"
+                    className="w-full h-full px-4 sm:px-6 py-3 sm:py-4 md:py-0 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base text-center placeholder:text-center"
                   />
 
                   {/* Service Dropdown */}
@@ -187,7 +187,7 @@ export default function NaibrlyHeroSection() {
                         setSearchOpen(false);
                       }}
                       placeholder="Zip code"
-                      className="flex-1 sm:w-32 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
+                      className="flex-1 sm:w-32 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base text-center placeholder:text-center"
                     />
                   </div>
 

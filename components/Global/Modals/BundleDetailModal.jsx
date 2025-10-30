@@ -104,7 +104,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
                 <div className="text-right">
                   <p className="text-sm text-gray-600 mb-1">Standard rates est.</p>
                   <p className="text-lg font-semibold text-teal-600">
-                    {bundleData.savings.replace('-', '')} off
+                    {bundleData.savings ? bundleData.savings.replace('-', '') + ' off' : bundleData.discountedPrice || 'N/A'}
                   </p>
                 </div>
               </div>

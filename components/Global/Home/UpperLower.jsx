@@ -39,7 +39,7 @@ export default function HowNaibrlyWorksSection() {
                     <Image
                       src={Human}
                       alt="Professional service technician"
-                      className="w-full h-auto object-contain"
+                      className="w-[1,440px] h-auto object-contain"
                       style={{ background: "transparent" }}
                     />
                   </div>

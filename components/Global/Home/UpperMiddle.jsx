@@ -14,7 +14,7 @@ export default function ProfessionalServicesSection() {
   ];
 
   return (
-    <div className="min-h-8 bg-gradient-to-br from-gray-50 to-teal-50 py-16 px-8 lg:px-8">
+    <div className="min-h-8 bg-linear-to-br from-gray-50 to-teal-50 py-16 px-8 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
@@ -35,7 +35,7 @@ export default function ProfessionalServicesSection() {
                 <div key={index} className="grid grid-cols-2 gap-8">
                   {/* Left Service */}
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="shrink-0 mt-1">
                       <Check
                         className="w-5 h-5 text-teal-600"
                         strokeWidth={3}
@@ -49,7 +49,7 @@ export default function ProfessionalServicesSection() {
                   {/* Right Service */}
                   
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="shrink-0 mt-1">
                       <Check
                         className="w-5 h-5 text-teal-600"
                         strokeWidth={3}
@@ -68,7 +68,7 @@ export default function ProfessionalServicesSection() {
           <div className="relative">
             <CardContainer containerClassName="py-0 flex items-center justify-center">
               <CardBody className="w-fit h-fit">
-                <CardItem translateZ="80" className="w-fit h-fit">
+                <CardItem translateZ="80" className="w-[540px] h-fit">
                   <div
                     className="relative overflow-hidden shadow-2xl"
                     style={{

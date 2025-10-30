@@ -25,7 +25,7 @@ export default function HeroSection() {
               className="bg-[#0E7A60] hover:bg-emerald-700 text-white font-semibold px-8 py-6 text-base rounded-full shadow-lg hover:shadow-xl transition-all"
               asChild
             >
-              <Link href="/our-services">Explore more service</Link>
+              <Link href="/our-services">Join as a Provider</Link>
             </Button>
           </div>
         </div>
