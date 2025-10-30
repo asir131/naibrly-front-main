@@ -149,7 +149,7 @@ export default function NaibrlyHeroSection() {
                       setZipOpen(false);
                     }}
                     placeholder="What do you need help with?"
-                    className="w-full h-full px-4 sm:px-6 py-3 sm:py-4 md:py-0 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base text-center placeholder:text-center"
+                    className="w-full h-full px-4 sm:px-6 py-3 sm:py-4 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
                   />
 
                   {/* Service Dropdown */}
@@ -176,7 +176,7 @@ export default function NaibrlyHeroSection() {
 
                 {/* Zip Code Search Input */}
                 <div ref={zipRef} className="h-full relative min-h-[50px] sm:min-h-[60px]">
-                  <div className="flex items-center gap-3 px-4 sm:px-6 h-full py-3 sm:py-4 md:py-0">
+                  <div className="flex items-center gap-3 px-4 sm:px-6 h-full py-3 sm:py-4">
                     <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600 shrink-0" />
                     <input
                       type="text"
@@ -187,7 +187,7 @@ export default function NaibrlyHeroSection() {
                         setSearchOpen(false);
                       }}
                       placeholder="Zip code"
-                      className="flex-1 sm:w-32 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base text-center placeholder:text-center"
+                      className="flex-1 sm:w-32 bg-transparent border-none outline-none text-gray-900 placeholder:text-gray-400 text-sm sm:text-base"
                     />
                   </div>
 
