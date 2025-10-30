@@ -4,15 +4,19 @@ import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import BundleDetailModal from '@/components/Global/Modals/BundleDetailModal';
+import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 
 export default function NaibrlybundelOfferSection() {
   const searchParams = useSearchParams();
   const serviceParam = searchParams.get('service');
   const zipParam = searchParams.get('zip');
+  const { isAuthenticated } = useAuth();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const offers = [
     {
       id: 1,
@@ -139,6 +143,17 @@ export default function NaibrlybundelOfferSection() {
   ];
 
   const handleViewDetails = (offer) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      const serviceData = {
+        title: offer.service,
+        image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop',
+      };
+      setSelectedBundle(serviceData);
+      setIsAuthModalOpen(true);
+      return;
+    }
+    // If authenticated, show bundle details
     setSelectedBundle(offer);
     setIsModalOpen(true);
   };
@@ -155,6 +170,14 @@ export default function NaibrlybundelOfferSection() {
         onClose={handleCloseModal}
         bundleData={selectedBundle}
       />
+
+      {/* Auth Prompt Modal */}
+      <AuthPromptModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        serviceData={selectedBundle}
+      />
+
     <div className="bg-linear-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -175,52 +198,59 @@ export default function NaibrlybundelOfferSection() {
           {offers.map((offer) => (
             <div
               key={offer.id}
-              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300"
+              className="bg-white rounded-[24px] p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100"
             >
               {/* Header with Service Name and Images */}
-              <div className="flex items-start justify-between mb-5">
-                <h3 className="text-2xl font-semibold text-gray-900">
-                  {offer.service}
-                </h3>
-                <div className="flex -space-x-3">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {offer.service}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Published 1hr ago
+                  </p>
+                </div>
+                <div className="flex -space-x-2 ml-3">
                   {offer.images.map((img, idx) => (
                     <img
                       key={idx}
                       src={img}
                       alt={`Person ${idx + 1}`}
-                      className="w-12 h-12 rounded-full border-3 border-white object-cover ring-2 ring-white"
+                      className="w-12 h-12 rounded-full border-2 border-white object-cover"
                     />
                   ))}
                 </div>
               </div>
 
               {/* Bundle Info */}
-              <p className="text-base text-gray-900 font-bold mb-3">
+              <p className="text-base font-semibold text-gray-900 mb-2">
                 {offer.bundle}
               </p>
 
+              {/* Service Date */}
+              <p className="text-sm text-gray-600 mb-3">
+                Service Date: jun 10, 2025
+              </p>
+
               {/* Location */}
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-                <MapPin className="w-5 h-5 text-gray-500" />
-                <span className=" text-[#666]">{offer.location}</span>
+              <div className="flex items-start gap-2 text-sm text-gray-700 mb-4">
+                <MapPin className="w-5 h-5 text-gray-900 shrink-0" />
+                <span>{offer.location}</span>
               </div>
 
               {/* Pricing and CTA */}
               <div className="flex items-center justify-between">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-red-500 line-through font-normal text-lg">
-                    {offer.originalPrice}
-                  </span>
-                  <span className="text-2xl font-semibold text-gray-900">
-                    {offer.discountedPrice}
-                  </span>
-                  <span className="text-sm text-green-600 font-medium">
-                    {offer.savings}
-                  </span>
+                <div>
+                  <p className="text-base font-semibold text-gray-900">
+                    Standard rates est.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    5-10% off
+                  </p>
                 </div>
                 <Button
                   onClick={() => handleViewDetails(offer)}
-                  className="bg-teal-50 hover:bg-teal-100 text-teal-600 rounded-lg px-5 py-2 font-medium shadow-none border-0"
+                  className="bg-[#E8F5F3] hover:bg-[#D0EBE7] text-teal-600 font-semibold rounded-lg px-5 py-2 text-sm transition-colors border-0 shadow-none"
                 >
                   View details
                 </Button>

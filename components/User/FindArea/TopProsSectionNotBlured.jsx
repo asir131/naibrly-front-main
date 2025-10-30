@@ -5,7 +5,6 @@ import React, { useState } from 'react'
 import PaginationControls from './PaginationControls'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 
 const TopProsSectionNotBlured = ({ showPagination = false }) => {
     const { isAuthenticated } = useAuth();
@@ -231,57 +230,6 @@ const TopProsSectionNotBlured = ({ showPagination = false }) => {
                     />
                 )}
             </div>
-
-            {/* Authentication Overlay - Only shown when not authenticated */}
-            {!isAuthenticated && (
-                <div className='absolute inset-0 flex items-center justify-center z-10'>
-                    <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center'>
-                        <div className='mb-6'>
-                            <svg
-                                className='mx-auto mb-4'
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="64"
-                                height="64"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#0E7A60"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            <h2 className='text-2xl font-bold text-gray-900 mb-3'>
-                                Sign in to view top professionals
-                            </h2>
-                            <p className='text-gray-600 text-base'>
-                                Create an account or sign in to see detailed profiles, ratings, and contact information for professionals in your area.
-                            </p>
-                        </div>
-
-                        <div className='flex flex-col gap-3'>
-                            <Button
-                                onClick={() => router.push('/user-auth/create-account')}
-                                className='w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-lg'
-                            >
-                                Create Account
-                            </Button>
-                            <Button
-                                onClick={() => router.push('/user-auth/Login')}
-                                variant="outline"
-                                className='w-full border-2 border-teal-600 text-teal-600 hover:bg-teal-50 font-semibold py-3 rounded-lg'
-                            >
-                                Sign In
-                            </Button>
-                        </div>
-
-                        <p className='text-sm text-gray-500 mt-4'>
-                            Join thousands of users saving money with Naibrly
-                        </p>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
