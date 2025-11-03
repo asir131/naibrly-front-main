@@ -293,7 +293,35 @@ export default function NaibrlyHeroSection() {
             </div>
           </div>
 
-          {/* Right Images Grid - Hidden on mobile/tablet, visible on desktop */}
+          {/* Right Images Grid - Mobile friendly layout */}
+          {/* Mobile Layout - Simple stacked grid */}
+          <div className="flex lg:hidden justify-center items-center h-[300px] gap-3 px-4">
+            <div className="flex flex-col gap-3">
+              <div className="rounded-2xl overflow-hidden shadow-lg w-[140px] h-[160px]">
+                <Image
+                  src={Rectangle3}
+                  alt="Kitchen installation service"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="rounded-2xl overflow-hidden shadow-lg w-[140px] h-[120px]">
+                <Image
+                  src={Rectangle1}
+                  alt="Cleaning service"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden shadow-lg w-[140px] h-[290px]">
+              <Image
+                src={Rectangle2}
+                alt="Furniture assembly service"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Desktop Layout - Absolute positioned (visible only on desktop) */}
           <div className="relative h-[500px] md:h-[580px] lg:h-[640px] hidden lg:block">
             <div className="relative w-full h-full max-w-[420px] lg:max-w-[480px] xl:max-w-[520px] mx-auto">
               {/* Kitchen Installation - Top Left with 3D Card Effect */}

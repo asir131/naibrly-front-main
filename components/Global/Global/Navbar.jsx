@@ -65,6 +65,8 @@ export default function Navbar() {
     useState(false);
   const [isNaibrlyNowModalOpen, setIsNaibrlyNowModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mobileServiceOpen, setMobileServiceOpen] = useState(false);
+  const [expandedMobileService, setExpandedMobileService] = useState(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -98,6 +100,8 @@ export default function Navbar() {
     setIsUserTypeModalOpen(false);
     setIsNotificationDropdownOpen(false);
     setIsNaibrlyNowModalOpen(false);
+    setMobileServiceOpen(false);
+    setExpandedMobileService(null);
   }, [pathname]);
 
   // Close dropdowns when clicking outside
@@ -830,25 +834,325 @@ export default function Navbar() {
 
             {/* EXPLORE SERVICES - Only for non-provider users */}
             {!(mounted && isAuthenticated && userType === "provider") && (
-              <Button
-                variant="outline"
-                className={`w-full ${
-                  isServiceOpen
-                    ? "bg-teal-600 text-white"
-                    : "bg-white text-gray-800 hover:text-teal-600"
-                } text-sm px-4 rounded-md border border-transparent`}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setIsServiceOpen(!isServiceOpen);
-                }}
-              >
-                Explore Services
-                <ChevronDown
-                  className={`w-4 h-4 ml-1 transition-transform ${
-                    isServiceOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className={`w-full ${
+                    mobileServiceOpen
+                      ? "bg-teal-600 text-white"
+                      : "bg-white text-gray-800 hover:text-teal-600"
+                  } text-sm px-4 rounded-md border border-transparent`}
+                  onClick={() => setMobileServiceOpen(!mobileServiceOpen)}
+                >
+                  Explore Services
+                  <ChevronDown
+                    className={`w-4 h-4 ml-1 transition-transform ${
+                      mobileServiceOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </Button>
+
+                {/* Mobile Services Dropdown */}
+                {mobileServiceOpen && (
+                  <div className="pl-4 space-y-2">
+                    {/* Interior Section */}
+                    <div className="space-y-1">
+                      <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                        Interior
+                      </h3>
+
+                      {/* Home Repairs & Maintenance */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 0 ? null : 0
+                            )
+                          }
+                        >
+                          <span>Home Repairs & Maintenance</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 0 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 0 && (
+                          <div className="pl-4 space-y-1">
+                            {services[0].subServices.map((sub, idx) => (
+                              <Link href="/our-services" key={idx}>
+                                <button
+                                  onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    setMobileServiceOpen(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                >
+                                  {sub.name}
+                                </button>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Cleaning & Organization */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 1 ? null : 1
+                            )
+                          }
+                        >
+                          <span>Cleaning & Organization</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 1 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 1 && (
+                          <div className="pl-4 space-y-1">
+                            {services[1].subServices.map((sub, idx) => (
+                              <Link href="/our-services" key={idx}>
+                                <button
+                                  onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    setMobileServiceOpen(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                >
+                                  {sub.name}
+                                </button>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Renovations & Upgrades */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 2 ? null : 2
+                            )
+                          }
+                        >
+                          <span>Renovations & Upgrades</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 2 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 2 && (
+                          <div className="pl-4 space-y-1">
+                            {services[2].subServices.map((sub, idx) => (
+                              <Link href="/our-services" key={idx}>
+                                <button
+                                  onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    setMobileServiceOpen(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                >
+                                  {sub.name}
+                                </button>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Exterior Section */}
+                    <div className="space-y-1 pt-2">
+                      <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                        Exterior
+                      </h3>
+
+                      {/* Exterior Home Care */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 3 ? null : 3
+                            )
+                          }
+                        >
+                          <span>Exterior Home Care</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 3 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 3 && (
+                          <div className="pl-4 space-y-1">
+                            {services[3].subServices[0].subServices.map(
+                              (sub, idx) => (
+                                <Link href="/our-services" key={idx}>
+                                  <button
+                                    onClick={() => {
+                                      setIsMobileMenuOpen(false);
+                                      setMobileServiceOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                  >
+                                    {sub.name}
+                                  </button>
+                                </Link>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Landscaping & Outdoor Services */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 4 ? null : 4
+                            )
+                          }
+                        >
+                          <span>Landscaping & Outdoor Services</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 4 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 4 && (
+                          <div className="pl-4 space-y-1">
+                            {services[3].subServices[1].subServices.map(
+                              (sub, idx) => (
+                                <Link href="/our-services" key={idx}>
+                                  <button
+                                    onClick={() => {
+                                      setIsMobileMenuOpen(false);
+                                      setMobileServiceOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                  >
+                                    {sub.name}
+                                  </button>
+                                </Link>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* More Services Section */}
+                    <div className="space-y-1 pt-2">
+                      <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                        More Services
+                      </h3>
+
+                      {/* Moving */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 5 ? null : 5
+                            )
+                          }
+                        >
+                          <span>Moving</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 5 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 5 && (
+                          <div className="pl-4 space-y-1">
+                            {services[4].subServices[0].subServices.map(
+                              (sub, idx) => (
+                                <Link href="/our-services" key={idx}>
+                                  <button
+                                    onClick={() => {
+                                      setIsMobileMenuOpen(false);
+                                      setMobileServiceOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                  >
+                                    {sub.name}
+                                  </button>
+                                </Link>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Installation & Assembly */}
+                      <div>
+                        <button
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                          onClick={() =>
+                            setExpandedMobileService(
+                              expandedMobileService === 6 ? null : 6
+                            )
+                          }
+                        >
+                          <span>Installation & Assembly</span>
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              expandedMobileService === 6 ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedMobileService === 6 && (
+                          <div className="pl-4 space-y-1">
+                            {services[4].subServices[1].subServices.map(
+                              (sub, idx) => (
+                                <Link href="/our-services" key={idx}>
+                                  <button
+                                    onClick={() => {
+                                      setIsMobileMenuOpen(false);
+                                      setMobileServiceOpen(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                  >
+                                    {sub.name}
+                                  </button>
+                                </Link>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* House Painter */}
+                    <div className="space-y-1 pt-2">
+                      <Link href="/our-services">
+                        <button
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setMobileServiceOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm font-semibold text-gray-900"
+                        >
+                          House Painter
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* BUNDLES - Only for user type */}
