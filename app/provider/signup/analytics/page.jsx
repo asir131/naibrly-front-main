@@ -18,12 +18,12 @@ const Analytics = () => {
         setOpen(false)
     }
     return (
-        <div className='analytics_layout flex flex-col gap-6'>
+        <div className='analytics_layout md:px-[126px] md:py-[80px] max-sm:py-6 max-sm:px-6 flex flex-col gap-6'>
             {/* this is for head of analytics */}
             <div className='w-full flex flex-col gap-[18px]'>
                 <h1 className='analytics_heading'>Analytics</h1>
                 {/* this is for analytics card */}
-                <div className='flex gap-[48px] w-full'>
+                <div className='flex flex-col md:flex-row gap-[48px] w-full'>
                     <div className='analytics_card w-full'>
                         <div className='flex  items-center justify-center gap-3'>
                             <span>
@@ -166,7 +166,7 @@ const Analytics = () => {
             {/* this is for active bundle request */}
             <div className='flex flex-col gap-[18px] w-full'>
                 <h1 className='analytics_heading'>Active Bundle Request</h1>
-                <div className='flex items-center justify-between w-full gap-[10px]'>
+                <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
                     <div className='w-full'>
                         <BundleRequestCard handleCencelOrderConfirm={handleCencelOrderConfirm} handleCencelOrderConfirmClose={handleCencelOrderConfirmClose} handleCencelOrderConfirmSubmit={handleCencelOrderConfirmSubmit} open={open} />
                     </div>

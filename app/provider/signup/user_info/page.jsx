@@ -56,8 +56,8 @@ export default function UserInfo() {
     };
 
     return (
-        <div className="user_info_layout">
-            <form onSubmit={handleSubmit} className="user_info_input">
+        <div className="">
+            <form onSubmit={handleSubmit} className="w-[90%] mx-auto my-10 user_info_input md:px-[200px] md:py-[100px] overflow-x-hidden">
                 <div className="user_info_heading flex items-center gap-[18px] pb-5">
                     <span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -69,7 +69,7 @@ export default function UserInfo() {
                     </span>
                 </div>
                 <div className='flex items-center justify-center'>
-                    <div className='md:w-[353px]'>
+                    <div className='w-full md:w-[353px]'>
                         <h3 className='text-[12px] font-medium text-[#333] text-center pb-5'>We need to collect your personal business information.</h3>
                         <div className="mb-5 flex flex-col gap-2 relative">
                             <div className='absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center gap-2' onClick={handleClick}>

@@ -36,9 +36,9 @@ const VerifyInfo = () => {
   };
 
   return (
-    <div className="verify_info_layout">
-      <form onSubmit={handleSubmit(onSubmit)} className="verify_info_form">
-        <div className="flex flex-col items-start w-[353px]">
+    <div className="verify_info_layout max-sm:my-6 max-sm:mx-6 md:px-[126px] md:py-[80px]">
+      <form onSubmit={handleSubmit(onSubmit)} className="verify_info_form max-sm:w-full  md:px-[200px] md:py-[100px]">
+        <div className="flex flex-col items-start w-full md:w-[353px]">
           <h2 className="user_info_heading flex items-center gap-[18px] pb-5">
             <span>
               <svg
@@ -142,7 +142,7 @@ const VerifyInfo = () => {
                     accept=".jpg,.jpeg,.png,.pdf"
                     className="hidden"
                     onChange={handleFileChange}
-                    // {...register("insuranceFile", { required: true })}
+                  // {...register("insuranceFile", { required: true })}
                   />
                   {errors.insuranceFile && (
                     <span className="text-red-500 text-[10px]">
@@ -203,17 +203,17 @@ const VerifyInfo = () => {
                   </span>
                 )}
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 w-full">
                 <h1 className="text-sm text-[#000] font-semibold">
                   Owner Operator ID check
                 </h1>
                 <h2 className="text-[#2D3748] text-sm font-medium">Front</h2>
                 <div>
-                  <Image src={Images.owner_id_check} alt="" />
+                  <Image className="w-full" src={Images.owner_id_check} alt="" />
                 </div>
                 <h2 className="text-[#2D3748] text-sm font-medium">Back</h2>
                 <div>
-                  <Image src={Images.owner_id_check} alt="" />
+                  <Image className="w-full" src={Images.owner_id_check} alt="" />
                 </div>
               </div>
             </div>
