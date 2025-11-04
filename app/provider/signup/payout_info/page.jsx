@@ -24,8 +24,8 @@ export default function PayoutInfo() {
     // (optional) formData upload example here
   };
   return (
-    <div className="user_info_layout">
-      <div className="confirm_info_layout flex  justify-center items-center">
+    <div className="user_info_layout md:px-[126px] md:py-[80px] max-sm:my-6 max-sm:mx-6">
+      <div className="confirm_info_layout md:px-[200px] md:py-[100px] flex  justify-center items-center">
         <form onSubmit={handleSubmit(onSubmit)} className="lg:w-[353px] w-full">
           <div className="user_info_heading flex items-center gap-[98px] pb-5">
             <span className="cursor-pointer" onClick={handleBack}>

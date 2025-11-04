@@ -10,8 +10,8 @@ export default function ConfirmInfo() {
     router.back();
   };
   return (
-    <div className="user_info_layout">
-      <div className="confirm_info_layout flex  justify-center items-center">
+    <div className="user_info_layout max-sm:mx-6 max-sm:my-6 md:py-[80px] md:px-[126px]">
+      <div className="confirm_info_layout md:px-[200px] md:py-[100px] flex  justify-center items-center">
         <div className="lg:w-[353px] w-full">
           <div className="user_info_heading flex items-center gap-[98px] pb-5">
             <span onClick={handleBack} className="cursor-pointer">

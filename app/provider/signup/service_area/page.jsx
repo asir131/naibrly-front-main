@@ -27,8 +27,8 @@ const ServiceArea = () => {
     router.back();
   };
   return (
-    <div className="verify_info_layout">
-      <div className="verify_info_form">
+    <div className="verify_info_layout md:px-[126px] md:py-[80px] max-sm:my-6 max-sm:mx-6">
+      <div className="verify_info_form md:px-[126px] md:py-[80px]">
         <div className="lg:w-[526px] w-full">
           <h2 className="user_info_heading flex items-center lg:gap-[145px] pb-5 w-full">
             <span onClick={handleBack} className="cursor-pointer">
