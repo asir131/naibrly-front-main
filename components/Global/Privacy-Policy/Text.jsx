@@ -1,11 +1,40 @@
-'Use client';
+'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function PolicySection() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-8">
       <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors mb-8 group"
+          aria-label="Go back"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="group-hover:translate-x-[-4px] transition-transform"
+          >
+            <path
+              d="M9.07 6L3 12.07L9.07 18.14M20.0019 12.0703H3.17188"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="font-medium">Back</span>
+        </button>
+
         <h1 className="text-5xl font-bold text-center text-gray-900 mb-16">Privacy</h1>
         
         <div className="space-y-8 text-gray-800">

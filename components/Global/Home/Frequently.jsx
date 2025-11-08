@@ -45,7 +45,7 @@ export default function FAQSection() {
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-1 sm:gap-2">
               <span className="text-gray-600 text-sm sm:text-base">Still need help?</span>
               <a
-                href="#contact"
+                href="/contact"
                 className="text-teal-600 font-semibold hover:text-teal-700 transition-colors text-sm sm:text-base"
               >
                 Get Help Now

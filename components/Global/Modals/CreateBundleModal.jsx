@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Calendar, Clock } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
   const [selectedMainCategory, setSelectedMainCategory] = useState('');
@@ -16,6 +16,31 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
   const [showMainCategoryDropdown, setShowMainCategoryDropdown] = useState(false);
   const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false);
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+
+  // Refs for click outside detection
+  const mainCategoryRef = useRef(null);
+  const subCategoryRef = useRef(null);
+  const serviceRef = useRef(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mainCategoryRef.current && !mainCategoryRef.current.contains(event.target)) {
+        setShowMainCategoryDropdown(false);
+      }
+      if (subCategoryRef.current && !subCategoryRef.current.contains(event.target)) {
+        setShowSubCategoryDropdown(false);
+      }
+      if (serviceRef.current && !serviceRef.current.contains(event.target)) {
+        setShowServiceDropdown(false);
+      }
+    };
+
+    if (showMainCategoryDropdown || showSubCategoryDropdown || showServiceDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMainCategoryDropdown, showSubCategoryDropdown, showServiceDropdown]);
 
   // Sample categories data
   const mainCategories = [
@@ -67,19 +92,25 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
             </label>
             <div className="grid grid-cols-2 gap-3">
               {/* Main Category Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={mainCategoryRef}>
                 <button
-                  onClick={() => setShowMainCategoryDropdown(!showMainCategoryDropdown)}
+                  type="button"
+                  onClick={() => {
+                    setShowMainCategoryDropdown(!showMainCategoryDropdown);
+                    setShowSubCategoryDropdown(false);
+                    setShowServiceDropdown(false);
+                  }}
                   className="w-full px-4 py-3 bg-gray-100 rounded-lg text-left text-sm text-gray-900 flex items-center justify-between hover:bg-gray-200 transition-colors"
                 >
-                  <span>{selectedMainCategory || 'Interior'}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                  <span className="truncate">{selectedMainCategory || 'Interior'}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showMainCategoryDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showMainCategoryDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                     {mainCategories.map((category) => (
                       <button
+                        type="button"
                         key={category.id}
                         onClick={() => {
                           setSelectedMainCategory(category.name);
@@ -97,19 +128,30 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
               </div>
 
               {/* Sub Category Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={subCategoryRef}>
                 <button
-                  onClick={() => setShowSubCategoryDropdown(!showSubCategoryDropdown)}
-                  className="w-full px-4 py-3 bg-gray-100 rounded-lg text-left text-sm text-gray-900 flex items-center justify-between hover:bg-gray-200 transition-colors"
+                  type="button"
+                  onClick={() => {
+                    if (selectedMainCategory) {
+                      setShowSubCategoryDropdown(!showSubCategoryDropdown);
+                      setShowMainCategoryDropdown(false);
+                      setShowServiceDropdown(false);
+                    }
+                  }}
+                  disabled={!selectedMainCategory}
+                  className={`w-full px-4 py-3 bg-gray-100 rounded-lg text-left text-sm text-gray-900 flex items-center justify-between transition-colors ${
+                    selectedMainCategory ? 'hover:bg-gray-200 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                  }`}
                 >
-                  <span>{selectedSubCategory || 'Door & window...'}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                  <span className="truncate">{selectedSubCategory || 'Door & window...'}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showSubCategoryDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showSubCategoryDropdown && selectedMainCategory && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                     {subCategories[selectedMainCategory]?.map((subCat, index) => (
                       <button
+                        type="button"
                         key={index}
                         onClick={() => {
                           setSelectedSubCategory(subCat);
@@ -128,24 +170,35 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
           </div>
 
           {/* Select Service */}
-          <div className="relative">
+          <div className="relative" ref={serviceRef}>
             <label className="text-sm font-semibold text-gray-900 mb-3 block">
               Select Service*
             </label>
             <button
-              onClick={() => setShowServiceDropdown(!showServiceDropdown)}
-              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-left text-sm flex items-center justify-between hover:border-gray-400 transition-colors"
+              type="button"
+              onClick={() => {
+                if (selectedSubCategory) {
+                  setShowServiceDropdown(!showServiceDropdown);
+                  setShowMainCategoryDropdown(false);
+                  setShowSubCategoryDropdown(false);
+                }
+              }}
+              disabled={!selectedSubCategory}
+              className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-left text-sm flex items-center justify-between transition-colors ${
+                selectedSubCategory ? 'hover:border-gray-400 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+              }`}
             >
-              <span className={selectedService ? 'text-gray-900' : 'text-gray-400'}>
+              <span className={`truncate ${selectedService ? 'text-gray-900' : 'text-gray-400'}`}>
                 {selectedService || 'Select one'}
               </span>
-              <ChevronDown className="w-4 h-4 text-gray-600" />
+              <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showServiceDropdown ? 'rotate-180' : ''}`} />
             </button>
 
-            {showServiceDropdown && selectedSubCategory && (
+            {showServiceDropdown && selectedSubCategory && services[selectedSubCategory] && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                {services[selectedSubCategory]?.map((service, index) => (
+                {services[selectedSubCategory].map((service, index) => (
                   <button
+                    type="button"
                     key={index}
                     onClick={() => {
                       setSelectedService(service);
@@ -165,16 +218,12 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
             <label className="text-sm font-semibold text-gray-900 mb-3 block">
               Service Date*
             </label>
-            <div className="relative">
-              <input
-                type="date"
-                value={serviceDate}
-                onChange={(e) => setServiceDate(e.target.value)}
-                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                placeholder="Select date"
-              />
-              <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-            </div>
+            <input
+              type="date"
+              value={serviceDate}
+              onChange={(e) => setServiceDate(e.target.value)}
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
           </div>
 
           {/* Time Range */}
@@ -183,32 +232,24 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
               <label className="text-sm font-semibold text-gray-900 mb-3 block">
                 From*
               </label>
-              <div className="relative">
-                <input
-                  type="time"
-                  value={fromTime}
-                  onChange={(e) => setFromTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  placeholder="00:00"
-                />
-                <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
+              <input
+                type="time"
+                value={fromTime}
+                onChange={(e) => setFromTime(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              />
             </div>
 
             <div>
               <label className="text-sm font-semibold text-gray-900 mb-3 block">
                 To Time*
               </label>
-              <div className="relative">
-                <input
-                  type="time"
-                  value={toTime}
-                  onChange={(e) => setToTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  placeholder="00:00"
-                />
-                <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
+              <input
+                type="time"
+                value={toTime}
+                onChange={(e) => setToTime(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              />
             </div>
           </div>
 

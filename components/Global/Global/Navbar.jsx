@@ -374,8 +374,11 @@ export default function Navbar() {
 
               {isServiceOpen && (
               <div
-                className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-[110]"
-                onMouseLeave={() => setIsServiceOpen(false)}
+                className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-[110]"
+                onMouseLeave={() => {
+                  setIsServiceOpen(false);
+                  setHoveredService(null);
+                }}
               >
                 <div className="p-3 space-y-1">
                   {/* Interior Section */}
@@ -385,7 +388,6 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(0)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">
@@ -394,7 +396,7 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 0 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[0].subServices.map((sub, idx) => (
                             <Link href="/our-services" key={idx}>
@@ -410,7 +412,6 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(1)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">
@@ -419,7 +420,7 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 1 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[1].subServices.map((sub, idx) => (
                             <Link href="/our-services" key={idx}>
@@ -435,7 +436,6 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(2)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">
@@ -444,7 +444,7 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 2 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[2].subServices.map((sub, idx) => (
                             <Link href="/our-services" key={idx}>
@@ -465,7 +465,6 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(3)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">
@@ -474,7 +473,7 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 3 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[3].subServices[0].subServices.map(
                             (sub, idx) => (
@@ -492,7 +491,6 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(4)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">
@@ -501,7 +499,7 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 4 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[3].subServices[1].subServices.map(
                             (sub, idx) => (
@@ -524,14 +522,13 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(5)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">Moving</span>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 5 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[4].subServices[0].subServices.map(
                             (sub, idx) => (
@@ -549,7 +546,6 @@ export default function Navbar() {
                   <div
                     className="relative"
                     onMouseEnter={() => setHoveredService(6)}
-                    onMouseLeave={() => setHoveredService(null)}
                   >
                     <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
                       <span className="group-hover:text-teal-600">
@@ -558,7 +554,7 @@ export default function Navbar() {
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
                     </button>
                     {hoveredService === 6 && (
-                      <div className="absolute left-full top-0 ml-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                         <div className="p-2">
                           {services[4].subServices[1].subServices.map(
                             (sub, idx) => (
