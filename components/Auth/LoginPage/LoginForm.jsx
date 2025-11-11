@@ -13,6 +13,7 @@ function LoginFormContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState('user'); // Default to 'user'
+  const [error, setError] = useState('');
 
   const { login } = useAuth();
   const router = useRouter();
@@ -26,40 +27,76 @@ function LoginFormContent() {
     }
   }, [searchParams]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
 
     console.log('LoginForm - Starting login with userType:', userType);
 
-    // Since you don't have a backend yet, this is a mock login
-    // Replace this with your actual API call when you have a backend
-    setTimeout(() => {
-      // Mock user data - replace with actual API response
-      const mockUser = {
-        id: '1',
-        name: email.split('@')[0], // Use email prefix as name for demo
-        email: email,
-        profileImage: null,
-        role: userType // Set role based on selected user type
+    try {
+      // Make API call to backend
+      const response = await fetch('https://naibrly-backend.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed. Please check your credentials.');
+      }
+
+      console.log('LoginForm - Login successful:', data);
+
+      // Store auth token if provided by backend
+      // Backend returns token in data.token
+      const token = data.data?.token || data.token;
+      if (token) {
+        console.log('LoginForm - Storing token:', token);
+        localStorage.setItem('authToken', token);
+        console.log('LoginForm - Token stored. Verifying:', localStorage.getItem('authToken'));
+      } else {
+        console.error('LoginForm - No token received from backend!');
+      }
+
+      // Create user object from response
+      // Backend returns user data in data.user
+      const userData = data.data?.user || data.user;
+      const user = {
+        id: userData?.id || data.id,
+        name: userData?.name || userData?.firstName + ' ' + userData?.lastName || email.split('@')[0],
+        email: userData?.email || email,
+        profileImage: userData?.profileImage || null,
+        phone: userData?.phoneNumber || userData?.phone,
+        address: userData?.address,
+        role: userData?.role || userType
       };
 
-      console.log('LoginForm - Calling login with:', { user: mockUser, userType });
+      console.log('LoginForm - Calling login with:', { user, userType: user.role });
 
-      // Call the login function with user data and userType (uses Redux under the hood)
-      login({ user: mockUser, userType });
+      // Call the login function with user data and userType
+      login({ user, userType: user.role });
 
-      setIsLoading(false);
-
-      // Use window.location.href for hard navigation to ensure state updates
-      if (userType === 'provider') {
+      // Redirect based on user role
+      if (user.role === 'provider') {
         console.log('LoginForm - Redirecting to /business');
-        window.location.href = '/business'; // Hard navigation to business page for providers
+        window.location.href = '/business';
       } else {
         console.log('LoginForm - Redirecting to /');
-        window.location.href = '/'; // Hard navigation to home page for users
+        window.location.href = '/';
       }
-    }, 1000); // Simulate network delay
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.message || 'An error occurred during login. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -76,6 +113,13 @@ function LoginFormContent() {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Email Input */}
           <div>
             <label className="text-xs font-medium text-teal-700 block mb-2">

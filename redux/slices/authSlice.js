@@ -57,6 +57,7 @@ const authSlice = createSlice({
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
         localStorage.removeItem('userType');
+        localStorage.removeItem('authToken'); // Clear auth token
         // Redirect to home page
         window.location.href = '/';
       }

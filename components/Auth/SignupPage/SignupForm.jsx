@@ -29,6 +29,7 @@ function SignupFormContent() {
   const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState('user'); // Default to 'user'
+  const [error, setError] = useState('');
 
   const { login } = useAuth();
   const router = useRouter();
@@ -62,25 +63,80 @@ function SignupFormContent() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
       return;
     }
 
     setIsLoading(true);
 
-    // Mock signup - replace with actual API call when backend is ready
-    setTimeout(() => {
-      // Create user object from form data
-      const mockUser = {
-        id: '1',
+    try {
+      // Prepare form data matching backend expectations
+      const formDataToSend = new FormData();
+
+      // Backend expects these exact field names (from Postman collection):
+      formDataToSend.append('firstName', formData.firstName);
+      formDataToSend.append('lastName', formData.lastName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('password', formData.password);
+      formDataToSend.append('confirmPassword', formData.confirmPassword);
+      formDataToSend.append('phone', `${formData.countryCode}${formData.phoneNumber}`);
+      formDataToSend.append('street', formData.streetAddress);
+      formDataToSend.append('city', formData.city);
+      formDataToSend.append('state', formData.state);
+      formDataToSend.append('zipCode', formData.zipCode);
+      formDataToSend.append('aptSuite', formData.aptSuite);
+
+      // Append profile image if exists
+      if (formData.profileImage) {
+        formDataToSend.append('profileImage', formData.profileImage);
+      }
+
+      // Debug: Log request data
+      console.log('=== Signup Request Data (FormData) ===');
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`${key}:`, value);
+      }
+      console.log('======================================');
+
+      // Make API call to backend with FormData
+      const response = await fetch('https://naibrly-backend.onrender.com/api/auth/register/customer', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed. Please try again.');
+      }
+
+      console.log('SignupForm - Account created successfully:', data);
+
+      // Store auth token if provided by backend
+      // Backend returns token in data.token
+      const token = data.data?.token || data.token;
+      if (token) {
+        console.log('SignupForm - Storing token:', token);
+        localStorage.setItem('authToken', token);
+        console.log('SignupForm - Token stored. Verifying:', localStorage.getItem('authToken'));
+      } else {
+        console.error('SignupForm - No token received from backend!');
+      }
+
+      // Create user object from response
+      // Backend returns user data in data.user
+      const userData = data.data?.user || data.user;
+      const user = {
+        id: userData?.id || data.id,
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
-        profileImage: imagePreview,
+        profileImage: userData?.profileImage || imagePreview,
         phone: `${formData.countryCode} ${formData.phoneNumber}`,
         address: {
           street: formData.streetAddress,
@@ -92,29 +148,35 @@ function SignupFormContent() {
         role: userType
       };
 
-      console.log('SignupForm - Creating account with userType:', userType);
-      console.log('SignupForm - User data:', mockUser);
-
       // Call the login function to set authenticated state
-      login({ user: mockUser, userType });
+      login({ user, userType });
 
-      setIsLoading(false);
-
-      // Use window.location.href for hard navigation to ensure state updates
+      // Redirect based on user type
       if (userType === 'provider') {
         console.log('SignupForm - Redirecting to /business');
-        window.location.href = '/business'; // Hard navigation to business page
+        window.location.href = '/business';
       } else {
         console.log('SignupForm - Redirecting to /');
-        window.location.href = '/'; // Hard navigation to home page
+        window.location.href = '/';
       }
-    }, 1000); // Simulate network delay
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError(err.message || 'An error occurred during signup. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-10">
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Profile Image Upload */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative">
