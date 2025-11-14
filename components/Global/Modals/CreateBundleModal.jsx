@@ -4,22 +4,29 @@ import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
+import { useGetServicesQuery } from '@/redux/api/servicesApi';
 
 export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
   const [selectedMainCategory, setSelectedMainCategory] = useState('');
-  const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  const [selectedCategoryType, setSelectedCategoryType] = useState(''); // Renamed from subCategory
   const [selectedService, setSelectedService] = useState('');
   const [serviceDate, setServiceDate] = useState('');
   const [fromTime, setFromTime] = useState('');
   const [toTime, setToTime] = useState('');
 
   const [showMainCategoryDropdown, setShowMainCategoryDropdown] = useState(false);
-  const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false);
+  const [showCategoryTypeDropdown, setShowCategoryTypeDropdown] = useState(false); // Renamed from subCategory
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+
+  // Fetch data using Redux Toolkit Query
+  const { data, isLoading, isError, error } = useGetServicesQuery();
+
+  const organizedData = data?.organized || {};
+  const mainCategories = Object.values(organizedData);
 
   // Refs for click outside detection
   const mainCategoryRef = useRef(null);
-  const subCategoryRef = useRef(null);
+  const categoryTypeRef = useRef(null); // Renamed from subCategoryRef
   const serviceRef = useRef(null);
 
   // Close dropdowns when clicking outside
@@ -28,43 +35,35 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
       if (mainCategoryRef.current && !mainCategoryRef.current.contains(event.target)) {
         setShowMainCategoryDropdown(false);
       }
-      if (subCategoryRef.current && !subCategoryRef.current.contains(event.target)) {
-        setShowSubCategoryDropdown(false);
+      if (categoryTypeRef.current && !categoryTypeRef.current.contains(event.target)) {
+        setShowCategoryTypeDropdown(false);
       }
       if (serviceRef.current && !serviceRef.current.contains(event.target)) {
         setShowServiceDropdown(false);
       }
     };
 
-    if (showMainCategoryDropdown || showSubCategoryDropdown || showServiceDropdown) {
+    if (showMainCategoryDropdown || showCategoryTypeDropdown || showServiceDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [showMainCategoryDropdown, showSubCategoryDropdown, showServiceDropdown]);
+  }, [showMainCategoryDropdown, showCategoryTypeDropdown, showServiceDropdown]);
 
-  // Sample categories data
-  const mainCategories = [
-    { id: 1, name: 'Interior' },
-    { id: 2, name: 'Exterior' },
-    { id: 3, name: 'Repair & Maintenance' }
-  ];
+  // Reset sub-category and service when main category changes
+  useEffect(() => {
+    setSelectedCategoryType('');
+    setSelectedService('');
+  }, [selectedMainCategory]);
 
-  const subCategories = {
-    'Interior': ['Cleaning', 'Painting', 'Flooring'],
-    'Exterior': ['Door & window washing', 'Lawn Care', 'Pressure Washing'],
-    'Repair & Maintenance': ['Plumbing', 'Electrical', 'HVAC']
-  };
-
-  const services = {
-    'Door & window washing': ['Window Washing', 'Door Cleaning', 'Frame Cleaning'],
-    'Cleaning': ['Deep Cleaning', 'Regular Cleaning', 'Move-out Cleaning'],
-    'Painting': ['Interior Painting', 'Exterior Painting', 'Touch-up']
-  };
+  // Reset service when sub-category changes
+  useEffect(() => {
+    setSelectedService('');
+  }, [selectedCategoryType]);
 
   const handlePublish = () => {
     const bundleData = {
       mainCategory: selectedMainCategory,
-      subCategory: selectedSubCategory,
+      categoryType: selectedCategoryType, // Renamed from subCategory
       service: selectedService,
       date: serviceDate,
       fromTime,
@@ -72,6 +71,15 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
     };
     onPublish(bundleData);
   };
+
+  if (isLoading) return <Dialog open={isOpen} onOpenChange={onClose}><DialogContent className="sm:max-w-md bg-white rounded-3xl p-8"><p>Loading categories...</p></DialogContent></Dialog>;
+  if (isError) return <Dialog open={isOpen} onOpenChange={onClose}><DialogContent className="sm:max-w-md bg-white rounded-3xl p-8"><p>Error: {error.message || 'Failed to load categories'}</p></DialogContent></Dialog>;
+
+  const currentMainCategory = organizedData[selectedMainCategory];
+  const currentCategoryTypes = currentMainCategory ? Object.values(currentMainCategory.categoryTypes) : [];
+  const currentServices = currentMainCategory && currentMainCategory.categoryTypes[selectedCategoryType]
+    ? currentMainCategory.categoryTypes[selectedCategoryType].services
+    : [];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -97,12 +105,12 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                   type="button"
                   onClick={() => {
                     setShowMainCategoryDropdown(!showMainCategoryDropdown);
-                    setShowSubCategoryDropdown(false);
+                    setShowCategoryTypeDropdown(false);
                     setShowServiceDropdown(false);
                   }}
                   className="w-full px-4 py-3 bg-gray-100 rounded-lg text-left text-sm text-gray-900 flex items-center justify-between hover:bg-gray-200 transition-colors"
                 >
-                  <span className="truncate">{selectedMainCategory || 'Interior'}</span>
+                  <span className="truncate">{selectedMainCategory || 'Select Main Category'}</span>
                   <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showMainCategoryDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -111,11 +119,9 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                     {mainCategories.map((category) => (
                       <button
                         type="button"
-                        key={category.id}
+                        key={category.name}
                         onClick={() => {
                           setSelectedMainCategory(category.name);
-                          setSelectedSubCategory('');
-                          setSelectedService('');
                           setShowMainCategoryDropdown(false);
                         }}
                         className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm text-gray-900 transition-colors first:rounded-t-lg last:rounded-b-lg"
@@ -127,13 +133,13 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                 )}
               </div>
 
-              {/* Sub Category Dropdown */}
-              <div className="relative" ref={subCategoryRef}>
+              {/* Category Type Dropdown */}
+              <div className="relative" ref={categoryTypeRef}>
                 <button
                   type="button"
                   onClick={() => {
                     if (selectedMainCategory) {
-                      setShowSubCategoryDropdown(!showSubCategoryDropdown);
+                      setShowCategoryTypeDropdown(!showCategoryTypeDropdown);
                       setShowMainCategoryDropdown(false);
                       setShowServiceDropdown(false);
                     }
@@ -143,24 +149,23 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                     selectedMainCategory ? 'hover:bg-gray-200 cursor-pointer' : 'opacity-50 cursor-not-allowed'
                   }`}
                 >
-                  <span className="truncate">{selectedSubCategory || 'Door & window...'}</span>
-                  <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showSubCategoryDropdown ? 'rotate-180' : ''}`} />
+                  <span className="truncate">{selectedCategoryType || 'Select Category Type'}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showCategoryTypeDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
-                {showSubCategoryDropdown && selectedMainCategory && (
+                {showCategoryTypeDropdown && selectedMainCategory && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                    {subCategories[selectedMainCategory]?.map((subCat, index) => (
+                    {currentCategoryTypes.map((catType) => (
                       <button
                         type="button"
-                        key={index}
+                        key={catType.name}
                         onClick={() => {
-                          setSelectedSubCategory(subCat);
-                          setSelectedService('');
-                          setShowSubCategoryDropdown(false);
+                          setSelectedCategoryType(catType.name);
+                          setShowCategoryTypeDropdown(false);
                         }}
                         className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm text-gray-900 transition-colors first:rounded-t-lg last:rounded-b-lg"
                       >
-                        {subCat}
+                        {catType.name}
                       </button>
                     ))}
                   </div>
@@ -177,15 +182,15 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
             <button
               type="button"
               onClick={() => {
-                if (selectedSubCategory) {
+                if (selectedCategoryType) {
                   setShowServiceDropdown(!showServiceDropdown);
                   setShowMainCategoryDropdown(false);
-                  setShowSubCategoryDropdown(false);
+                  setShowCategoryTypeDropdown(false);
                 }
               }}
-              disabled={!selectedSubCategory}
+              disabled={!selectedCategoryType}
               className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-left text-sm flex items-center justify-between transition-colors ${
-                selectedSubCategory ? 'hover:border-gray-400 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                selectedCategoryType ? 'hover:border-gray-400 cursor-pointer' : 'opacity-50 cursor-not-allowed'
               }`}
             >
               <span className={`truncate ${selectedService ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -194,19 +199,19 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
               <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showServiceDropdown ? 'rotate-180' : ''}`} />
             </button>
 
-            {showServiceDropdown && selectedSubCategory && services[selectedSubCategory] && (
+            {showServiceDropdown && selectedCategoryType && currentServices.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                {services[selectedSubCategory].map((service, index) => (
+                {currentServices.map((service) => (
                   <button
                     type="button"
-                    key={index}
+                    key={service.id}
                     onClick={() => {
-                      setSelectedService(service);
+                      setSelectedService(service.name);
                       setShowServiceDropdown(false);
                     }}
                     className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm text-gray-900 transition-colors first:rounded-t-lg last:rounded-b-lg"
                   >
-                    {service}
+                    {service.name}
                   </button>
                 ))}
               </div>
