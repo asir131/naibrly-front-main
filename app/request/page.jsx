@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
+import { useGetMyServiceRequestsQuery } from '@/redux/api/servicesApi';
 import PendingConfirmationModal from '@/components/Global/Modals/PendingConfirmationModal';
 import QuickChatMessaging from '@/components/Global/Modals/QuickChatMessaging';
 import CancelRequestModal from '@/components/Global/Modals/CancelRequestModal';
@@ -17,71 +18,97 @@ export default function RequestPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showTaskCompletedModal, setShowTaskCompletedModal] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
 
   // Request flow states
   const [requestFlowState, setRequestFlowState] = useState('accepted');
   // 'accepted' -> 'provider-accepted' -> 'payment' -> 'done' or 'cancelled'
   const [requestAmountStatus, setRequestAmountStatus] = useState('waiting'); // 'waiting' or 'accepted'
 
-  // Sample request data
-  const openRequests = [
-    {
-      id: 1,
-      title: 'Appliance Repairs',
-      description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      avgPrice: '$63/hr',
-      rating: 5.0,
-      reviews: 1513,
-      date: '18 Sep, 14:00',
-      status: 'Accepted',
-      statusColor: 'text-green-600',
-      statusBg: 'bg-green-50',
-      image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop',
-      amount: 500
-    },
-    {
-      id: 2,
-      title: 'Appliance Repairs',
-      description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      avgPrice: '$63/hr',
-      rating: 5.0,
-      reviews: 1513,
-      date: '18 Sep, 14:00',
-      status: 'Pending',
-      statusColor: 'text-orange-600',
-      statusBg: 'bg-orange-50',
-      image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop'
-    }
-  ];
+  // Fetch service requests from API with conditional polling
+  const { data, isLoading, error, refetch } = useGetMyServiceRequestsQuery(undefined, {
+    pollingInterval: isPageVisible ? 60000 : 0, // Poll every 60 seconds only when page is visible
+    refetchOnMountOrArgChange: true, // Refetch when component mounts
+    refetchOnFocus: true, // Refetch when user switches back to the tab
+    refetchOnReconnect: true, // Refetch when internet connection is restored
+  });
 
-  const closedRequests = [
-    {
-      id: 3,
-      title: 'Appliance Repairs',
-      description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      avgPrice: '$63/hr',
-      rating: 5.0,
-      reviews: 1513,
-      date: '18 Sep, 14:00',
-      status: 'Done',
-      statusColor: 'text-gray-700',
-      statusBg: 'bg-gray-100',
-      image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop'
-    },
-    {
-      id: 4,
-      title: 'Appliance Repairs',
-      description: 'Drain pipe leaking, pipe clogged, replace the pipe line',
-      avgPrice: '$63/hr',
-      rating: 5.0,
-      reviews: 1513,
-      date: '18 Sep, 14:00',
-      status: 'Cancel',
-      statusColor: 'text-red-600',
-      statusBg: 'bg-red-50',
-      image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop'
+  // Track page visibility to pause/resume polling
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isVisible = document.visibilityState === 'visible';
+      setIsPageVisible(isVisible);
+
+      // Refetch immediately when page becomes visible
+      if (isVisible) {
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetch]);
+
+  // Transform API data to component format and filter by status
+  const { openRequests, closedRequests } = useMemo(() => {
+    if (!data?.serviceRequests) {
+      return { openRequests: [], closedRequests: [] };
     }
-  ];
+
+    const transformRequest = (request) => {
+      // Map status to UI format
+      const statusMap = {
+        pending: { label: 'Pending', color: 'text-orange-600', bg: 'bg-orange-50' },
+        accepted: { label: 'Accepted', color: 'text-green-600', bg: 'bg-green-50' },
+        completed: { label: 'Done', color: 'text-gray-700', bg: 'bg-gray-100' },
+        cancelled: { label: 'Cancel', color: 'text-red-600', bg: 'bg-red-50' },
+      };
+
+      const statusInfo = statusMap[request.status] || statusMap.pending;
+
+      // Format date
+      const date = new Date(request.scheduledDate);
+      const formattedDate = date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      return {
+        id: request._id,
+        title: request.serviceType,
+        description: request.problem || request.note || 'No description provided',
+        avgPrice: request.price ? `$${request.price}/hr` : `$${request.estimatedHours ? request.estimatedHours * 20 : 60}/hr`,
+        rating: request.provider?.rating || 0,
+        reviews: 0, // API doesn't provide review count
+        date: formattedDate,
+        status: statusInfo.label,
+        statusColor: statusInfo.color,
+        statusBg: statusInfo.bg,
+        image: request.provider?.profileImage?.url || request.provider?.businessLogo?.url || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop',
+        amount: request.price || (request.estimatedHours || 3) * 20,
+        providerName: request.provider ? `${request.provider.firstName} ${request.provider.lastName}` : 'Unknown Provider',
+        businessName: request.provider?.businessNameRegistered || '',
+        originalData: request, // Keep original data for detailed view
+      };
+    };
+
+    const transformed = data.serviceRequests.map(transformRequest);
+
+    // Filter: Open tab = pending + accepted, Closed tab = completed + cancelled
+    const open = transformed.filter(req =>
+      req.status === 'Pending' || req.status === 'Accepted'
+    );
+    const closed = transformed.filter(req =>
+      req.status === 'Done' || req.status === 'Cancel'
+    );
+
+    return { openRequests: open, closedRequests: closed };
+  }, [data]);
 
   const handlePendingClick = () => {
     setShowPendingModal(true);
@@ -229,55 +256,86 @@ export default function RequestPage() {
 
           {/* Request Cards or Messaging */}
           <div className="space-y-6">
-            {selectedAcceptedRequest ? (
-              /* Show messaging interface when an accepted request is clicked */
-              <>
-                <QuickChatMessaging
-                  request={selectedAcceptedRequest}
-                  onCancel={() => setShowCancelModal(true)}
-                  status={requestFlowState}
-                  cancellationReason={requestFlowState === 'cancelled' || requestFlowState === 'done' ? 'The service was no longer required due to unforeseen circumstances.' : null}
-                  cancelledBy={requestFlowState === 'cancelled' ? 'user' : requestFlowState === 'done' ? 'provider' : null}
-                />
+            {/* Loading State */}
+            {isLoading && (
+              <div className="text-center py-16">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+                <p className="text-gray-500 text-lg mt-4">Loading your requests...</p>
+              </div>
+            )}
 
-                {/* Request Amount Card - Show only in accepted or provider-accepted state */}
-                {(requestFlowState === 'accepted' || requestFlowState === 'provider-accepted') && (
-                  <RequestAmountCard
-                    request={selectedAcceptedRequest}
-                    onCancel={() => setShowCancelModal(true)}
-                    onAccept={handleAcceptRequestAmount}
-                    status={requestAmountStatus}
-                  />
+            {/* Error State */}
+            {error && !isLoading && (
+              <div className="text-center py-16">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+                  <p className="text-red-600 text-lg font-medium mb-2">Failed to load requests</p>
+                  <p className="text-red-500 text-sm mb-4">
+                    {error?.data?.message || 'Please try again later'}
+                  </p>
+                  <button
+                    onClick={() => refetch()}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Content - only show when not loading and no error */}
+            {!isLoading && !error && (
+              <>
+                {selectedAcceptedRequest ? (
+                  /* Show messaging interface when an accepted request is clicked */
+                  <>
+                    <QuickChatMessaging
+                      request={selectedAcceptedRequest}
+                      onCancel={() => setShowCancelModal(true)}
+                      status={requestFlowState}
+                      cancellationReason={requestFlowState === 'cancelled' || requestFlowState === 'done' ? 'The service was no longer required due to unforeseen circumstances.' : null}
+                      cancelledBy={requestFlowState === 'cancelled' ? 'user' : requestFlowState === 'done' ? 'provider' : null}
+                    />
+
+                    {/* Request Amount Card - Show only in accepted or provider-accepted state */}
+                    {(requestFlowState === 'accepted' || requestFlowState === 'provider-accepted') && (
+                      <RequestAmountCard
+                        request={selectedAcceptedRequest}
+                        onCancel={() => setShowCancelModal(true)}
+                        onAccept={handleAcceptRequestAmount}
+                        status={requestAmountStatus}
+                      />
+                    )}
+
+                    {/* Review and Confirm - Show only when provider has accepted */}
+                    {requestFlowState === 'provider-accepted' && requestAmountStatus === 'accepted' && (
+                      <ReviewAndConfirm
+                        amount={selectedAcceptedRequest.amount}
+                        onConfirm={handleConfirmAndPayment}
+                      />
+                    )}
+                  </>
+                ) : (
+                  /* Show request cards when no accepted request is selected */
+                  <>
+                    {activeTab === 'open' && openRequests.map((request) => (
+                      <RequestCard key={request.id} request={request} />
+                    ))}
+                    {activeTab === 'closed' && closedRequests.map((request) => (
+                      <RequestCard key={request.id} request={request} />
+                    ))}
+                  </>
                 )}
 
-                {/* Review and Confirm - Show only when provider has accepted */}
-                {requestFlowState === 'provider-accepted' && requestAmountStatus === 'accepted' && (
-                  <ReviewAndConfirm
-                    amount={selectedAcceptedRequest.amount}
-                    onConfirm={handleConfirmAndPayment}
-                  />
+                {/* Empty State */}
+                {!selectedAcceptedRequest && ((activeTab === 'open' && openRequests.length === 0) ||
+                  (activeTab === 'closed' && closedRequests.length === 0)) && (
+                  <div className="text-center py-16">
+                    <p className="text-gray-500 text-lg">No requests found</p>
+                  </div>
                 )}
-              </>
-            ) : (
-              /* Show request cards when no accepted request is selected */
-              <>
-                {activeTab === 'open' && openRequests.map((request) => (
-                  <RequestCard key={request.id} request={request} />
-                ))}
-                {activeTab === 'closed' && closedRequests.map((request) => (
-                  <RequestCard key={request.id} request={request} />
-                ))}
               </>
             )}
           </div>
-
-          {/* Empty State */}
-          {!selectedAcceptedRequest && ((activeTab === 'open' && openRequests.length === 0) ||
-            (activeTab === 'closed' && closedRequests.length === 0)) && (
-            <div className="text-center py-16">
-              <p className="text-gray-500 text-lg">No requests found</p>
-            </div>
-          )}
 
           {/* Back button when viewing messaging */}
           {selectedAcceptedRequest && (

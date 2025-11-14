@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Clock, MapPin, Calendar, Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -9,24 +9,20 @@ import Rectangle3 from "@/public/Home/Rectangle c.png";
 import MapBg from "@/public/map image.png";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
+import { useGetServicesQuery } from "@/redux/api/servicesApi";
 
 export default function NaibrlyHeroSection() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Sample dropdown options
-  const serviceOptions = [
-    "IKEA Assembly",
-    "TV Mounting",
-    "Furniture Assembly",
-    "General Mounting",
-    "Truck Assisted Help Moving",
-    "Help Moving",
-    "Cleaning",
-    "Door, Cabinet, & Furniture Repair",
-    "Heavy Lifting & Loading",
-    "Electrical help",
-  ];
+  // Fetch services from API
+  const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
+
+  // Extract all service names from the API data
+  const serviceOptions = useMemo(() => {
+    if (!servicesData?.services) return [];
+    return servicesData.services.map((service) => service.name);
+  }, [servicesData]);
 
   const zipCodeOptions = [
     "10001",
@@ -49,9 +45,21 @@ export default function NaibrlyHeroSection() {
   const searchRef = useRef(null);
   const zipRef = useRef(null);
 
+  // Initialize filtered services when data loads
+  useEffect(() => {
+    if (serviceOptions.length > 0 && filteredServices.length === 0 && !searchQuery) {
+      setFilteredServices(serviceOptions);
+    }
+  }, [serviceOptions, filteredServices.length, searchQuery]);
+
   // Filter services based on search query
   const handleServiceSearch = (value) => {
     setSearchQuery(value);
+    if (servicesLoading || serviceOptions.length === 0) {
+      setFilteredServices([]);
+      setSearchOpen(true);
+      return;
+    }
     const filtered = serviceOptions.filter((service) =>
       service.toLowerCase().includes(value.toLowerCase())
     );
@@ -171,20 +179,30 @@ export default function NaibrlyHeroSection() {
                   />
 
                   {/* Service Dropdown */}
-                  {searchOpen && filteredServices.length > 0 && (
+                  {searchOpen && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {filteredServices.map((service, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setSearchQuery(service);
-                            setSearchOpen(false);
-                          }}
-                          className="w-full text-left px-5 py-3.5 hover:bg-gray-50 text-gray-900 text-sm font-normal transition-colors first:rounded-t-xl last:rounded-b-xl"
-                        >
-                          {service}
-                        </button>
-                      ))}
+                      {servicesLoading ? (
+                        <div className="px-5 py-3.5 text-gray-500 text-sm text-center">
+                          Loading services...
+                        </div>
+                      ) : filteredServices.length > 0 ? (
+                        filteredServices.map((service, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setSearchQuery(service);
+                              setSearchOpen(false);
+                            }}
+                            className="w-full text-left px-5 py-3.5 hover:bg-gray-50 text-gray-900 text-sm font-normal transition-colors first:rounded-t-xl last:rounded-b-xl"
+                          >
+                            {service}
+                          </button>
+                        ))
+                      ) : searchQuery ? (
+                        <div className="px-5 py-3.5 text-gray-500 text-sm text-center">
+                          No services found
+                        </div>
+                      ) : null}
                     </div>
                   )}
                 </div>

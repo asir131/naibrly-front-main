@@ -21,6 +21,7 @@ import NotificationDropdown from "@/components/Global/Modals/NotificationDropdow
 import NaibrlyNowModal from "@/components/Global/Modals/NaibrlyNowModal";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useGetServicesQuery } from "@/redux/api/servicesApi";
 
 const SubMenuItem = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -72,6 +73,9 @@ export default function Navbar() {
 
   // Get authentication state (now using Redux under the hood)
   const { isAuthenticated, user, userType, logout } = useAuth();
+
+  // Fetch services from API using RTK Query
+  const { data: servicesData, isLoading: servicesLoading, error: servicesError } = useGetServicesQuery();
 
   // Handle logout with redirect
   const handleLogout = () => {
@@ -152,105 +156,69 @@ export default function Navbar() {
     };
   }, [isMobileMenuOpen]);
 
-  const services = [
-    {
-      name: "Home Repairs & Maintenance",
-      subServices: [
-        { name: "Plumbing", path: "/Plumbing", subServices: [] },
-        { name: "Locksmiths", subServices: [] },
-        { name: "Appliance Repairs", subServices: [] },
-        { name: "Door & window Repairs", subServices: [] },
-        { name: "HVAC", subServices: [] },
-        { name: "Electrical", subServices: [] },
-      ],
-    },
-    {
-      name: "Cleaning & Organization",
-      subServices: [
-        { name: "House Cleaning", subServices: [] },
-        { name: "Carpet Cleaning", subServices: [] },
-        { name: "Upholstery Cleaning", subServices: [] },
-        { name: "Home Organization", subServices: [] },
-        { name: "All Furniture Cleaning", subServices: [] },
-        { name: "Junk Removal", subServices: [] },
-        { name: "Duct & Vent Cleaning", subServices: [] },
-        { name: "Pool Cleaning", subServices: [] },
-        { name: "Commercial Cleaners", subServices: [] },
-      ],
-    },
-    {
-      name: "Renovations & Upgrades",
-      subServices: [
-        { name: "General Contracting", subServices: [] },
-        { name: "Carpenters", subServices: [] },
-        { name: "Bathroom Remodeling", subServices: [] },
-        { name: "Kitchen Remodeling", subServices: [] },
-        { name: "Flooring Installation", subServices: [] },
-        { name: "Carpet Installation", subServices: [] },
-        { name: "Basement Remodeling", subServices: [] },
-      ],
-    },
-    {
-      name: "Exterior",
-      subServices: [
-        {
-          name: "Exterior Home Care",
-          subServices: [
-            { name: "Roofing", subServices: [] },
-            { name: "Window Washing", subServices: [] },
-            { name: "Chimney Sweeps", subServices: [] },
-            { name: "Gutter Cleaning", subServices: [] },
-            { name: "Deck Contractors", subServices: [] },
-            { name: "Siding", subServices: [] },
-            { name: "Basement Remodeling", subServices: [] },
-          ],
-        },
-        {
-          name: "Landscaping & Outdoor Services",
-          subServices: [
-            { name: "Lawn Care", subServices: [] },
-            { name: "Landscaping Design", subServices: [] },
-            { name: "Gardening", subServices: [] },
-            { name: "Sprinkler System Repairs", subServices: [] },
-            { name: "Artificial Turf Installation", subServices: [] },
-            { name: "Stump Grinding", subServices: [] },
-            { name: "Sod Installation", subServices: [] },
-            { name: "Arborists", subServices: [] },
-          ],
-        },
-      ],
-    },
-    {
-      name: "More Services",
-      subServices: [
-        {
-          name: "Moving",
-          subServices: [
-            { name: "Local Movers", subServices: [] },
-            { name: "Long Distance Movers", subServices: [] },
-            { name: "Piano Movers", subServices: [] },
-            { name: "Packing & Unpacking", subServices: [] },
-            { name: "Move In & Move Out Cleaning", subServices: [] },
-            { name: "Storage Companies", subServices: [] },
-            { name: "Furniture Movers", subServices: [] },
-          ],
-        },
-        {
-          name: "Installation & Assembly",
-          subServices: [
-            { name: "Holiday Light Hanging", subServices: [] },
-            { name: "TV Mounting", subServices: [] },
-            { name: "Security Camera Installation", subServices: [] },
-            { name: "Appliance Installation", subServices: [] },
-            { name: "Ceiling Fan Installation", subServices: [] },
-            { name: "Generator Installation", subServices: [] },
-            { name: "Furniture Assembly", subServices: [] },
-          ],
-        },
-      ],
-    },
-    { name: "House Painter", subServices: [] },
-  ];
+  // Transform API data into the format needed for the dropdown
+  const getOrganizedServices = () => {
+    if (servicesLoading) return [];
+    if (servicesError || !servicesData?.organized) return [];
+
+    const organized = servicesData.organized;
+    const result = [];
+
+    // Interior services
+    if (organized["Interior"]) {
+      const interior = organized["Interior"];
+      Object.values(interior.categoryTypes).forEach((categoryType) => {
+        result.push({
+          mainCategory: "Interior",
+          name: categoryType.name,
+          subServices: categoryType.services.map((service) => ({
+            name: service.name,
+            id: service.id,
+            path: "/our-services",
+            subServices: [],
+          })),
+        });
+      });
+    }
+
+    // Exterior services
+    if (organized["Exterior"]) {
+      const exterior = organized["Exterior"];
+      Object.values(exterior.categoryTypes).forEach((categoryType) => {
+        result.push({
+          mainCategory: "Exterior",
+          name: categoryType.name,
+          subServices: categoryType.services.map((service) => ({
+            name: service.name,
+            id: service.id,
+            path: "/our-services",
+            subServices: [],
+          })),
+        });
+      });
+    }
+
+    // More Services
+    if (organized["More Services"]) {
+      const moreServices = organized["More Services"];
+      Object.values(moreServices.categoryTypes).forEach((categoryType) => {
+        result.push({
+          mainCategory: "More Services",
+          name: categoryType.name,
+          subServices: categoryType.services.map((service) => ({
+            name: service.name,
+            id: service.id,
+            path: "/our-services",
+            subServices: [],
+          })),
+        });
+      });
+    }
+
+    return result;
+  };
+
+  const services = getOrganizedServices();
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -381,199 +349,139 @@ export default function Navbar() {
                 }}
               >
                 <div className="p-3 space-y-1">
-                  {/* Interior Section */}
-                  <h3 className="font-semibold text-gray-900 text-base px-3 py-2">
-                    Interior
-                  </h3>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(0)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">
-                        Home Repairs & Maintenance
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 0 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[0].subServices.map((sub, idx) => (
-                            <Link href="/our-services" key={idx}>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                {sub.name}
-                              </button>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(1)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">
-                        Cleaning & Organization
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 1 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[1].subServices.map((sub, idx) => (
-                            <Link href="/our-services" key={idx}>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                {sub.name}
-                              </button>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(2)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">
-                        Renovations & Upgrades
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 2 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[2].subServices.map((sub, idx) => (
-                            <Link href="/our-services" key={idx}>
-                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                {sub.name}
-                              </button>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {servicesLoading ? (
+                    <div className="px-3 py-4 text-center text-sm text-gray-500">
+                      Loading services...
+                    </div>
+                  ) : servicesError ? (
+                    <div className="px-3 py-4 text-center text-sm text-red-500">
+                      Failed to load services
+                    </div>
+                  ) : (
+                    <>
+                      {/* Interior Section */}
+                      {services.some((s) => s.mainCategory === "Interior") && (
+                        <>
+                          <h3 className="font-semibold text-gray-900 text-base px-3 py-2">
+                            Interior
+                          </h3>
+                          {services
+                            .filter((s) => s.mainCategory === "Interior")
+                            .map((categoryType, idx) => (
+                              <div
+                                key={idx}
+                                className="relative"
+                                onMouseEnter={() => setHoveredService(idx)}
+                              >
+                                <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                  <span className="group-hover:text-teal-600">
+                                    {categoryType.name}
+                                  </span>
+                                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                                </button>
+                                {hoveredService === idx && (
+                                  <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                                    <div className="p-2">
+                                      {categoryType.subServices.map((service, subIdx) => (
+                                        <Link href="/our-services" key={service.id || subIdx}>
+                                          <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                            {service.name}
+                                          </button>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                        </>
+                      )}
 
-                  {/* Exterior Section */}
-                  <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
-                    Exterior
-                  </h3>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(3)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">
-                        Exterior Home Care
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 3 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[3].subServices[0].subServices.map(
-                            (sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(4)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">
-                        Landscaping & Outdoor Services
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 4 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[3].subServices[1].subServices.map(
-                            (sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                      {/* Exterior Section */}
+                      {services.some((s) => s.mainCategory === "Exterior") && (
+                        <>
+                          <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
+                            Exterior
+                          </h3>
+                          {services
+                            .filter((s) => s.mainCategory === "Exterior")
+                            .map((categoryType, idx) => {
+                              const exteriorIdx = idx + services.filter((s) => s.mainCategory === "Interior").length;
+                              return (
+                                <div
+                                  key={idx}
+                                  className="relative"
+                                  onMouseEnter={() => setHoveredService(exteriorIdx)}
+                                >
+                                  <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                    <span className="group-hover:text-teal-600">
+                                      {categoryType.name}
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                                  </button>
+                                  {hoveredService === exteriorIdx && (
+                                    <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                                      <div className="p-2">
+                                        {categoryType.subServices.map((service, subIdx) => (
+                                          <Link href="/our-services" key={service.id || subIdx}>
+                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                              {service.name}
+                                            </button>
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </>
+                      )}
 
-                  {/* More Services Section */}
-                  <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
-                    More Services
-                  </h3>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(5)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">Moving</span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 5 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[4].subServices[0].subServices.map(
-                            (sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="relative"
-                    onMouseEnter={() => setHoveredService(6)}
-                  >
-                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                      <span className="group-hover:text-teal-600">
-                        Installation & Assembly
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                    </button>
-                    {hoveredService === 6 && (
-                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                        <div className="p-2">
-                          {services[4].subServices[1].subServices.map(
-                            (sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* House Painter Section */}
-                  <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
-                    House Painter
-                  </h3>
+                      {/* More Services Section */}
+                      {services.some((s) => s.mainCategory === "More Services") && (
+                        <>
+                          <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
+                            More Services
+                          </h3>
+                          {services
+                            .filter((s) => s.mainCategory === "More Services")
+                            .map((categoryType, idx) => {
+                              const moreServicesIdx = idx +
+                                services.filter((s) => s.mainCategory === "Interior").length +
+                                services.filter((s) => s.mainCategory === "Exterior").length;
+                              return (
+                                <div
+                                  key={idx}
+                                  className="relative"
+                                  onMouseEnter={() => setHoveredService(moreServicesIdx)}
+                                >
+                                  <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                    <span className="group-hover:text-teal-600">
+                                      {categoryType.name}
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                                  </button>
+                                  {hoveredService === moreServicesIdx && (
+                                    <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                                      <div className="p-2">
+                                        {categoryType.subServices.map((service, subIdx) => (
+                                          <Link href="/our-services" key={service.id || subIdx}>
+                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                              {service.name}
+                                            </button>
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
               )}
@@ -851,301 +759,166 @@ export default function Navbar() {
                 {/* Mobile Services Dropdown */}
                 {mobileServiceOpen && (
                   <div className="pl-4 space-y-2">
-                    {/* Interior Section */}
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
-                        Interior
-                      </h3>
-
-                      {/* Home Repairs & Maintenance */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 0 ? null : 0
-                            )
-                          }
-                        >
-                          <span>Home Repairs & Maintenance</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 0 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 0 && (
-                          <div className="pl-4 space-y-1">
-                            {services[0].subServices.map((sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    setMobileServiceOpen(false);
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
-                                >
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            ))}
-                          </div>
-                        )}
+                    {servicesLoading ? (
+                      <div className="px-3 py-4 text-center text-sm text-gray-500">
+                        Loading services...
                       </div>
-
-                      {/* Cleaning & Organization */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 1 ? null : 1
-                            )
-                          }
-                        >
-                          <span>Cleaning & Organization</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 1 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 1 && (
-                          <div className="pl-4 space-y-1">
-                            {services[1].subServices.map((sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    setMobileServiceOpen(false);
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
-                                >
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            ))}
-                          </div>
-                        )}
+                    ) : servicesError ? (
+                      <div className="px-3 py-4 text-center text-sm text-red-500">
+                        Failed to load services
                       </div>
-
-                      {/* Renovations & Upgrades */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 2 ? null : 2
-                            )
-                          }
-                        >
-                          <span>Renovations & Upgrades</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 2 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 2 && (
-                          <div className="pl-4 space-y-1">
-                            {services[2].subServices.map((sub, idx) => (
-                              <Link href="/our-services" key={idx}>
-                                <button
-                                  onClick={() => {
-                                    setIsMobileMenuOpen(false);
-                                    setMobileServiceOpen(false);
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
-                                >
-                                  {sub.name}
-                                </button>
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Exterior Section */}
-                    <div className="space-y-1 pt-2">
-                      <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
-                        Exterior
-                      </h3>
-
-                      {/* Exterior Home Care */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 3 ? null : 3
-                            )
-                          }
-                        >
-                          <span>Exterior Home Care</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 3 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 3 && (
-                          <div className="pl-4 space-y-1">
-                            {services[3].subServices[0].subServices.map(
-                              (sub, idx) => (
-                                <Link href="/our-services" key={idx}>
+                    ) : (
+                      <>
+                        {/* Interior Section */}
+                        {services.some((s) => s.mainCategory === "Interior") && (
+                          <div className="space-y-1">
+                            <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                              Interior
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "Interior")
+                              .map((categoryType, idx) => (
+                                <div key={idx}>
                                   <button
-                                    onClick={() => {
-                                      setIsMobileMenuOpen(false);
-                                      setMobileServiceOpen(false);
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                    className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                                    onClick={() =>
+                                      setExpandedMobileService(
+                                        expandedMobileService === idx ? null : idx
+                                      )
+                                    }
                                   >
-                                    {sub.name}
+                                    <span>{categoryType.name}</span>
+                                    <ChevronDown
+                                      className={`w-4 h-4 transition-transform ${
+                                        expandedMobileService === idx ? "rotate-180" : ""
+                                      }`}
+                                    />
                                   </button>
-                                </Link>
-                              )
-                            )}
+                                  {expandedMobileService === idx && (
+                                    <div className="pl-4 space-y-1">
+                                      {categoryType.subServices.map((service, subIdx) => (
+                                        <Link href="/our-services" key={service.id || subIdx}>
+                                          <button
+                                            onClick={() => {
+                                              setIsMobileMenuOpen(false);
+                                              setMobileServiceOpen(false);
+                                            }}
+                                            className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                          >
+                                            {service.name}
+                                          </button>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
                           </div>
                         )}
-                      </div>
 
-                      {/* Landscaping & Outdoor Services */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 4 ? null : 4
-                            )
-                          }
-                        >
-                          <span>Landscaping & Outdoor Services</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 4 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 4 && (
-                          <div className="pl-4 space-y-1">
-                            {services[3].subServices[1].subServices.map(
-                              (sub, idx) => (
-                                <Link href="/our-services" key={idx}>
-                                  <button
-                                    onClick={() => {
-                                      setIsMobileMenuOpen(false);
-                                      setMobileServiceOpen(false);
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
-                                  >
-                                    {sub.name}
-                                  </button>
-                                </Link>
-                              )
-                            )}
+                        {/* Exterior Section */}
+                        {services.some((s) => s.mainCategory === "Exterior") && (
+                          <div className="space-y-1 pt-2">
+                            <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                              Exterior
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "Exterior")
+                              .map((categoryType, idx) => {
+                                const exteriorIdx = idx + services.filter((s) => s.mainCategory === "Interior").length;
+                                return (
+                                  <div key={idx}>
+                                    <button
+                                      className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                                      onClick={() =>
+                                        setExpandedMobileService(
+                                          expandedMobileService === exteriorIdx ? null : exteriorIdx
+                                        )
+                                      }
+                                    >
+                                      <span>{categoryType.name}</span>
+                                      <ChevronDown
+                                        className={`w-4 h-4 transition-transform ${
+                                          expandedMobileService === exteriorIdx ? "rotate-180" : ""
+                                        }`}
+                                      />
+                                    </button>
+                                    {expandedMobileService === exteriorIdx && (
+                                      <div className="pl-4 space-y-1">
+                                        {categoryType.subServices.map((service, subIdx) => (
+                                          <Link href="/our-services" key={service.id || subIdx}>
+                                            <button
+                                              onClick={() => {
+                                                setIsMobileMenuOpen(false);
+                                                setMobileServiceOpen(false);
+                                              }}
+                                              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                            >
+                                              {service.name}
+                                            </button>
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                           </div>
                         )}
-                      </div>
-                    </div>
 
-                    {/* More Services Section */}
-                    <div className="space-y-1 pt-2">
-                      <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
-                        More Services
-                      </h3>
-
-                      {/* Moving */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 5 ? null : 5
-                            )
-                          }
-                        >
-                          <span>Moving</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 5 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 5 && (
-                          <div className="pl-4 space-y-1">
-                            {services[4].subServices[0].subServices.map(
-                              (sub, idx) => (
-                                <Link href="/our-services" key={idx}>
-                                  <button
-                                    onClick={() => {
-                                      setIsMobileMenuOpen(false);
-                                      setMobileServiceOpen(false);
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
-                                  >
-                                    {sub.name}
-                                  </button>
-                                </Link>
-                              )
-                            )}
+                        {/* More Services Section */}
+                        {services.some((s) => s.mainCategory === "More Services") && (
+                          <div className="space-y-1 pt-2">
+                            <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                              More Services
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "More Services")
+                              .map((categoryType, idx) => {
+                                const moreServicesIdx = idx +
+                                  services.filter((s) => s.mainCategory === "Interior").length +
+                                  services.filter((s) => s.mainCategory === "Exterior").length;
+                                return (
+                                  <div key={idx}>
+                                    <button
+                                      className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                                      onClick={() =>
+                                        setExpandedMobileService(
+                                          expandedMobileService === moreServicesIdx ? null : moreServicesIdx
+                                        )
+                                      }
+                                    >
+                                      <span>{categoryType.name}</span>
+                                      <ChevronDown
+                                        className={`w-4 h-4 transition-transform ${
+                                          expandedMobileService === moreServicesIdx ? "rotate-180" : ""
+                                        }`}
+                                      />
+                                    </button>
+                                    {expandedMobileService === moreServicesIdx && (
+                                      <div className="pl-4 space-y-1">
+                                        {categoryType.subServices.map((service, subIdx) => (
+                                          <Link href="/our-services" key={service.id || subIdx}>
+                                            <button
+                                              onClick={() => {
+                                                setIsMobileMenuOpen(false);
+                                                setMobileServiceOpen(false);
+                                              }}
+                                              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                            >
+                                              {service.name}
+                                            </button>
+                                          </Link>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                           </div>
                         )}
-                      </div>
-
-                      {/* Installation & Assembly */}
-                      <div>
-                        <button
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                          onClick={() =>
-                            setExpandedMobileService(
-                              expandedMobileService === 6 ? null : 6
-                            )
-                          }
-                        >
-                          <span>Installation & Assembly</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              expandedMobileService === 6 ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {expandedMobileService === 6 && (
-                          <div className="pl-4 space-y-1">
-                            {services[4].subServices[1].subServices.map(
-                              (sub, idx) => (
-                                <Link href="/our-services" key={idx}>
-                                  <button
-                                    onClick={() => {
-                                      setIsMobileMenuOpen(false);
-                                      setMobileServiceOpen(false);
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
-                                  >
-                                    {sub.name}
-                                  </button>
-                                </Link>
-                              )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* House Painter */}
-                    <div className="space-y-1 pt-2">
-                      <Link href="/our-services">
-                        <button
-                          onClick={() => {
-                            setIsMobileMenuOpen(false);
-                            setMobileServiceOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm font-semibold text-gray-900"
-                        >
-                          House Painter
-                        </button>
-                      </Link>
-                    </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
