@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import BundleDetailModal from "@/components/Global/Modals/BundleDetailModal";
@@ -9,6 +9,7 @@ import CreateBundleModal from "@/components/Global/Modals/CreateBundleModal";
 import BundlePublishedModal from "@/components/Global/Modals/BundlePublishedModal";
 import ShareBundleModal from "@/components/Global/Modals/ShareBundleModal";
 import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
+import { useGetNearbyBundlesQuery } from "@/redux/api/servicesApi";
 
 export default function NaibrlybundelOfferSection() {
   const { isAuthenticated } = useAuth();
@@ -22,6 +23,78 @@ export default function NaibrlybundelOfferSection() {
   const [isShareBundleOpen, setIsShareBundleOpen] = useState(false);
   const [createdBundleData, setCreatedBundleData] = useState(null);
 
+  // Fetch nearby bundles from API - only fetch if authenticated
+  const { data: bundlesData, isLoading, isError, error } = useGetNearbyBundlesQuery(
+    { limit: 12 },
+    { skip: !isAuthenticated } // Skip the query if user is not authenticated
+  );
+
+  // Debug logging
+  React.useEffect(() => {
+    if (error) {
+      console.error('Bundle fetch error:', error);
+    }
+    if (bundlesData) {
+      console.log('Bundles data:', bundlesData);
+    }
+  }, [error, bundlesData]);
+
+  // Helper function to format bundle data for display
+  const formatBundleForDisplay = (bundle) => {
+    // Get participant images (use profile images or fallback to placeholder)
+    const participantImages = bundle.participants?.slice(0, 3).map((participant, idx) =>
+      participant.customer?.profileImage?.url || `https://i.pravatar.cc/100?img=${idx + 1}`
+    ) || [];
+
+    // Fill remaining spots with placeholder images
+    while (participantImages.length < 3) {
+      participantImages.push(`https://i.pravatar.cc/100?img=${participantImages.length + 10}`);
+    }
+
+    // Format service date
+    const serviceDate = bundle.serviceDate
+      ? new Date(bundle.serviceDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+      : 'Date TBD';
+
+    // Calculate spots
+    const spotsOpen = bundle.maxParticipants - bundle.currentParticipants;
+    const bundleText = spotsOpen > 0
+      ? `${bundle.maxParticipants}-Person Bundle (${spotsOpen} Spot${spotsOpen !== 1 ? 's' : ''} Open)`
+      : `${bundle.maxParticipants}-Person Bundle (Full)`;
+
+    // Format location
+    const location = bundle.address
+      ? `${bundle.address.street}, ${bundle.address.city}, ${bundle.address.state} ${bundle.zipCode || ''}`
+      : `${bundle.zipCode || 'Location TBD'}`;
+
+    // Calculate time ago
+    const createdAt = new Date(bundle.createdAt);
+    const now = new Date();
+    const diffInHours = Math.floor((now - createdAt) / (1000 * 60 * 60));
+    const timeAgo = diffInHours < 1
+      ? 'Just now'
+      : diffInHours < 24
+        ? `${diffInHours}hr${diffInHours !== 1 ? 's' : ''} ago`
+        : `${Math.floor(diffInHours / 24)} day${Math.floor(diffInHours / 24) !== 1 ? 's' : ''} ago`;
+
+    return {
+      ...bundle,
+      service: bundle.title || bundle.services?.[0]?.name || 'Service Bundle',
+      bundle: bundleText,
+      date: `Service Date: ${serviceDate}`,
+      location,
+      rate: `${bundle.pricePerPerson ? `$${bundle.pricePerPerson}/person` : 'Price TBD'}`,
+      originalPrice: `$${bundle.totalPrice || 0}`,
+      discountedPrice: `${bundle.bundleDiscount || 0}% off`,
+      images: participantImages,
+      timeAgo,
+    };
+  };
+
   // Custom Location Icon Component
 const LocationIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
@@ -30,39 +103,39 @@ const LocationIcon = () => (
   </svg>
 );
 
-  const handleViewDetails = (offer) => {
+  const handleViewDetails = (bundle) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
       const serviceData = {
-        title: offer.service,
+        title: bundle.service || bundle.title,
         image: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
       };
       setSelectedBundle(serviceData);
       setIsAuthModalOpen(true);
       return;
     }
-    // Add participants data for the modal
+
+    // Format participants data for the modal
+    const participantsForModal = bundle.participants?.map((p, idx) => ({
+      name: p.customer ? `${p.customer.firstName} ${p.customer.lastName}` : `Participant ${idx + 1}`,
+      image: p.customer?.profileImage?.url || bundle.images?.[idx] || `https://i.pravatar.cc/100?img=${idx + 1}`,
+      location: bundle.location,
+    })) || [];
+
+    // Add open spots as participants
+    const spotsOpen = bundle.maxParticipants - bundle.currentParticipants;
+    for (let i = 0; i < spotsOpen && participantsForModal.length < 3; i++) {
+      participantsForModal.push({
+        name: "Open Spot",
+        image: bundle.images?.[participantsForModal.length] || `https://i.pravatar.cc/100?img=${participantsForModal.length + 10}`,
+        location: bundle.location,
+      });
+    }
+
     const bundleWithParticipants = {
-      ...offer,
-      participants: [
-        {
-          name: "John Smith",
-          image: offer.images[0],
-          location: offer.location,
-        },
-        {
-          name: "Sarah Johnson",
-          image: offer.images[1],
-          location: offer.location,
-        },
-        {
-          name: "Open Spot",
-          image: offer.images[2],
-          location: offer.location,
-        },
-      ],
-      modalImage:
-        "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
+      ...bundle,
+      participants: participantsForModal,
+      modalImage: "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
     };
     setSelectedBundle(bundleWithParticipants);
     setIsModalOpen(true);
@@ -95,98 +168,8 @@ const LocationIcon = () => (
     setIsShareBundleOpen(true);
   };
 
-  const offers = [
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    }
-  ];
+  // Format bundles for display
+  const offers = bundlesData?.bundles?.map(formatBundleForDisplay) || [];
 
   return (
     <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
@@ -217,7 +200,36 @@ const LocationIcon = () => (
         </div>
 
         {/* Offers Grid */}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-12 h-12 animate-spin text-teal-600" />
+            <span className="ml-3 text-lg text-gray-600">Loading bundles...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {isError && (
+          <div className="text-center py-20">
+            <p className="text-lg text-red-600">Failed to load bundles. Please try again later.</p>
+            {error && (
+              <p className="text-sm text-gray-500 mt-2">
+                Error: {error?.data?.message || error?.error || 'Unknown error'}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !isError && offers.length === 0 && (
+          <div className="text-center py-20">
+            <p className="text-lg text-gray-600">No bundles available at the moment.</p>
+            <p className="text-base text-gray-500 mt-2">Be the first to create one!</p>
+          </div>
+        )}
+
         {/* Offers Grid */}
+        {!isLoading && !isError && offers.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-8 sm:mb-10 md:mb-12">
                   {offers.map((offer, index) => (
                     <div
@@ -231,7 +243,7 @@ const LocationIcon = () => (
                             {offer.service}
                           </h3>
                           <p className="text-xs sm:text-sm text-gray-500">
-                            Published 1hr ago
+                            Published {offer.timeAgo}
                           </p>
                         </div>
                         <div className="flex -space-x-2 ml-3">
@@ -285,7 +297,8 @@ const LocationIcon = () => (
                     </div>
                   ))}
                 </div>
-                </div>
+        )}
+      </div>
 
       {/* Bundle Detail Modal */}
       <BundleDetailModal

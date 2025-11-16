@@ -22,6 +22,7 @@ import NaibrlyNowModal from "@/components/Global/Modals/NaibrlyNowModal";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
+import { useSelector } from 'react-redux';
 
 const SubMenuItem = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -71,8 +72,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Get authentication state (now using Redux under the hood)
+  // Get authentication state and user data from Redux
   const { isAuthenticated, user, userType, logout } = useAuth();
+  const reduxUser = useSelector((state) => state.auth.user);
 
   // Fetch services from API using RTK Query
   const { data: servicesData, isLoading: servicesLoading, error: servicesError } = useGetServicesQuery();
@@ -87,6 +89,9 @@ export default function Navbar() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Get profile image from Redux state
+  const profileImage = reduxUser?.profileImage?.url || null;
 
   const isHomePage =
     pathname === "/" || pathname === "/login" || pathname === "/signup";
@@ -571,13 +576,19 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
-                  <Image
-                    src="/provider/Ellipse  (2).png"
-                    alt="User Profile"
-                    width={40}
-                    height={40}
-                    className="rounded-full w-10 h-10 object-cover"
-                  />
+                  {profileImage ? (
+                    <Image
+                      src={profileImage}
+                      alt="User Profile"
+                      width={40}
+                      height={40}
+                      className="rounded-full w-10 h-10 object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
+                      <UserIcon className="w-6 h-6 text-white" />
+                    </div>
+                  )}
                   {userType === "provider" && (
                     <span className="text-gray-900 font-medium text-base">
                       {user?.name || "Jacob"}

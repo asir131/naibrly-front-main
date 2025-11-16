@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import Image from 'next/image';
+import { useDispatch } from 'react-redux';
+import { updateUser } from '@/redux/slices/authSlice';
 
 const Account = () => {
+  const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -23,6 +27,8 @@ const Account = () => {
     profileImage: null,
     createdAt: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -110,6 +116,16 @@ const Account = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setError('');
@@ -120,26 +136,48 @@ const Account = () => {
         throw new Error('No authentication token found. Please login again.');
       }
 
-      const response = await fetch('https://naibrly-backend.onrender.com/api/users/profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: {
+      // Use FormData if there's a file, otherwise use JSON
+      let response;
+      if (selectedFile) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('firstName', formData.firstName);
+        formDataToSend.append('lastName', formData.lastName);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('phone', formData.phone);
+        formDataToSend.append('street', formData.street);
+        formDataToSend.append('city', formData.city);
+        formDataToSend.append('state', formData.state);
+        formDataToSend.append('zipCode', formData.zipCode);
+        formDataToSend.append('aptSuite', formData.aptSuite);
+        formDataToSend.append('profileImage', selectedFile);
+
+        response = await fetch('https://naibrly-backend.onrender.com/api/users/update-profile', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formDataToSend,
+        });
+      } else {
+        response = await fetch('https://naibrly-backend.onrender.com/api/users/update-profile', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
             street: formData.street,
             city: formData.city,
             state: formData.state,
             zipCode: formData.zipCode,
             aptSuite: formData.aptSuite,
-          }
-        }),
-      });
+          }),
+        });
+      }
 
       const data = await response.json();
 
@@ -148,8 +186,44 @@ const Account = () => {
       }
 
       console.log('Profile updated successfully:', data);
+
+      // Update formData with the response to ensure UI is in sync
+      const updatedUser = data.data?.user || data.data || data.user || data;
+      if (updatedUser) {
+        const newFormData = {
+          firstName: updatedUser.firstName || formData.firstName,
+          lastName: updatedUser.lastName || formData.lastName,
+          email: updatedUser.email || formData.email,
+          phone: updatedUser.phone || formData.phone,
+          street: updatedUser.address?.street || formData.street,
+          city: updatedUser.address?.city || formData.city,
+          state: updatedUser.address?.state || formData.state,
+          zipCode: updatedUser.address?.zipCode || formData.zipCode,
+          aptSuite: updatedUser.address?.aptSuite || formData.aptSuite,
+          profileImage: updatedUser.profileImage || formData.profileImage,
+          createdAt: updatedUser.createdAt || formData.createdAt
+        };
+        setFormData(newFormData);
+
+        // Update Redux store with new user data (including profile image)
+        dispatch(updateUser({
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          profileImage: updatedUser.profileImage,
+          address: updatedUser.address,
+        }));
+      }
+
+      setSuccessMessage('Profile updated successfully!');
       setIsEditing(false);
       setIsSaving(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('Error updating profile:', err);
       setError(err.message || 'Failed to update profile');
@@ -160,6 +234,9 @@ const Account = () => {
   const handleCancel = () => {
     setIsEditing(false);
     setError('');
+    setSuccessMessage('');
+    setSelectedFile(null);
+    setPreviewUrl(null);
   };
 
   // Show loading state
@@ -175,6 +252,13 @@ const Account = () => {
 
   return (
     <div className="flex-1 p-8">
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+          {successMessage}
+        </div>
+      )}
+
       {/* Error Message */}
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
@@ -196,15 +280,17 @@ const Account = () => {
           </div>
 
           <div className="flex gap-8">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               {formData.profileImage ? (
-                <img
-                  src={formData.profileImage}
+                <Image
+                  src={formData.profileImage.url}
                   alt="Profile"
                   className="w-24 h-24 rounded-full object-cover"
+                  width={96}  
+                  height={96}
                 />
               ) : (
-                <div className="w-24 h-24 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
+                <div className="w-24 h-24 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
                   <User className="w-12 h-12 text-white" />
                 </div>
               )}
@@ -250,11 +336,34 @@ const Account = () => {
 
           <div className="flex gap-8">
             <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center mb-3">
-                <User className="w-12 h-12 text-white" />
+              <div className="relative">
+                {previewUrl || formData.profileImage ? (
+                  <Image
+                    src={previewUrl || formData.profileImage.url}
+                    alt="Profile preview"
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center mb-3">
+                    <User className="w-12 h-12 text-white" />
+                  </div>
+                )}
               </div>
-              <button className="text-sm text-gray-600 hover:text-gray-800">
-                Upload a new photo
+              <input
+                type="file"
+                id="profileImageInput"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => document.getElementById('profileImageInput').click()}
+                className="text-sm text-teal-600 hover:text-teal-700 font-medium mt-2 block"
+              >
+                {previewUrl || formData.profileImage ? 'Change photo' : 'Upload a new photo'}
               </button>
             </div>
 
@@ -307,25 +416,15 @@ const Account = () => {
                 <Label htmlFor="phone" className="text-sm font-medium mb-2 block">
                   Phone Number
                 </Label>
-                <div className="flex gap-2">
-                  <Select defaultValue="1">
-                    <SelectTrigger className="w-24">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1+</SelectItem>
-                      <SelectItem value="44">44+</SelectItem>
-                      <SelectItem value="91">91+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    placeholder="(239) 555-0108"
-                    className="flex-1"
-                    defaultValue="(239) 555-0108"
-                  />
-                </div>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="(239) 555-0108"
+                  className="w-full"
+                />
               </div>
 
               <div>

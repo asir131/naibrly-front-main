@@ -18,39 +18,15 @@ export default function RequestPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showTaskCompletedModal, setShowTaskCompletedModal] = useState(false);
-  const [isPageVisible, setIsPageVisible] = useState(true);
 
   // Request flow states
   const [requestFlowState, setRequestFlowState] = useState('accepted');
   // 'accepted' -> 'provider-accepted' -> 'payment' -> 'done' or 'cancelled'
   const [requestAmountStatus, setRequestAmountStatus] = useState('waiting'); // 'waiting' or 'accepted'
 
-  // Fetch service requests from API with conditional polling
-  const { data, isLoading, error, refetch } = useGetMyServiceRequestsQuery(undefined, {
-    pollingInterval: isPageVisible ? 60000 : 0, // Poll every 60 seconds only when page is visible
-    refetchOnMountOrArgChange: true, // Refetch when component mounts
-    refetchOnFocus: true, // Refetch when user switches back to the tab
-    refetchOnReconnect: true, // Refetch when internet connection is restored
-  });
+  // Fetch service requests from API (uses global caching settings from servicesApi)
+  const { data, isLoading, error, refetch } = useGetMyServiceRequestsQuery();
 
-  // Track page visibility to pause/resume polling
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const isVisible = document.visibilityState === 'visible';
-      setIsPageVisible(isVisible);
-
-      // Refetch immediately when page becomes visible
-      if (isVisible) {
-        refetch();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [refetch]);
 
   // Transform API data to component format and filter by status
   const { openRequests, closedRequests } = useMemo(() => {
@@ -270,7 +246,9 @@ export default function RequestPage() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
                   <p className="text-red-600 text-lg font-medium mb-2">Failed to load requests</p>
                   <p className="text-red-500 text-sm mb-4">
-                    {error?.data?.message || 'Please try again later'}
+                    {error?.status === 'FETCH_ERROR' || error?.originalStatus === undefined
+                      ? 'Unable to connect to the server. Please check your internet connection or try again later.'
+                      : error?.data?.message || 'An unexpected error occurred. Please try again later.'}
                   </p>
                   <button
                     onClick={() => refetch()}

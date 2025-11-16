@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, MapPin } from "lucide-react";
+import { Share2, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Link from "next/link";
 import ShareBundleModal from "./ShareBundleModal";
+import { useJoinBundleMutation } from "@/redux/api/servicesApi";
 
 export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [joinBundle, { isLoading: isJoining }] = useJoinBundleMutation();
 
   if (!isOpen || !bundleData) return null;
 
@@ -19,6 +20,35 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
   const handleShare = () => {
     setIsShareModalOpen(true);
+  };
+
+  const handleJoinBundle = async () => {
+    try {
+      // Use the bundle _id or id from bundleData
+      const bundleId = bundleData._id || bundleData.id;
+
+      if (!bundleId) {
+        console.error('Bundle ID not found');
+        alert('Unable to join bundle. Please try again.');
+        return;
+      }
+
+      console.log('Joining bundle:', bundleId);
+
+      // Call the join bundle API
+      const result = await joinBundle(bundleId).unwrap();
+
+      console.log('Successfully joined bundle:', result);
+
+      // Show the share modal after successful join
+      setIsShareModalOpen(true);
+    } catch (error) {
+      console.error('Failed to join bundle:', error);
+
+      // Show user-friendly error message
+      const errorMessage = error?.data?.message || error?.message || 'Failed to join bundle. Please try again.';
+      alert(errorMessage);
+    }
   };
 
   return (
@@ -111,11 +141,20 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
             </div>
 
             {/* Join Button */}
-            <Link href="/request" className="w-full">
-              <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white py-4 rounded-xl font-semibold text-lg shadow-md mt-auto">
-                Join Bundle
-              </Button>
-            </Link>
+            <Button
+              onClick={handleJoinBundle}
+              disabled={isJoining}
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-4 rounded-xl font-semibold text-lg shadow-md mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isJoining ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Joining...</span>
+                </div>
+              ) : (
+                'Join Bundle'
+              )}
+            </Button>
           </div>
         </div>
       </div>
