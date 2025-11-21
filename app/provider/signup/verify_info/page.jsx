@@ -67,10 +67,11 @@ const VerifyInfo = () => {
       // Create FormData for file upload - matching backend expectations exactly
       const submitData = new FormData();
 
-      // Required fields from Postman: einNumber, firstName, lastName, insuranceDocument
+      // Required fields from Postman: einNumber, firstName, lastName, businessRegisteredCountry, insuranceDocument
       submitData.append('einNumber', data.einNumber.trim());
       submitData.append('firstName', data.ownerFirstName.trim());
       submitData.append('lastName', data.ownerLastName.trim());
+      submitData.append('businessRegisteredCountry', data.businessRegisteredCountry);
 
       // Insurance document file (REQUIRED)
       submitData.append('insuranceDocument', data.insuranceFile);
@@ -178,6 +179,33 @@ const VerifyInfo = () => {
                   <span>An Employer Identification Number (EIN) is a federal tax ID for businesses</span>
                 </p>
               </div>
+            </div>
+
+            <div className="flex flex-col gap-2 pb-4">
+              <label className="text-[#1C5941] text-sm font-bold flex items-center gap-1">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                </svg>
+                Business Registered Country *
+              </label>
+              <select
+                className="input_box text-[16px] w-full focus:border-[#1C5941] transition-colors text-[#333]"
+                {...register("businessRegisteredCountry", { required: true })}
+              >
+                <option value="">Select Country</option>
+                <option value="USA">United States (USA)</option>
+                <option value="Canada">Canada</option>
+                <option value="UK">United Kingdom</option>
+                <option value="Australia">Australia</option>
+              </select>
+              {errors.businessRegisteredCountry && (
+                <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span>Please select a country</span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2 mb-4">

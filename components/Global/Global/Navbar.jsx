@@ -388,7 +388,7 @@ export default function Navbar() {
                                   <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                     <div className="p-2">
                                       {categoryType.subServices.map((service, subIdx) => (
-                                        <Link href="/our-services" key={service.id || subIdx}>
+                                        <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                           <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
                                             {service.name}
                                           </button>
@@ -428,7 +428,7 @@ export default function Navbar() {
                                     <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                       <div className="p-2">
                                         {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href="/our-services" key={service.id || subIdx}>
+                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                             <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
                                               {service.name}
                                             </button>
@@ -471,7 +471,7 @@ export default function Navbar() {
                                     <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
                                       <div className="p-2">
                                         {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href="/our-services" key={service.id || subIdx}>
+                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                             <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
                                               {service.name}
                                             </button>
@@ -808,7 +808,7 @@ export default function Navbar() {
                                   {expandedMobileService === idx && (
                                     <div className="pl-4 space-y-1">
                                       {categoryType.subServices.map((service, subIdx) => (
-                                        <Link href="/our-services" key={service.id || subIdx}>
+                                        <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                           <button
                                             onClick={() => {
                                               setIsMobileMenuOpen(false);
@@ -857,7 +857,7 @@ export default function Navbar() {
                                     {expandedMobileService === exteriorIdx && (
                                       <div className="pl-4 space-y-1">
                                         {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href="/our-services" key={service.id || subIdx}>
+                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                             <button
                                               onClick={() => {
                                                 setIsMobileMenuOpen(false);
@@ -909,7 +909,7 @@ export default function Navbar() {
                                     {expandedMobileService === moreServicesIdx && (
                                       <div className="pl-4 space-y-1">
                                         {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href="/our-services" key={service.id || subIdx}>
+                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                             <button
                                               onClick={() => {
                                                 setIsMobileMenuOpen(false);

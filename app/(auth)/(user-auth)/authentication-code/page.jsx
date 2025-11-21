@@ -5,16 +5,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Suspense } from 'react';
+import { useVerifyOtpMutation, useResendOtpMutation } from '@/redux/api/servicesApi';
 
 function AuthenticationCodeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || 'jhon@gmail.com';
 
-  const [code, setCode] = useState(['', '', '', '', '']);
-  const [isLoading, setIsLoading] = useState(false);
-  const [countdown, setCountdown] = useState(34);
+  const [code, setCode] = useState(['', '', '', '']);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [countdown, setCountdown] = useState(60);
   const inputRefs = useRef([]);
+
+  const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
+  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
 
   // Countdown timer
   useEffect(() => {
@@ -31,9 +36,10 @@ function AuthenticationCodeContent() {
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
+    setError(''); // Clear error on input
 
     // Auto-focus next input
-    if (value && index < 4) {
+    if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -47,10 +53,10 @@ function AuthenticationCodeContent() {
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 5);
-    const newCode = pastedData.split('').slice(0, 5);
+    const pastedData = e.clipboardData.getData('text').slice(0, 4);
+    const newCode = pastedData.split('').slice(0, 4);
 
-    while (newCode.length < 5) {
+    while (newCode.length < 4) {
       newCode.push('');
     }
 
@@ -58,30 +64,49 @@ function AuthenticationCodeContent() {
 
     // Focus the last filled input or the first empty one
     const lastFilledIndex = newCode.findIndex(digit => !digit);
-    const focusIndex = lastFilledIndex === -1 ? 4 : lastFilledIndex;
+    const focusIndex = lastFilledIndex === -1 ? 3 : lastFilledIndex;
     inputRefs.current[focusIndex]?.focus();
   };
 
-  const handleResend = () => {
-    setCountdown(34);
-    setCode(['', '', '', '', '']);
-    inputRefs.current[0]?.focus();
-    // Here you would call your resend API
+  const handleResend = async () => {
+    setError('');
+    setSuccess('');
+
+    try {
+      await resendOtp({ email }).unwrap();
+      setSuccess('OTP resent successfully!');
+      setCountdown(60);
+      setCode(['', '', '', '']);
+      inputRefs.current[0]?.focus();
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      setError(err?.data?.message || err?.message || 'Failed to resend OTP. Please try again.');
+    }
   };
 
-  const handleConfirm = (e) => {
+  const handleConfirm = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+
     const fullCode = code.join('');
 
-    if (fullCode.length === 5) {
-      setIsLoading(true);
+    if (fullCode.length === 4) {
+      try {
+        await verifyOtp({ email, otp: fullCode }).unwrap();
+        setSuccess('OTP verified successfully!');
 
-      // Simulate verification
-      setTimeout(() => {
-        setIsLoading(false);
-        // Navigate to new password page
-        router.push('/new-password');
-      }, 1000);
+        // Navigate to new password page after short delay
+        setTimeout(() => {
+          router.push(`/new-password?email=${encodeURIComponent(email)}`);
+        }, 1000);
+      } catch (err) {
+        console.error('Verify OTP error:', err);
+        setError(err?.data?.message || err?.message || 'Invalid OTP. Please try again.');
+      }
     }
   };
 
@@ -104,7 +129,7 @@ function AuthenticationCodeContent() {
             Authentication Code
           </h1>
           <p className="text-sm text-slate-500">
-            Enter 5-digit code we just texted to your Email{' '}
+            Enter 4-digit code we just sent to your Email{' '}
             <span className="font-medium text-slate-700">{email}</span>
           </p>
         </div>
@@ -129,6 +154,20 @@ function AuthenticationCodeContent() {
             ))}
           </div>
 
+          {/* Success Message */}
+          {success && (
+            <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+              {success}
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+              {error}
+            </div>
+          )}
+
           {/* Countdown and Resend */}
           <div className="text-center text-sm">
             <span className="text-slate-500">
@@ -143,9 +182,10 @@ function AuthenticationCodeContent() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="text-teal-600 hover:text-teal-700 font-medium"
+                  disabled={isResending}
+                  className="text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50"
                 >
-                  Resend?
+                  {isResending ? 'Resending...' : 'Resend?'}
                 </button>
               </>
             ) : (
@@ -162,7 +202,7 @@ function AuthenticationCodeContent() {
             disabled={!isCodeComplete || isLoading}
             className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-lg font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Confirming...' : 'Confirm'}
+            {isLoading ? 'Verifying...' : 'Confirm'}
           </Button>
         </form>
       </div>

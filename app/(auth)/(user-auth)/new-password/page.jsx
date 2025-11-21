@@ -1,25 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useResetPasswordMutation } from '@/redux/api/servicesApi';
+import { Suspense } from 'react';
 
-export default function NewPasswordPage() {
+function NewPasswordContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email');
+
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSubmit = (e) => {
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
+
+  // Redirect if no email
+  useEffect(() => {
+    if (!email) {
+      router.push('/forgot-password');
+    }
+  }, [email, router]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
@@ -33,14 +48,23 @@ export default function NewPasswordPage() {
       return;
     }
 
-    setIsLoading(true);
+    try {
+      await resetPassword({
+        email,
+        newPassword: formData.password,
+        confirmPassword: formData.confirmPassword
+      }).unwrap();
 
-    // Simulate password reset
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to login page
-      router.push('/Login');
-    }, 1000);
+      setSuccess('Password reset successfully! Redirecting to login...');
+
+      // Navigate to login page after short delay
+      setTimeout(() => {
+        router.push('/Login');
+      }, 2000);
+    } catch (err) {
+      console.error('Reset password error:', err);
+      setError(err?.data?.message || err?.message || 'Failed to reset password. Please try again.');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -132,6 +156,13 @@ export default function NewPasswordPage() {
             </div>
           </div>
 
+          {/* Success Message */}
+          {success && (
+            <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
+              {success}
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
             <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
@@ -159,5 +190,19 @@ export default function NewPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-10">
+          <div className="text-center text-slate-600">Loading...</div>
+        </div>
+      </div>
+    }>
+      <NewPasswordContent />
+    </Suspense>
   );
 }

@@ -1,53 +1,111 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Check, Calendar } from 'lucide-react';
+import { X, Check, Calendar, Loader2 } from 'lucide-react';
+import { useCreateServiceRequestMutation } from '@/redux/api/servicesApi';
+import { useRouter } from 'next/navigation';
 
-const RequestModal = ({ isOpen, onClose, providerName = "Jacob Maicle", serviceName = "Appliance Repairs" }) => {
+const RequestModal = ({
+    isOpen,
+    onClose,
+    providerName = "Jacob Maicle",
+    serviceName = "Appliance Repairs",
+    providerId,
+    serviceId,
+    hourlyRate
+}) => {
+    const router = useRouter();
     const [modalState, setModalState] = useState('form'); // 'form', 'success', 'error'
+    const [errorMessage, setErrorMessage] = useState('');
     const [formData, setFormData] = useState({
         problem: '',
         note: '',
         date: ''
     });
 
-    // Available dates
-    const availableDates = [
-        { label: 'Today', value: new Date().toISOString().split('T')[0] },
-        { label: 'Tomorrow', value: new Date(Date.now() + 86400000).toISOString().split('T')[0] },
-        { label: 'Thu 11 Sep', value: '2025-09-11' },
-        { label: 'Fri 12 Sep', value: '2025-09-12' },
-        { label: 'Sat 13 Sep', value: '2025-09-13' },
-        { label: 'Sun 14 Sep', value: '2025-09-14' }
-    ];
+    // RTK Query mutation hook
+    const [createServiceRequest, { isLoading }] = useCreateServiceRequestMutation();
 
-    const handleSubmit = (e) => {
+    // Generate available dates dynamically
+    const generateAvailableDates = () => {
+        const dates = [];
+        const today = new Date();
+
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            let label;
+            if (i === 0) {
+                label = 'Today';
+            } else if (i === 1) {
+                label = 'Tomorrow';
+            } else {
+                label = `${dayNames[date.getDay()]} ${date.getDate()} ${monthNames[date.getMonth()]}`;
+            }
+
+            dates.push({
+                label,
+                value: date.toISOString().split('T')[0]
+            });
+        }
+
+        return dates;
+    };
+
+    const availableDates = generateAvailableDates();
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Simulate random success/error for demo
-        const isSuccess = Math.random() > 0.3; // 70% success rate
+        if (!providerId || !serviceId) {
+            setErrorMessage('Missing provider or service information');
+            setModalState('error');
+            return;
+        }
 
-        if (isSuccess) {
-            setModalState('success');
-        } else {
+        try {
+            const requestBody = {
+                providerId,
+                serviceId,
+                serviceType: serviceName,
+                problem: formData.problem,
+                note: formData.note,
+                scheduledDate: formData.date
+            };
+
+            console.log('Submitting service request:', requestBody);
+            const result = await createServiceRequest(requestBody).unwrap();
+
+            if (result) {
+                setModalState('success');
+            }
+        } catch (error) {
+            console.error('Service request error:', error);
+            console.error('Error details:', JSON.stringify(error?.data, null, 2));
+            setErrorMessage(error?.data?.message || error?.message || 'Failed to submit request');
             setModalState('error');
         }
     };
 
     const handleClose = () => {
         setModalState('form');
+        setErrorMessage('');
         setFormData({ problem: '', note: '', date: '' });
         onClose();
     };
 
     const handleGoHome = () => {
         handleClose();
-        // You can add router.push('/home') here if needed
+        router.push('/home');
     };
 
     const handleChooseAnother = () => {
         handleClose();
-        // You can add logic to go back to provider selection
+        router.back();
     };
 
     if (!isOpen) return null;
@@ -85,9 +143,10 @@ const RequestModal = ({ isOpen, onClose, providerName = "Jacob Maicle", serviceN
                                 <input
                                     type="text"
                                     required
+                                    minLength={10}
                                     value={formData.problem}
                                     onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
-                                    placeholder="Describe your problem"
+                                    placeholder="Describe your problem (min 10 characters)"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                 />
                             </div>
@@ -133,9 +192,17 @@ const RequestModal = ({ isOpen, onClose, providerName = "Jacob Maicle", serviceN
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl transition-colors duration-200"
+                                disabled={isLoading}
+                                className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-bold py-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
                             >
-                                Request Sent
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Submitting...
+                                    </>
+                                ) : (
+                                    'Send Request'
+                                )}
                             </button>
                         </form>
                     </div>
@@ -184,7 +251,7 @@ const RequestModal = ({ isOpen, onClose, providerName = "Jacob Maicle", serviceN
                             We're sorry
                         </h2>
                         <p className="text-gray-600 text-lg mb-8">
-                            It looks like {providerName} is no longer available at this time.
+                            {errorMessage || `It looks like ${providerName} is no longer available at this time.`}
                         </p>
 
                         {/* Choose Another Provider Button */}

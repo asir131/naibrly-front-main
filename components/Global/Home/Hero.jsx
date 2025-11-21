@@ -233,11 +233,13 @@ export default function NaibrlyHeroSection() {
                   onClick={() => {
                     setSearchOpen(false);
                     setZipOpen(false);
-                    // Navigate to find-area page with search parameters
-                    if (searchQuery || zipCode) {
+                    // Navigate to find-area page with search parameters (trim whitespace)
+                    const trimmedService = searchQuery.trim();
+                    const trimmedZip = zipCode.trim();
+                    if (trimmedService || trimmedZip) {
                       const params = new URLSearchParams();
-                      if (searchQuery) params.set("service", searchQuery);
-                      if (zipCode) params.set("zip", zipCode);
+                      if (trimmedService) params.set("service", trimmedService);
+                      if (trimmedZip) params.set("zip", trimmedZip);
                       router.push(`/find-area?${params.toString()}`);
                     }
                   }}

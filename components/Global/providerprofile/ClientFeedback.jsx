@@ -4,74 +4,19 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const ClientFeedback = () => {
+const ClientFeedback = ({ feedback, isLoading }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    // Sample feedback data
-    const feedbackData = [
-        {
-            id: 1,
-            name: 'Jessica R',
-            rating: 4.0,
-            date: '2 Days ago',
-            comment: 'Thank you for your work! The service met my expectations and I\'m very happy.',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'
-        },
-        {
-            id: 2,
-            name: 'Jessica R',
-            rating: 4.0,
-            date: '2 Days ago',
-            comment: 'Thank you for your work! The service met my expectations and I\'m very happy.',
-            avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-        },
-        {
-            id: 3,
-            name: 'Jessica R',
-            rating: 4.0,
-            date: '2 Days ago',
-            comment: 'Thank you for your work! The service met my expectations and I\'m very happy.',
-            avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-        },
-        {
-            id: 4,
-            name: 'Michael B',
-            rating: 5.0,
-            date: '3 Days ago',
-            comment: 'Excellent service! Highly professional and completed the job perfectly.',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop'
-        },
-        {
-            id: 5,
-            name: 'Sarah K',
-            rating: 4.5,
-            date: '5 Days ago',
-            comment: 'Great work, very satisfied with the results. Will definitely hire again.',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'
-        },
-        {
-            id: 6,
-            name: 'David L',
-            rating: 4.0,
-            date: '1 Week ago',
-            comment: 'Good service, arrived on time and did a thorough job.',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop'
-        },
-        {
-            id: 7,
-            name: 'Emily T',
-            rating: 5.0,
-            date: '1 Week ago',
-            comment: 'Outstanding! Exceeded all my expectations. Very professional.',
-            avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop'
-        }
-    ];
+    // Use API feedback data or empty array
+    const feedbackList = feedback?.list || [];
+    const aggregates = feedback?.aggregates || { averageRating: 0, totalReviews: 0 };
+    const pagination = feedback?.pagination || { current: 1, total: 0, pages: 0 };
 
-    const totalPages = Math.ceil(feedbackData.length / rowsPerPage);
+    const totalPages = Math.ceil(feedbackList.length / rowsPerPage) || 1;
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
-    const currentFeedback = feedbackData.slice(startIndex, endIndex);
+    const currentFeedback = feedbackList.slice(startIndex, endIndex);
 
     const renderStars = (rating) => {
         const fullStars = Math.floor(rating);
@@ -99,32 +44,89 @@ const ClientFeedback = () => {
         );
     };
 
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="w-full bg-linear-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-8">
+                        <div className="h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
+                    </div>
+                    <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-white rounded-2xl p-6 shadow-md animate-pulse">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-16 h-16 bg-gray-200 rounded-full shrink-0"></div>
+                                    <div className="flex-1 space-y-3">
+                                        <div className="h-5 bg-gray-200 rounded w-1/4"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // No feedback available
+    if (feedbackList.length === 0) {
+        return (
+            <div className="w-full bg-linear-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-8">
+                        <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
+                            Client Feedback
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                            Average Rating: {aggregates.averageRating.toFixed(1)} ({aggregates.totalReviews} reviews)
+                        </p>
+                    </div>
+                    <div className="bg-white rounded-2xl p-8 shadow-md text-center">
+                        <p className="text-gray-500">No reviews yet for this provider.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="w-full bg-gradient-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
+        <div className="w-full bg-linear-to-br from-gray-50 to-blue-50 py-16 px-8 lg:px-16">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <h2 className="text-3xl lg:text-4xl font-bold text-gray-900">
                         Client Feedback
                     </h2>
+                    <p className="text-gray-600 mt-2">
+                        Average Rating: {aggregates.averageRating.toFixed(1)} ({aggregates.totalReviews} reviews)
+                    </p>
                 </div>
 
                 {/* Feedback Cards */}
                 <div className="space-y-4 mb-8">
-                    {currentFeedback.map((feedback) => (
+                    {currentFeedback.map((item, index) => (
                         <div
-                            key={feedback.id}
+                            key={item._id || index}
                             className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
                         >
                             <div className="flex items-start gap-4">
                                 {/* Avatar */}
-                                <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-                                    <Image
-                                        src={feedback.avatar}
-                                        alt={feedback.name}
-                                        fill
-                                        className="object-cover"
-                                    />
+                                <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0 bg-teal-100 flex items-center justify-center">
+                                    {item.customerAvatar ? (
+                                        <Image
+                                            src={item.customerAvatar}
+                                            alt={item.customerName || 'Customer'}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-teal-600 font-semibold text-xl">
+                                            {(item.customerName || 'C').charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Content */}
@@ -132,25 +134,22 @@ const ClientFeedback = () => {
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
                                             <h3 className="text-lg font-semibold text-gray-900">
-                                                {feedback.name}
+                                                {item.customerName || 'Anonymous'}
                                             </h3>
                                             <div className="flex items-center gap-3 mt-1">
-                                                {renderStars(feedback.rating)}
+                                                {renderStars(item.rating || 0)}
                                                 <span className="text-sm text-gray-500">
-                                                    ({feedback.rating.toFixed(1)})
+                                                    ({(item.rating || 0).toFixed(1)})
                                                 </span>
                                             </div>
                                         </div>
                                         <span className="text-sm text-gray-500">
-                                            {feedback.date}
+                                            {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
                                         </span>
                                     </div>
 
                                     <p className="text-gray-700 leading-relaxed">
-                                        {feedback.comment}{' '}
-                                        <button className="text-teal-600 hover:text-teal-700 font-medium">
-                                            See more...
-                                        </button>
+                                        {item.comment || item.review || 'No comment provided'}
                                     </p>
                                 </div>
                             </div>

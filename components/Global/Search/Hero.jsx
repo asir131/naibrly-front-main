@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
 
-export default function NaibrlyHeroSection() {
+export default function NaibrlyHeroSection({ onSearch, isSearching }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -255,16 +255,32 @@ export default function NaibrlyHeroSection() {
                 onClick={() => {
                   setSearchOpen(false);
                   setZipOpen(false);
-                  // Update URL with search parameters
+                  // Update URL with search parameters (trim whitespace)
                   const params = new URLSearchParams();
-                  if (searchQuery) params.set("service", searchQuery);
-                  if (zipCode) params.set("zip", zipCode);
+                  const trimmedService = searchQuery.trim();
+                  const trimmedZip = zipCode.trim();
+                  if (trimmedService) params.set("service", trimmedService);
+                  if (trimmedZip) params.set("zip", trimmedZip);
                   router.push(`/find-area?${params.toString()}`);
+                  // Trigger search if onSearch callback is provided
+                  if (onSearch && trimmedService && trimmedZip) {
+                    onSearch(trimmedService, trimmedZip);
+                  }
                 }}
-                className="w-full bg-teal-700 hover:bg-teal-800 h-14 rounded-xl flex items-center justify-center gap-2 shadow-sm text-sm sm:text-base font-medium"
+                disabled={isSearching}
+                className="w-full bg-teal-700 hover:bg-teal-800 h-14 rounded-xl flex items-center justify-center gap-2 shadow-sm text-sm sm:text-base font-medium disabled:opacity-50"
               >
-                <Search className="w-5 h-5" />
-                Find your area
+                {isSearching ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Find your area
+                  </>
+                )}
               </Button>
             </div>
           </div>

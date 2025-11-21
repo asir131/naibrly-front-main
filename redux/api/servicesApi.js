@@ -107,8 +107,8 @@ export const servicesApi = createApi({
 
     updateProviderZipCode: builder.mutation({
       query: (zipCodeData) => ({
-        url: '/zip/provider/zip',
-        method: 'PUT',
+        url: '/zip/provider/service-areas/add',
+        method: 'POST',
         body: zipCodeData,
       }),
       invalidatesTags: ['Provider'],
@@ -407,6 +407,200 @@ export const servicesApi = createApi({
         return response.data;
       },
     }),
+
+    // Password Reset Endpoints
+    forgotPassword: builder.mutation({
+      query: (data) => ({
+        url: '/auth/password-reset/forgot-password',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log('Forgot password API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to send reset code');
+        }
+        return response.data;
+      },
+    }),
+
+    verifyOtp: builder.mutation({
+      query: (data) => ({
+        url: '/auth/password-reset/verify-otp',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log('Verify OTP API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Invalid OTP');
+        }
+        return response.data;
+      },
+    }),
+
+    resendOtp: builder.mutation({
+      query: (data) => ({
+        url: '/auth/password-reset/resend-otp',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log('Resend OTP API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to resend OTP');
+        }
+        return response.data;
+      },
+    }),
+
+    resetPassword: builder.mutation({
+      query: (data) => ({
+        url: '/auth/password-reset/reset-password',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log('Reset password API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to reset password');
+        }
+        return response.data;
+      },
+    }),
+
+    // Search Providers by service and zip code (POST)
+    searchProviders: builder.mutation({
+      query: (data) => ({
+        url: '/search/providers',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log('Search providers API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to search providers');
+        }
+        return response.data;
+      },
+    }),
+
+    // Get Provider Services by provider ID and service name
+    getProviderServices: builder.query({
+      query: ({ providerId, serviceName }) => {
+        return `/providers/${providerId}/services/${encodeURIComponent(serviceName)}`;
+      },
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Get provider services API response:', response);
+        if (!response || !response.success) {
+          return {
+            provider: null,
+            selectedService: null,
+            otherServices: [],
+            feedback: { list: [], pagination: {}, aggregates: {} }
+          };
+        }
+        return response.data;
+      },
+    }),
+
+    // Search Providers by service type and zip code (GET)
+    searchProvidersByService: builder.query({
+      query: ({ serviceType, zipCode, minRating, maxHourlyRate, sortBy, page, limit }) => {
+        const queryParams = new URLSearchParams();
+        if (serviceType) queryParams.append('serviceType', serviceType);
+        if (zipCode) queryParams.append('zipCode', zipCode);
+        if (minRating) queryParams.append('minRating', minRating);
+        if (maxHourlyRate) queryParams.append('maxHourlyRate', maxHourlyRate);
+        if (sortBy) queryParams.append('sortBy', sortBy);
+        if (page) queryParams.append('page', page);
+        if (limit) queryParams.append('limit', limit);
+
+        const queryString = queryParams.toString();
+        return `/service-requests/search-providers${queryString ? `?${queryString}` : ''}`;
+      },
+      providesTags: ['Services'],
+      transformResponse: (response) => {
+        console.log('Search providers by service API response:', response);
+        if (!response || !response.success) {
+          return {
+            providers: [],
+            searchCriteria: {},
+            pagination: { current: 1, total: 0, pages: 1 },
+            summary: {}
+          };
+        }
+        return response.data;
+      },
+    }),
+
+    // Search Bundles by query and zip code (GET)
+    searchBundles: builder.query({
+      query: ({ searchQuery, zipCode, category, page, limit }) => {
+        const queryParams = new URLSearchParams();
+        if (searchQuery) queryParams.append('searchQuery', searchQuery);
+        if (zipCode) queryParams.append('zipCode', zipCode);
+        if (category) queryParams.append('category', category);
+        if (page) queryParams.append('page', page);
+        if (limit) queryParams.append('limit', limit);
+
+        const queryString = queryParams.toString();
+        return `/bundles/search${queryString ? `?${queryString}` : ''}`;
+      },
+      providesTags: ['Bundles'],
+      transformResponse: (response) => {
+        console.log('Search bundles API response:', response);
+        if (!response || !response.success) {
+          return {
+            bundles: [],
+            searchSummary: {},
+            customerLocation: {},
+            pagination: { current: 1, total: 0, pages: 1 }
+          };
+        }
+        return response.data;
+      },
+    }),
+
+    // Get user profile
+    getUserProfile: builder.query({
+      query: () => '/users/profile',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Get user profile API response:', response);
+        if (!response || !response.success) {
+          return { user: null };
+        }
+        return response.data;
+      },
+    }),
+
+    // Get verification information status
+    getVerifyInfoStatus: builder.query({
+      query: () => '/verify-information/status',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Get verify info status API response:', response);
+        if (!response || !response.success) {
+          return { status: null, verificationInfo: null };
+        }
+        return response.data;
+      },
+    }),
+
+    // Get provider zip/service areas
+    getProviderZip: builder.query({
+      query: () => '/zip/provider/zip',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Get provider zip API response:', response);
+        if (!response || !response.success) {
+          return { provider: null };
+        }
+        return response.data;
+      },
+    }),
   }),
 });
 
@@ -430,4 +624,19 @@ export const {
   useGetNearbyBundlesQuery,
   useJoinBundleMutation,
   useGetNearbyServicesQuery,
+  // Password reset hooks
+  useForgotPasswordMutation,
+  useVerifyOtpMutation,
+  useResendOtpMutation,
+  useResetPasswordMutation,
+  // Search hooks
+  useSearchProvidersMutation,
+  useSearchProvidersByServiceQuery,
+  useSearchBundlesQuery,
+  useLazySearchBundlesQuery,
+  // Provider hooks
+  useGetProviderServicesQuery,
+  useGetUserProfileQuery,
+  useGetVerifyInfoStatusQuery,
+  useGetProviderZipQuery,
 } = servicesApi;

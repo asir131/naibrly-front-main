@@ -5,26 +5,37 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useForgotPasswordMutation } from '@/redux/api/servicesApi';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSubmit = (e) => {
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError('');
+    setSuccess('');
 
-    // Simulate sending verification code
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to authentication code page
-      router.push(`/authentication-code?email=${encodeURIComponent(email)}`);
-    }, 1000);
+    try {
+      const response = await forgotPassword({ email }).unwrap();
+      setSuccess('Verification code sent to your email!');
+
+      // Navigate to authentication code page after short delay
+      setTimeout(() => {
+        router.push(`/authentication-code?email=${encodeURIComponent(email)}`);
+      }, 1500);
+    } catch (err) {
+      console.error('Forgot password error:', err);
+      setError(err?.data?.message || err?.message || 'Failed to send verification code. Please try again.');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-10">
         {/* Back Button */}
         <button
@@ -102,6 +113,20 @@ export default function ForgotPasswordPage() {
               required
             />
           </div>
+
+          {/* Success Message */}
+          {success && (
+            <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
+              {success}
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+              {error}
+            </div>
+          )}
 
           {/* Submit Button */}
           <Button

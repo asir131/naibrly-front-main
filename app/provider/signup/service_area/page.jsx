@@ -1,12 +1,21 @@
 "use client";
-import { Images } from "@/public/usersImg/ExportImg";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { RiSearch2Line } from "react-icons/ri";
 import { useUpdateProviderZipCodeMutation } from '@/redux/api/servicesApi';
 import { toast } from 'react-hot-toast';
+import dynamic from "next/dynamic";
+
+// Dynamically import the map component to avoid SSR issues
+const ZipCodeMap = dynamic(() => import("@/components/Global/ZipCodeMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-gray-100 rounded-lg h-[300px] flex items-center justify-center">
+      <div className="text-gray-500">Loading map...</div>
+    </div>
+  ),
+});
 
 const ServiceArea = () => {
   // this is for navigate
@@ -158,7 +167,11 @@ const ServiceArea = () => {
                 </div>
               )}
               <div className="mt-6 mb-[29px]">
-                <Image src={Images.map_img} />
+                <ZipCodeMap
+                  zipCode={watch("zipCode")}
+                  zipCodes={zipCodes}
+                  height="300px"
+                />
               </div>
               <button
                 type="submit"
