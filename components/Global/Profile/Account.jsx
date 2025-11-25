@@ -281,12 +281,12 @@ const Account = () => {
 
           <div className="flex gap-8">
             <div className="shrink-0">
-              {formData.profileImage ? (
+              {formData.profileImage?.url ? (
                 <Image
                   src={formData.profileImage.url}
                   alt="Profile"
                   className="w-24 h-24 rounded-full object-cover"
-                  width={96}  
+                  width={96}
                   height={96}
                 />
               ) : (
@@ -337,7 +337,7 @@ const Account = () => {
           <div className="flex gap-8">
             <div className="flex-shrink-0">
               <div className="relative">
-                {previewUrl || formData.profileImage ? (
+                {previewUrl || formData.profileImage?.url ? (
                   <Image
                     src={previewUrl || formData.profileImage.url}
                     alt="Profile preview"
@@ -363,7 +363,7 @@ const Account = () => {
                 onClick={() => document.getElementById('profileImageInput').click()}
                 className="text-sm text-teal-600 hover:text-teal-700 font-medium mt-2 block"
               >
-                {previewUrl || formData.profileImage ? 'Change photo' : 'Upload a new photo'}
+                {previewUrl || formData.profileImage?.url ? 'Change photo' : 'Upload a new photo'}
               </button>
             </div>
 

@@ -119,9 +119,21 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
       const response = await createBundle(bundleData).unwrap();
       console.log('Bundle created successfully:', response);
 
-      // Call onPublish callback if provided
+      // Generate the frontend share link
+      const shareToken = response.data?.sharing?.shareToken;
+      const frontendShareLink = shareToken
+        ? `${window.location.origin}/join-bundle/${shareToken}`
+        : null;
+
+      // Call onPublish callback with full response data including sharing info
       if (onPublish) {
-        onPublish(bundleData);
+        onPublish({
+          bundle: response.data?.bundle,
+          sharing: {
+            ...response.data?.sharing,
+            frontendShareLink, // Add the frontend share link
+          },
+        });
       }
 
       // Close modal on success

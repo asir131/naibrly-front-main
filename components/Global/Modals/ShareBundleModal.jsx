@@ -5,17 +5,22 @@ import { X, Copy } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
 
-export default function ShareBundleModal({ isOpen, onClose, bundleData }) {
+export default function ShareBundleModal({ isOpen, onClose, bundleData, sharingData }) {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  // Generate share URL based on bundle ID
-  const bundleId = bundleData?._id || bundleData?.id;
-  const shareUrl = bundleId
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/bundles/${bundleId}`
-    : 'https://youtu.be/0lO4SKpD2E?si=5LDL1E6...';
-  const bundleTitle = bundleData?.service || bundleData?.title || 'Bundle';
+  // Use frontend share link first, then fallback to backend shareLink, then generated URL
+  const shareUrl = sharingData?.frontendShareLink ||
+    sharingData?.shareLink ||
+    (bundleData?._id || bundleData?.bundle?._id
+      ? `${typeof window !== 'undefined' ? window.location.origin : ''}/join-bundle/${bundleData?._id || bundleData?.bundle?._id}`
+      : 'https://youtu.be/0lO4SKpD2E?si=5LDL1E6...');
+
+  const bundleTitle = bundleData?.title || bundleData?.bundle?.title || bundleData?.service || 'Bundle';
+
+  // Use backend QR code if available
+  const qrCodeSrc = sharingData?.qrCode || '/QR Code.png';
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -65,13 +70,23 @@ export default function ShareBundleModal({ isOpen, onClose, bundleData }) {
           {/* QR Code */}
           <div className="flex justify-center mb-6">
             <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
-              <Image
-                src="/QR Code.png"
-                alt="QR Code"
-                width={200}
-                height={200}
-                className="w-48 h-48 object-contain"
-              />
+              {qrCodeSrc.startsWith('data:image') ? (
+                // If QR code is base64 from backend, use img tag
+                <img
+                  src={qrCodeSrc}
+                  alt="QR Code"
+                  className="w-48 h-48 object-contain"
+                />
+              ) : (
+                // Otherwise use Next.js Image component for static images
+                <Image
+                  src={qrCodeSrc}
+                  alt="QR Code"
+                  width={200}
+                  height={200}
+                  className="w-48 h-48 object-contain"
+                />
+              )}
             </div>
           </div>
 

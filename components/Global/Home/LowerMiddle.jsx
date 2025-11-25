@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -15,141 +15,95 @@ const LocationIcon = () => (
   </svg>
 );
 
+// Helper function to shuffle array randomly
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// Helper function to format date
+const formatServiceDate = (dateString) => {
+  const date = new Date(dateString);
+  const options = { month: 'short', day: 'numeric', year: 'numeric' };
+  return `Service Date: ${date.toLocaleDateString('en-US', options)}`;
+};
+
+// Default avatar placeholder
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop';
+
 export default function NaibrlybundelOfferSection() {
   const { isAuthenticated } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [bundles, setBundles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleViewDetails = (offer) => {
+  useEffect(() => {
+    const fetchBundles = async () => {
+      try {
+        const response = await fetch('https://naibrly-backend.onrender.com/api/bundles/all');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bundles');
+        }
+        const data = await response.json();
+        // API returns { success: true, data: { bundles: [...] } }
+        const bundlesArray = data?.data?.bundles || [];
+        // Shuffle and take only 6 bundles
+        const randomBundles = shuffleArray(bundlesArray).slice(0, 6);
+        setBundles(randomBundles);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBundles();
+  }, []);
+
+  const handleViewDetails = (bundle) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
       const serviceData = {
-        title: offer.service,
+        title: bundle.title,
         image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop',
       };
       setSelectedBundle(serviceData);
       setIsAuthModalOpen(true);
       return;
     }
-    // Add participants data for the modal
-    const bundleWithParticipants = {
-      ...offer,
-      participants: [
-        {
-          name: 'John Smith',
-          image: offer.images[0],
-          location: offer.location
-        },
-        {
-          name: 'Sarah Johnson',
-          image: offer.images[1],
-          location: offer.location
-        },
-        {
-          name: 'Open Spot',
-          image: offer.images[2],
-          location: offer.location
-        }
-      ],
+
+    // Map participants to the format expected by the modal
+    const mappedParticipants = bundle.participants?.map(p => ({
+      name: p.customer ? `${p.customer.firstName} ${p.customer.lastName}` : 'Participant',
+      image: p.customer?.profileImage?.url || DEFAULT_AVATAR,
+      location: p.address ? `${p.address.city}, ${p.address.state}` : ''
+    })) || [];
+
+    // Format location
+    const location = bundle.address
+      ? `${bundle.address.street}, ${bundle.address.city}, ${bundle.address.state}`
+      : 'Location not specified';
+
+    // Pass the full bundle data to the modal
+    const bundleWithModalData = {
+      ...bundle,
+      service: bundle.title,
+      location: location,
+      originalPrice: `$${bundle.pricing?.originalPrice || 0}`,
+      discountedPrice: `${bundle.pricing?.discountPercent || bundle.bundleDiscount}% off`,
+      participants: mappedParticipants,
       modalImage: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop'
     };
-    setSelectedBundle(bundleWithParticipants);
+    setSelectedBundle(bundleWithModalData);
     setIsModalOpen(true);
   };
-
-  const offers = [
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    },
-    {
-      id: 6,
-      service: 'Window Washing',
-      bundle: '3-Person Bundle (1 Spot Open)',
-      date: 'Service Date: jun 10, 2025',
-      location: 'Street Springfield, IL 62704',
-      rate: 'Standard rates est.',
-      originalPrice: '$68/hr',
-      discountedPrice: '5-10% off',
-      images: [
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop'
-      ]
-    }
-  ];
 
   return (
     <div className="bg-linear-to-br from-teal-50 to-gray-50 py-8 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 lg:px-16">
@@ -165,73 +119,106 @@ export default function NaibrlybundelOfferSection() {
         </div>
 
         {/* Offers Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-8 sm:mb-10 md:mb-12">
-          {offers.map((offer, index) => (
-            <div
-              key={`${offer.id}-${index}`}
-              className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
-            >
-              {/* Header with Service Name and Images */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                    {offer.service}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    Published 1hr ago
-                  </p>
-                </div>
-                <div className="flex -space-x-2 ml-3">
-                  {offer.images.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`Person ${idx + 1}`}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
-                    />
-                  ))}
-                </div>
-              </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-red-500">
+            {error}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-8 sm:mb-10 md:mb-12">
+            {bundles.map((bundle, index) => {
+              // Calculate time since creation
+              const createdAt = new Date(bundle.createdAt);
+              const now = new Date();
+              const hoursAgo = Math.floor((now - createdAt) / (1000 * 60 * 60));
+              const timeAgoText = hoursAgo < 1 ? 'Just now' : hoursAgo < 24 ? `Published ${hoursAgo}hr ago` : `Published ${Math.floor(hoursAgo / 24)}d ago`;
 
-              {/* Bundle Info */}
-              <p className="text-base sm:text-lg text-gray-900 font-semibold mb-3">
-                {offer.bundle}
-              </p>
+              // Get participant images
+              const participantImages = bundle.participants?.map(p =>
+                p.customer?.profileImage?.url || DEFAULT_AVATAR
+              ) || [];
 
-              {/* Service Date */}
-              <p className="text-sm sm:text-base text-gray-600 mb-3">
-                {offer.date}
-              </p>
+              // Format location
+              const location = bundle.address
+                ? `${bundle.address.street}, ${bundle.address.city}, ${bundle.address.state} ${bundle.zipCode || ''}`
+                : 'Location not specified';
 
-              {/* Location */}
-              <div className="flex items-start gap-2 text-sm sm:text-base text-gray-700 mb-4">
-                <LocationIcon />
-                <span className="leading-snug">{offer.location}</span>
-              </div>
-
-              {/* Rate Info and CTA Button */}
-              <div className="flex items-center justify-between mt-4">
-                <div>
-                  <p className="text-base sm:text-lg text-gray-900 font-semibold">
-                    {offer.rate}
-                  </p>
-                  <p className="text-sm sm:text-base text-gray-600">
-                    {offer.discountedPrice}
-                  </p>
-                </div>
-                <Button
-                  onClick={() => handleViewDetails(offer)}
-                  className="bg-[#0E7A601A] text-teal-700 font-semibold rounded-xl px-6 py-2.5 text-sm transition-colors whitespace-nowrap hover:bg-[#0E7A60] hover:text-white"
-                  style={{
-                    border: 'none'
-                  }}
+              return (
+                <div
+                  key={bundle._id || index}
+                  className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
                 >
-                  View details
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+                  {/* Header with Service Name and Images */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                        {bundle.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        {timeAgoText}
+                      </p>
+                    </div>
+                    <div className="flex -space-x-2 ml-3">
+                      {participantImages.slice(0, 3).map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt={`Participant ${idx + 1}`}
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
+                        />
+                      ))}
+                      {bundle.availableSpots > 0 && (
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                          +{bundle.availableSpots}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bundle Info */}
+                  <p className="text-base sm:text-lg text-gray-900 font-semibold mb-3">
+                    {bundle.maxParticipants}-Person Bundle ({bundle.availableSpots} Spot{bundle.availableSpots !== 1 ? 's' : ''} Open)
+                  </p>
+
+                  {/* Service Date */}
+                  <p className="text-sm sm:text-base text-gray-600 mb-3">
+                    {formatServiceDate(bundle.serviceDate)}
+                  </p>
+
+                  {/* Location */}
+                  <div className="flex items-start gap-2 text-sm sm:text-base text-gray-700 mb-4">
+                    <LocationIcon />
+                    <span className="leading-snug">{location}</span>
+                  </div>
+
+                  {/* Rate Info and CTA Button */}
+                  <div className="flex items-center justify-between mt-4">
+                    <div>
+                      <p className="text-base sm:text-lg text-gray-900 font-semibold">
+                        ${bundle.pricing?.finalPrice || bundle.finalPrice}
+                      </p>
+                      <p className="text-sm sm:text-base text-gray-600">
+                        {bundle.pricing?.discountPercent || bundle.bundleDiscount}% off
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => handleViewDetails(bundle)}
+                      className="bg-[#0E7A601A] text-teal-700 font-semibold rounded-xl px-6 py-2.5 text-sm transition-colors whitespace-nowrap hover:bg-[#0E7A60] hover:text-white"
+                      style={{
+                        border: 'none'
+                      }}
+                    >
+                      View details
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* CTA Button */}
         <div className="text-center px-4">

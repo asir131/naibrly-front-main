@@ -99,9 +99,30 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
-      transformErrorResponse: (response) => {
-        console.error('Submit verify information error response:', response);
-        return response;
+      transformErrorResponse: (response, meta) => {
+        console.error('Submit verify information error response:', {
+          status: meta?.response?.status,
+          statusText: meta?.response?.statusText,
+          data: response?.data || response,
+          headers: meta?.response?.headers,
+        });
+
+        // Handle different error types
+        if (!response || Object.keys(response).length === 0) {
+          return {
+            status: meta?.response?.status || 'UNKNOWN_ERROR',
+            data: {
+              message: 'Network error or server did not respond. Please check your connection and try again.',
+              errors: []
+            }
+          };
+        }
+
+        // Return structured error
+        return {
+          status: response.status || meta?.response?.status,
+          data: response.data || response
+        };
       },
     }),
 
@@ -201,19 +222,22 @@ export const servicesApi = createApi({
         if (params?.status) queryParams.append('status', params.status);
 
         const queryString = queryParams.toString();
-        return `/service-requests/customer/my-requests${queryString ? `?${queryString}` : ''}`;
+        return `/service-requests/customer/my-all-requests${queryString ? `?${queryString}` : ''}`;
       },
       providesTags: (result) =>
-        result?.serviceRequests
+        result?.serviceRequests?.items
           ? [
-              ...result.serviceRequests.map(({ _id }) => ({ type: 'ServiceRequests', id: _id })),
+              ...result.serviceRequests.items.map(({ _id }) => ({ type: 'ServiceRequests', id: _id })),
               { type: 'ServiceRequests', id: 'LIST' },
             ]
           : [{ type: 'ServiceRequests', id: 'LIST' }],
       transformResponse: (response) => {
         if (!response || !response.success || !response.data) {
           console.error('Invalid service requests response:', response);
-          return { serviceRequests: [], pagination: { current: 1, total: 0, pages: 1 } };
+          return {
+            serviceRequests: { items: [], pagination: { current: 1, total: 0, pages: 1 } },
+            bundles: { items: [], pagination: { current: 1, total: 0, pages: 1 } }
+          };
         }
         return response.data;
       },
@@ -379,6 +403,45 @@ export const servicesApi = createApi({
           throw new Error(response?.message || 'Failed to join bundle');
         }
         return response.data;
+      },
+    }),
+
+    // Get bundle details by share token (view only, doesn't join)
+    getBundleByToken: builder.query({
+      query: (shareToken) => `/bundles/share/${shareToken}`,
+      providesTags: (result, error, shareToken) => [
+        { type: 'Bundles', id: shareToken },
+      ],
+      transformResponse: (response) => {
+        console.log('Get bundle by token API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Bundle not found or expired');
+        }
+        return response;
+      },
+      // Don't refetch automatically
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+    }),
+
+    // Join a bundle via share token
+    joinBundleByToken: builder.mutation({
+      query: (shareToken) => ({
+        url: `/bundles/share/${shareToken}`,
+        method: 'POST',
+      }),
+      invalidatesTags: (result, error, shareToken) => [
+        { type: 'Bundles', id: shareToken },
+        { type: 'Bundles', id: 'LIST' },
+        { type: 'Bundles', id: 'NEARBY' },
+      ],
+      transformResponse: (response) => {
+        console.log('Join bundle by token API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to join bundle');
+        }
+        return response;
       },
     }),
 
@@ -601,6 +664,46 @@ export const servicesApi = createApi({
         return response.data;
       },
     }),
+
+    // Submit payout information
+    submitPayoutInformation: builder.mutation({
+      query: (data) => ({
+        url: '/payout/information',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Submit payout information API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to submit payout information');
+        }
+        return response.data;
+      },
+      transformErrorResponse: (response, meta) => {
+        console.error('Submit payout information error response:', {
+          status: meta?.response?.status,
+          statusText: meta?.response?.statusText,
+          data: response?.data || response,
+          headers: meta?.response?.headers,
+        });
+
+        if (!response || Object.keys(response).length === 0) {
+          return {
+            status: meta?.response?.status || 'UNKNOWN_ERROR',
+            data: {
+              message: 'Network error or server did not respond. Please check your connection and try again.',
+              errors: []
+            }
+          };
+        }
+
+        return {
+          status: response.status || meta?.response?.status,
+          data: response.data || response
+        };
+      },
+    }),
   }),
 });
 
@@ -610,6 +713,7 @@ export const {
   useRegisterProviderMutation,
   useSubmitVerifyInformationMutation,
   useUpdateProviderZipCodeMutation,
+  useSubmitPayoutInformationMutation,
   // Service hooks
   useGetServicesQuery,
   useGetServicesByCategoryQuery,
@@ -623,6 +727,8 @@ export const {
   useGetAllBundlesQuery,
   useGetNearbyBundlesQuery,
   useJoinBundleMutation,
+  useGetBundleByTokenQuery,
+  useJoinBundleByTokenMutation,
   useGetNearbyServicesQuery,
   // Password reset hooks
   useForgotPasswordMutation,

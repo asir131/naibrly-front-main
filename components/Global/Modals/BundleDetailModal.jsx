@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, MapPin, Loader2 } from "lucide-react";
+import { Share2, MapPin, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import ShareBundleModal from "./ShareBundleModal";
 import { useJoinBundleMutation } from "@/redux/api/servicesApi";
+
+// Default avatar placeholder
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop';
 
 export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -13,10 +16,14 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
   if (!isOpen || !bundleData) return null;
 
-  // Filter out "Open Spot" participants
-  const activeParticipants = bundleData.participants?.filter(
+  // Filter out "Open Spot" participants and ensure valid image/name
+  const activeParticipants = (bundleData.participants?.filter(
     participant => participant.name !== "Open Spot"
-  ) || [];
+  ) || []).map(p => ({
+    ...p,
+    image: p.image || DEFAULT_AVATAR,
+    name: p.name || 'Participant'
+  }));
 
   const handleShare = () => {
     setIsShareModalOpen(true);

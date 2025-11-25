@@ -159,8 +159,22 @@ const LocationIcon = () => (
 
   const handleShareWithText = () => {
     setIsBundlePublishedOpen(false);
-    // In a real app, you would open the native share dialog or email client
-    alert('Opening text/email share...');
+    // Use the frontend share link
+    const frontendShareLink = createdBundleData?.sharing?.frontendShareLink;
+    if (frontendShareLink && navigator.share) {
+      // Use native share API if available
+      navigator.share({
+        title: createdBundleData?.bundle?.title || 'Join my Naibrly Bundle',
+        text: `I've created a bundle on Naibrly! Join me to save money on ${createdBundleData?.bundle?.title || 'services'}.`,
+        url: frontendShareLink,
+      }).catch((error) => console.log('Error sharing:', error));
+    } else if (frontendShareLink) {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(frontendShareLink);
+      alert('Share link copied to clipboard!');
+    } else {
+      alert('Share link not available');
+    }
   };
 
   const handleShareWithQR = () => {
@@ -327,6 +341,7 @@ const LocationIcon = () => (
         isOpen={isShareBundleOpen}
         onClose={() => setIsShareBundleOpen(false)}
         bundleData={createdBundleData}
+        sharingData={createdBundleData?.sharing}
       />
 
       {/* Auth Prompt Modal */}

@@ -30,7 +30,7 @@ export default function RequestPage() {
 
   // Transform API data to component format and filter by status
   const { openRequests, closedRequests } = useMemo(() => {
-    if (!data?.serviceRequests) {
+    if (!data) {
       return { openRequests: [], closedRequests: [] };
     }
 
@@ -56,6 +56,7 @@ export default function RequestPage() {
 
       return {
         id: request._id,
+        type: 'service',
         title: request.serviceType,
         description: request.problem || request.note || 'No description provided',
         avgPrice: request.price ? `$${request.price}/hr` : `$${request.estimatedHours ? request.estimatedHours * 20 : 60}/hr`,
@@ -73,14 +74,65 @@ export default function RequestPage() {
       };
     };
 
-    const transformed = data.serviceRequests.map(transformRequest);
+    const transformBundle = (bundle) => {
+      // Map bundle status to UI format
+      const statusMap = {
+        pending: { label: 'Pending', color: 'text-orange-600', bg: 'bg-orange-50' },
+        accepted: { label: 'Accepted', color: 'text-green-600', bg: 'bg-green-50' },
+        completed: { label: 'Done', color: 'text-gray-700', bg: 'bg-gray-100' },
+        cancelled: { label: 'Cancel', color: 'text-red-600', bg: 'bg-red-50' },
+      };
+
+      const statusInfo = statusMap[bundle.status] || statusMap.pending;
+
+      // Format date
+      const date = new Date(bundle.serviceDate);
+      const formattedDate = date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+      });
+
+      // Combine service names
+      const serviceNames = bundle.services?.map(s => s.name).join(', ') || 'Bundle Services';
+
+      return {
+        id: bundle._id,
+        type: 'bundle',
+        title: bundle.title,
+        description: bundle.description || 'Bundle service package',
+        avgPrice: `$${bundle.pricing?.finalPrice || bundle.finalPrice || 0}`,
+        rating: bundle.provider?.rating || 0,
+        reviews: 0,
+        date: formattedDate,
+        status: statusInfo.label,
+        statusColor: statusInfo.color,
+        statusBg: statusInfo.bg,
+        image: bundle.provider?.businessLogo?.url || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop',
+        amount: bundle.pricing?.finalPrice || bundle.finalPrice || 0,
+        providerName: bundle.provider?.businessNameRegistered || 'No Provider Yet',
+        businessName: bundle.provider?.businessNameRegistered || '',
+        services: serviceNames,
+        participants: bundle.currentParticipants || 0,
+        maxParticipants: bundle.maxParticipants || 0,
+        originalData: bundle, // Keep original data for detailed view
+      };
+    };
+
+    // Transform service requests
+    const transformedRequests = data.serviceRequests?.items?.map(transformRequest) || [];
+
+    // Transform bundles
+    const transformedBundles = data.bundles?.items?.map(transformBundle) || [];
+
+    // Combine both arrays
+    const allItems = [...transformedRequests, ...transformedBundles];
 
     // Filter: Open tab = pending + accepted, Closed tab = completed + cancelled
-    const open = transformed.filter(req =>
-      req.status === 'Pending' || req.status === 'Accepted'
+    const open = allItems.filter(item =>
+      item.status === 'Pending' || item.status === 'Accepted'
     );
-    const closed = transformed.filter(req =>
-      req.status === 'Done' || req.status === 'Cancel'
+    const closed = allItems.filter(item =>
+      item.status === 'Done' || item.status === 'Cancel'
     );
 
     return { openRequests: open, closedRequests: closed };
@@ -129,6 +181,7 @@ export default function RequestPage() {
     const isAccepted = request.status === 'Accepted';
     const isDone = request.status === 'Done';
     const isCancelled = request.status === 'Cancel';
+    const isBundle = request.type === 'bundle';
 
     return (
       <div
@@ -162,9 +215,16 @@ export default function RequestPage() {
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            {/* Header with title and status */}
+            {/* Header with title, badge, and status */}
             <div className="flex items-start justify-between mb-2">
-              <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
+                {isBundle && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                    Bundle
+                  </span>
+                )}
+              </div>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${request.statusBg} ${request.statusColor} whitespace-nowrap ml-2`}>
                 {request.status === 'Accepted' && '• Accepted'}
                 {request.status === 'Pending' && '• Pending'}
@@ -174,21 +234,37 @@ export default function RequestPage() {
             </div>
 
             {/* Description */}
-            <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
               {request.description}
             </p>
+
+            {/* Bundle Services (if bundle) */}
+            {isBundle && request.services && (
+              <p className="text-xs text-teal-600 mb-2 font-medium">
+                Services: {request.services}
+              </p>
+            )}
 
             {/* Price, Rating, and Date */}
             <div className="flex items-center gap-4 text-sm">
               <div>
-                <span className="font-semibold text-gray-900">Avg. price: </span>
+                <span className="font-semibold text-gray-900">
+                  {isBundle ? 'Price: ' : 'Avg. price: '}
+                </span>
                 <span className="text-gray-700">{request.avgPrice}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-yellow-400">★</span>
-                <span className="font-medium text-gray-900">{request.rating}</span>
-                <span className="text-gray-500">({request.reviews.toLocaleString()} reviews)</span>
-              </div>
+              {request.rating > 0 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-yellow-400">★</span>
+                  <span className="font-medium text-gray-900">{request.rating}</span>
+                  <span className="text-gray-500">({request.reviews.toLocaleString()} reviews)</span>
+                </div>
+              )}
+              {isBundle && (
+                <div className="text-gray-600">
+                  {request.participants}/{request.maxParticipants} joined
+                </div>
+              )}
             </div>
 
             {/* Date */}

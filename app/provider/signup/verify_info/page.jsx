@@ -32,59 +32,89 @@ const VerifyInfo = () => {
   const handleFileChange = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size too large. Please upload a file smaller than 10MB.');
+        e.target.value = '';
+        return;
+      }
       setValue("insuranceFile", file, { shouldValidate: true });
     }
   };
 
-  const handleIdFrontClick = (e) => {
-    e.preventDefault();
+  const handleIdFrontClick = () => {
     idFrontRef.current?.click();
   };
 
-  const handleIdBackClick = (e) => {
-    e.preventDefault();
+  const handleIdBackClick = () => {
     idBackRef.current?.click();
   };
 
   const handleIdFrontChange = (e) => {
     const file = e.target.files && e.target.files[0];
-    setValue("idFront", file, { shouldValidate: true });
+    if (file) {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size too large. Please upload a file smaller than 10MB.');
+        e.target.value = '';
+        return;
+      }
+      setValue("idFront", file, { shouldValidate: true });
+    }
   };
 
   const handleIdBackChange = (e) => {
     const file = e.target.files && e.target.files[0];
-    setValue("idBack", file, { shouldValidate: true });
+    if (file) {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size too large. Please upload a file smaller than 10MB.');
+        e.target.value = '';
+        return;
+      }
+      setValue("idBack", file, { shouldValidate: true });
+    }
   };
 
   const onSubmit = async (data) => {
     try {
+      // Check if user is authenticated
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      if (!token) {
+        toast.error('Please log in to continue. You need to be authenticated to submit verification information.');
+        console.error('No auth token found. User needs to log in.');
+        return;
+      }
+
       // Validate required fields
       if (!data.insuranceFile) {
         toast.error('Insurance document is required');
         return;
       }
 
+      if (!data.idFront) {
+        toast.error('ID front side is required');
+        return;
+      }
+
+      if (!data.idBack) {
+        toast.error('ID back side is required');
+        return;
+      }
+
       // Create FormData for file upload - matching backend expectations exactly
       const submitData = new FormData();
 
-      // Required fields from Postman: einNumber, firstName, lastName, businessRegisteredCountry, insuranceDocument
+      // Required fields from backend: einNumber, firstName, lastName, businessRegisteredCountry, insuranceDocument, idFront, idBack
       submitData.append('einNumber', data.einNumber.trim());
       submitData.append('firstName', data.ownerFirstName.trim());
       submitData.append('lastName', data.ownerLastName.trim());
       submitData.append('businessRegisteredCountry', data.businessRegisteredCountry);
 
-      // Insurance document file (REQUIRED)
+      // All document files are REQUIRED
       submitData.append('insuranceDocument', data.insuranceFile);
-
-      // Optional: ID front and back (for future development)
-      // Keep these for now but they're not in the current backend schema
-      if (data.idFront) {
-        submitData.append('idFront', data.idFront);
-      }
-
-      if (data.idBack) {
-        submitData.append('idBack', data.idBack);
-      }
+      submitData.append('idCardFront', data.idFront);
+      submitData.append('idCardBack', data.idBack);
 
       // Log what we're sending
       console.log('Submitting verify information:');
@@ -107,10 +137,27 @@ const VerifyInfo = () => {
         }
       }
 
+      // Log the full error structure to help debug
+      console.error('Full error object:', {
+        status: error?.status,
+        data: error?.data,
+        message: error?.message,
+        originalStatus: error?.originalStatus,
+      });
+
       let errorMessage = 'Failed to submit verification information. Please try again.';
 
+      // Handle different error scenarios - check data.message first since that's what backend returns
       if (error?.data?.message) {
         errorMessage = error.data.message;
+      } else if (error?.status === 'UNKNOWN_ERROR' || error?.originalStatus === undefined) {
+        errorMessage = 'Network error: Unable to connect to the server. Please check your internet connection.';
+      } else if (error?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error?.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (error?.status === 413) {
+        errorMessage = 'File size too large. Please upload smaller files (max 10MB).';
       } else if (error?.data?.errors && Array.isArray(error.data.errors)) {
         if (error.data.errors.length > 0) {
           errorMessage = error.data.errors[0].msg || error.data.errors[0].message || errorMessage;
@@ -329,7 +376,7 @@ const VerifyInfo = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                      ID Front Side
+                      ID Front Side *
                     </label>
                     <div
                       className="cursor-pointer border-2 border-dashed rounded-lg p-4 hover:border-[#1C5941] transition-all duration-200 bg-gray-50 hover:bg-green-50 group relative overflow-hidden"
@@ -367,11 +414,19 @@ const VerifyInfo = () => {
                         onChange={handleIdFrontChange}
                       />
                     </div>
+                    {errors.idFront && (
+                      <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <span>ID front side is required</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
                     <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                      ID Back Side
+                      ID Back Side *
                     </label>
                     <div
                       className="cursor-pointer border-2 border-dashed rounded-lg p-4 hover:border-[#1C5941] transition-all duration-200 bg-gray-50 hover:bg-green-50 group relative overflow-hidden"
@@ -409,6 +464,14 @@ const VerifyInfo = () => {
                         onChange={handleIdBackChange}
                       />
                     </div>
+                    {errors.idBack && (
+                      <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <span>ID back side is required</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

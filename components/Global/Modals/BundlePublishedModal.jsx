@@ -4,7 +4,19 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 
-export default function BundlePublishedModal({ isOpen, onClose, onShareText, onShareQR }) {
+export default function BundlePublishedModal({ isOpen, onClose, onShareText, onShareQR, sharingData }) {
+  const handleShareText = () => {
+    if (onShareText) {
+      onShareText(sharingData);
+    }
+  };
+
+  const handleShareQR = () => {
+    if (onShareQR) {
+      onShareQR(sharingData);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-white rounded-3xl p-8">
@@ -36,14 +48,14 @@ export default function BundlePublishedModal({ isOpen, onClose, onShareText, onS
           {/* Action Buttons */}
           <div className="w-full space-y-3">
             <Button
-              onClick={onShareText}
+              onClick={handleShareText}
               className="w-full bg-white hover:bg-gray-50 text-teal-600 border-2 border-teal-600 h-12 rounded-lg font-semibold text-base"
             >
               Share with text/email
             </Button>
 
             <Button
-              onClick={onShareQR}
+              onClick={handleShareQR}
               className="w-full bg-white hover:bg-gray-50 text-teal-600 border-2 border-teal-600 h-12 rounded-lg font-semibold text-base"
             >
               Share with QR

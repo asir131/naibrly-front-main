@@ -2,10 +2,14 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { IoIosArrowDown } from "react-icons/io";
+import { useSubmitPayoutInformationMutation } from '@/redux/api/servicesApi';
+import { toast } from 'react-hot-toast';
 
 export default function PayoutInfo() {
   // this is for navigate
   const router = useRouter();
+  const [submitPayoutInformation, { isLoading }] = useSubmitPayoutInformationMutation();
+
   // this is for handle back
   const handleBack = () => {
     router.back();
@@ -19,9 +23,75 @@ export default function PayoutInfo() {
     formState: { errors },
   } = useForm();
   const onSubmit = async (data) => {
-    console.log(data);
-    router.push("/provider/signup/analytics");
-    // (optional) formData upload example here
+    try {
+      // Check if user is authenticated
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      if (!token) {
+        toast.error('Please log in to continue');
+        return;
+      }
+
+      // Map bank codes to full bank names
+      const bankNameMap = {
+        'BOFA': 'Bank of America',
+        'CHASE': 'Chase Bank',
+        'WELLS': 'Wells Fargo',
+        'CITI': 'Citibank',
+        'USB': 'US Bank',
+        'PNC': 'PNC Bank',
+        'TD': 'TD Bank',
+        'COF': 'Capital One'
+      };
+
+      // Prepare the payload according to the API requirements
+      const payoutData = {
+        accountHolderName: data.account_holder_name?.trim(),
+        bankName: bankNameMap[data.bank_name] || data.bank_name,
+        bankCode: data.bank_name,
+        accountNumber: data.bank_account,
+        routingNumber: data.routing_number,
+        accountType: data.account_type || "checking"
+      };
+
+      // Log what we're sending
+      console.log('Submitting payout information:', payoutData);
+
+      await submitPayoutInformation(payoutData).unwrap();
+
+      toast.success('Payout information saved successfully!');
+      router.push("/provider/signup/analytics");
+    } catch (error) {
+      console.error('Payout submission error:', error);
+
+      // Enhanced error logging
+      if (error?.data) {
+        console.error('Backend error details:', error.data);
+        if (error.data.errors) {
+          console.error('Validation errors:', error.data.errors);
+        }
+      }
+
+      let errorMessage = 'Failed to submit payout information. Please try again.';
+
+      // Handle different error scenarios
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.status === 'UNKNOWN_ERROR' || error?.originalStatus === undefined) {
+        errorMessage = 'Network error: Unable to connect to the server. Please check your internet connection.';
+      } else if (error?.status === 401) {
+        errorMessage = 'Authentication required. Please log in again.';
+      } else if (error?.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (error?.data?.errors && Array.isArray(error.data.errors)) {
+        if (error.data.errors.length > 0) {
+          errorMessage = error.data.errors[0].msg || error.data.errors[0].message || errorMessage;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+    }
   };
   return (
     <div className="user_info_layout md:px-[126px] md:py-[80px] max-sm:my-6 max-sm:mx-6">
@@ -63,8 +133,8 @@ export default function PayoutInfo() {
                 </label>
                 <input
                   className="input_box text-[16px] w-full"
-                  type="number"
-                  placeholder="Jacob Meikle"
+                  type="text"
+                  placeholder="John Doe"
                   {...register("account_holder_name", { required: true })}
                 />
                 {errors.account_holder_name && (
@@ -81,17 +151,19 @@ export default function PayoutInfo() {
                   <IoIosArrowDown className="absolute right-4 top-4" />
                   <select
                     placeholder="Choose your bank"
-                    defaultValue={"Choose your bank"}
-                    name="role"
+                    defaultValue=""
                     className="input_box text-[#999] text-[16px]"
                     {...register("bank_name", { required: true })}
                   >
-                    <option value="dashbangla_bank">Dash Bangla Bank</option>
-                    <option value="Islamic_bank">Islamic Bank</option>
-                    <option value="american_bank">American Bank</option>
-                    <option value="international_bank">
-                      International Bank
-                    </option>
+                    <option value="" disabled>Choose your bank</option>
+                    <option value="BOFA">Bank of America (BOFA)</option>
+                    <option value="CHASE">Chase Bank (CHASE)</option>
+                    <option value="WELLS">Wells Fargo (WELLS)</option>
+                    <option value="CITI">Citibank (CITI)</option>
+                    <option value="USB">US Bank (USB)</option>
+                    <option value="PNC">PNC Bank (PNC)</option>
+                    <option value="TD">TD Bank (TD)</option>
+                    <option value="COF">Capital One (COF)</option>
                   </select>
                 </div>
                 {errors.bank_name && (
@@ -106,13 +178,15 @@ export default function PayoutInfo() {
                 </label>
                 <input
                   className="input_box text-[16px] w-full"
-                  type="number"
-                  placeholder="0123456789"
-                  {...register("bank_account", { required: true })}
+                  type="text"
+                  placeholder="1234567890"
+                  {...register("bank_account", { required: true, pattern: /^[0-9]+$/ })}
                 />
                 {errors.bank_account && (
                   <span className="text-red-500 text-[10px]">
-                    This field is required
+                    {errors.bank_account.type === 'pattern'
+                      ? 'Please enter a valid account number (digits only)'
+                      : 'This field is required'}
                   </span>
                 )}
               </div>
@@ -122,11 +196,40 @@ export default function PayoutInfo() {
                 </label>
                 <input
                   className="input_box text-[16px] w-full"
-                  type="number"
-                  placeholder="0123456789"
-                  {...register("routing_number", { required: true })}
+                  type="text"
+                  placeholder="026009593"
+                  maxLength="9"
+                  {...register("routing_number", {
+                    required: true,
+                    pattern: /^[0-9]{9}$/,
+                    minLength: 9,
+                    maxLength: 9
+                  })}
                 />
                 {errors.routing_number && (
+                  <span className="text-red-500 text-[10px]">
+                    {errors.routing_number.type === 'pattern' || errors.routing_number.type === 'minLength' || errors.routing_number.type === 'maxLength'
+                      ? 'Routing number must be exactly 9 digits'
+                      : 'This field is required'}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 pb-3">
+                <label className="text-black text-sm font-semibold">
+                  Account Type
+                </label>
+                <div className="mb-3 relative">
+                  <IoIosArrowDown className="absolute right-4 top-4" />
+                  <select
+                    defaultValue="checking"
+                    className="input_box text-[16px]"
+                    {...register("account_type", { required: true })}
+                  >
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                  </select>
+                </div>
+                {errors.account_type && (
                   <span className="text-red-500 text-[10px]">
                     This field is required
                   </span>
@@ -169,9 +272,20 @@ export default function PayoutInfo() {
               </div>
               <button
                 type="submit"
-                className="next_button w-full mt-[32px] text-[16px] font-medium text-white cursor-pointer"
+                disabled={isLoading}
+                className="next_button w-full mt-[32px] text-[16px] font-medium text-white cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
               >
-                Confirm
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  'Confirm'
+                )}
               </button>
             </div>
           </div>
