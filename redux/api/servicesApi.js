@@ -309,6 +309,21 @@ export const servicesApi = createApi({
       invalidatesTags: [{ type: 'Bundles', id: 'LIST' }],
     }),
 
+    // Update bundle status (provider accepts/declines)
+    updateBundleStatus: builder.mutation({
+      query: ({ bundleId, ...body }) => ({
+        url: `/bundles/${bundleId}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { bundleId }) => [
+        { type: 'Bundles', id: bundleId },
+        { type: 'Bundles', id: 'LIST' },
+        'Provider',
+        'ServiceRequests',
+      ],
+    }),
+
     // Get customer's bundles
     getMyBundles: builder.query({
       query: (params) => {
@@ -788,6 +803,7 @@ export const {
   useUpdateServiceRequestStatusMutation,
   useCancelServiceRequestMutation,
   useCreateBundleMutation,
+  useUpdateBundleStatusMutation,
   useGetMyBundlesQuery,
   useGetAllBundlesQuery,
   useGetNearbyBundlesQuery,

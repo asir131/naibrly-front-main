@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-function BundleRequestCard({ bundle, handleCencelOrderConfirm }) {
+function BundleRequestCard({ bundle, handleCencelOrderConfirm, handleAccept, isUpdating }) {
     if (!bundle) return null;
 
     const serviceDate = new Date(bundle.serviceDate);
@@ -92,14 +92,22 @@ function BundleRequestCard({ bundle, handleCencelOrderConfirm }) {
                 </div>
 
                 <div className="flex gap-3">
-                    <button onClick={handleCencelOrderConfirm} type="button" className="decline_btn px-4 py-2">
+                    <button
+                        onClick={handleCencelOrderConfirm}
+                        type="button"
+                        className="decline_btn px-4 py-2"
+                        disabled={isUpdating}
+                    >
                         Decline
                     </button>
-                    <Link href={`/provider/signup/order`}>
-                        <button type="button" className="accept_btn px-4 py-2">
-                            Accept
-                        </button>
-                    </Link>
+                    <button
+                        onClick={handleAccept}
+                        type="button"
+                        className="accept_btn px-4 py-2"
+                        disabled={isUpdating}
+                    >
+                        {isUpdating ? 'Processing...' : 'Accept'}
+                    </button>
                 </div>
             </div>
         </div>

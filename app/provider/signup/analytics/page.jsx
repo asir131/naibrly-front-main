@@ -5,21 +5,76 @@ import ReviewsList from '@/components/ReviewsList'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import CancelOrderConfirmModal from '@/components/CancelOrderConfirmModal'
-import { useGetProviderAnalyticsQuery, useGetProviderServiceRequestsQuery } from '@/redux/api/servicesApi'
+import { useGetProviderAnalyticsQuery, useGetProviderServiceRequestsQuery, useUpdateServiceRequestStatusMutation, useUpdateBundleStatusMutation } from '@/redux/api/servicesApi'
 
 const Analytics = () => {
     const [open, setOpen] = useState(false)
+    const [selectedRequest, setSelectedRequest] = useState(null)
+    const [selectedBundle, setSelectedBundle] = useState(null)
+
     const { data: analytics, isLoading, isError, error } = useGetProviderAnalyticsQuery()
     const { data: requestsData, isLoading: requestsLoading } = useGetProviderServiceRequestsQuery()
+    const [updateServiceRequestStatus, { isLoading: isUpdatingRequest }] = useUpdateServiceRequestStatusMutation()
+    const [updateBundleStatus, { isLoading: isUpdatingBundle }] = useUpdateBundleStatusMutation()
 
-    const handleCencelOrderConfirm = () => {
+    const handleCencelOrderConfirm = (item, type) => {
+        if (type === 'service') {
+            setSelectedRequest(item)
+            setSelectedBundle(null)
+        } else {
+            setSelectedBundle(item)
+            setSelectedRequest(null)
+        }
         setOpen(true)
     }
+
+    const handleAccept = async (item, type) => {
+        try {
+            if (type === 'service') {
+                await updateServiceRequestStatus({
+                    requestId: item._id,
+                    status: 'accepted',
+                    note: 'Service accepted by provider'
+                }).unwrap()
+            } else {
+                await updateBundleStatus({
+                    bundleId: item._id,
+                    status: 'accepted',
+                    note: 'Bundle accepted by provider'
+                }).unwrap()
+            }
+        } catch (error) {
+            console.error('Failed to accept:', error)
+        }
+    }
+
     const handleCencelOrderConfirmClose = () => {
         setOpen(false)
+        setSelectedRequest(null)
+        setSelectedBundle(null)
     }
-    const handleCencelOrderConfirmSubmit = (note) => {
-        setOpen(false)
+
+    const handleCencelOrderConfirmSubmit = async (note) => {
+        try {
+            if (selectedRequest) {
+                await updateServiceRequestStatus({
+                    requestId: selectedRequest._id,
+                    status: 'declined',
+                    note: note || 'Service declined by provider'
+                }).unwrap()
+            } else if (selectedBundle) {
+                await updateBundleStatus({
+                    bundleId: selectedBundle._id,
+                    status: 'declined',
+                    note: note || 'Bundle declined by provider'
+                }).unwrap()
+            }
+            setOpen(false)
+            setSelectedRequest(null)
+            setSelectedBundle(null)
+        } catch (error) {
+            console.error('Failed to decline:', error)
+        }
     }
 
     return (
@@ -193,20 +248,21 @@ const Analytics = () => {
                                     {/* actions */}
                                     <div className="flex w-full justify-end gap-3">
                                         <button
-                                            onClick={handleCencelOrderConfirm}
+                                            onClick={() => handleCencelOrderConfirm(request, 'service')}
                                             type="button"
                                             className="decline_btn"
+                                            disabled={isUpdatingRequest}
                                         >
                                             Decline
                                         </button>
-                                        <Link href={`/provider/signup/order`}>
-                                            <button
-                                                type="button"
-                                                className="accept_btn"
-                                            >
-                                                Accept
-                                            </button>
-                                        </Link>
+                                        <button
+                                            onClick={() => handleAccept(request, 'service')}
+                                            type="button"
+                                            className="accept_btn"
+                                            disabled={isUpdatingRequest}
+                                        >
+                                            {isUpdatingRequest ? 'Processing...' : 'Accept'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -225,13 +281,15 @@ const Analytics = () => {
                     <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
                         <p className="text-center text-[#666]">Loading bundle requests...</p>
                     </div>
-                ) : requestsData?.bundles?.items?.length > 0 ? (
+                ) : requestsData?.bundles?.items?.filter(bundle => bundle.status === 'pending').length > 0 ? (
                     <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
-                        {requestsData.bundles.items.map((bundle) => (
+                        {requestsData.bundles.items.filter(bundle => bundle.status === 'pending').map((bundle) => (
                             <div key={bundle._id} className='w-full'>
                                 <BundleRequestCard
                                     bundle={bundle}
-                                    handleCencelOrderConfirm={handleCencelOrderConfirm}
+                                    handleCencelOrderConfirm={() => handleCencelOrderConfirm(bundle, 'bundle')}
+                                    handleAccept={() => handleAccept(bundle, 'bundle')}
+                                    isUpdating={isUpdatingBundle}
                                 />
                             </div>
                         ))}

@@ -4,11 +4,32 @@ import Link from "next/link";
 import React, { useMemo, useState } from "react";
 
 const StatusPill = ({ status }) => {
-  const isAccepted = status?.toLowerCase() === "accepted";
-  const color = isAccepted ? "#16A34A" : "#F3934F"; // green vs orange
-  const bg = isAccepted ? "#E8F7EE" : "#FFF3E9";
-  const dot = isAccepted ? "#34D399" : "#FBBF24";
-  const label = isAccepted ? "Accepted" : "Pending";
+  const statusLower = status?.toLowerCase();
+
+  let color, bg, dot, label;
+
+  if (statusLower === "accepted") {
+    color = "#16A34A";
+    bg = "#E8F7EE";
+    dot = "#34D399";
+    label = "Accepted";
+  } else if (statusLower === "completed") {
+    color = "#0E7A60";
+    bg = "#E6F7F4";
+    dot = "#0E7A60";
+    label = "Completed";
+  } else if (statusLower === "cancelled" || statusLower === "declined") {
+    color = "#DC2626";
+    bg = "#FEE2E2";
+    dot = "#EF4444";
+    label = statusLower === "cancelled" ? "Cancelled" : "Declined";
+  } else {
+    color = "#F3934F";
+    bg = "#FFF3E9";
+    dot = "#FBBF24";
+    label = "Pending";
+  }
+
   return (
     <span
       className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium"
@@ -26,7 +47,36 @@ const Star = () => (
   </svg>
 );
 
-const RequestRow = ({ item }) => {
+const RequestRow = ({ item, type }) => {
+  const isBundle = type === 'bundle';
+
+  const title = isBundle ? item.title : item.serviceType;
+  const description = isBundle
+    ? item.description
+    : `${item.problem}${item.note ? ` - ${item.note}` : ''}`;
+  const price = isBundle
+    ? item.services?.[0]?.hourlyRate || 0
+    : item.price || 0;
+  const customerImage = isBundle
+    ? item.creator?.profileImage?.url
+    : item.customer?.profileImage?.url;
+  const customerName = isBundle
+    ? `${item.creator?.firstName} ${item.creator?.lastName}`
+    : `${item.customer?.firstName} ${item.customer?.lastName}`;
+
+  const scheduledDate = new Date(isBundle ? item.serviceDate : item.scheduledDate);
+  const formattedDate = scheduledDate.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short'
+  });
+  const formattedTime = isBundle
+    ? item.serviceTimeStart
+    : scheduledDate.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
   return (
     <div className="request_card relative">
       {/* top-right status */}
@@ -35,34 +85,42 @@ const RequestRow = ({ item }) => {
       </div>
 
       <div className="flex gap-4">
-        <Image
-          src={item.image}
-          alt={item.title}
+        <img
+          src={customerImage || "https://i.pravatar.cc/140?img=1"}
+          alt={customerName}
           width={140}
           height={146.5}
-          className=" rounded-xl object-cover"
+          className="rounded-xl object-cover w-[140px] h-[146.5px]"
         />
 
         <div className="flex-1">
-          <h3 className="text-[18px] font-semibold text-[#1D1D1F]">{item.title}</h3>
+          <h3 className="text-[18px] font-semibold text-[#1D1D1F]">{title}</h3>
           <p className="mt-1 text-[14px] leading-6 text-[#7F7F7F] line-clamp-2 md:line-clamp-none">
-            {item.description}
+            {description}
           </p>
 
           <div className="mt-2 text-[15px]">
-            <span className="text-[#71717A]">Avg. price: </span>
-            <span className="font-semibold text-[#0E7A60]">${item.rate}/hr</span>
+            <span className="text-[#71717A]">Customer: </span>
+            <span className="font-semibold text-[#1D1D1F]">{customerName}</span>
           </div>
 
-          <div className="mt-2 flex items-center gap-2 text-[15px] text-[#1D1D1F]">
-            <Star />
-            <span className="font-medium">{item.rating.toFixed(1)}</span>
-            <span className="text-[#7F7F7F]">({item.reviews} reviews)</span>
+          <div className="mt-2 text-[15px]">
+            <span className="text-[#71717A]">Price: </span>
+            <span className="font-semibold text-[#0E7A60]">${price}{isBundle ? '/hr' : ''}</span>
           </div>
+
+          {isBundle && (
+            <div className="mt-2 text-[15px]">
+              <span className="text-[#71717A]">Participants: </span>
+              <span className="font-semibold text-[#1D1D1F]">
+                {item.currentParticipants}/{item.maxParticipants}
+              </span>
+            </div>
+          )}
 
           <div className="mt-2 text-[15px] text-[#7F7F7F]">
             <span className="text-[#1D1D1F]">Service Date: </span>
-            {item.serviceDate}
+            {formattedDate}, {formattedTime}
           </div>
         </div>
       </div>
@@ -70,67 +128,28 @@ const RequestRow = ({ item }) => {
   );
 };
 
-export default function RequestsTabs({ open = [], closed = [] }) {
+export default function RequestsTabs({
+  openRequests = [],
+  openBundles = [],
+  closedRequests = [],
+  closedBundles = [],
+  isLoading = false
+}) {
   const [tab, setTab] = useState("open");
 
-  const sampleOpen = useMemo(
-    () =>
-      open.length
-        ? open
-        : [
-          {
-            id: 1,
-            title: "Appliance Repairs",
-            description:
-              "Drain pipe leaking, pipe clogged, replace the pipe lineDrain pipe leaking, pipe clogged, replace the pipe lineDrain pipe leaking, pipe clogged, replace the pipe line",
-            rate: 63,
-            rating: 5.0,
-            reviews: 1513,
-            serviceDate: "18 Sep, 14:00",
-            status: "accepted",
-            image:
-              "https://images.unsplash.com/photo-1591453089816-0fbb971b454c?q=80&w=1200&auto=format&fit=crop",
-          },
-          {
-            id: 2,
-            title: "Appliance Repairs",
-            description:
-              "Drain pipe leaking, pipe clogged, replace the pipe lineDrain pipe leaking, pipe clogged, replace the pipe lineDrain pipe leaking, pipe clogged, replace the pipe line",
-            rate: 63,
-            rating: 5.0,
-            reviews: 1513,
-            serviceDate: "18 Sep, 14:00",
-            status: "pending",
-            image:
-              "https://images.unsplash.com/photo-1591453089816-0fbb971b454c?q=80&w=1200&auto=format&fit=crop",
-          },
-        ],
-    [open]
-  );
+  const openList = useMemo(() => {
+    const requests = openRequests.map(req => ({ ...req, type: 'request' }));
+    const bundles = openBundles.map(bundle => ({ ...bundle, type: 'bundle' }));
+    return [...requests, ...bundles];
+  }, [openRequests, openBundles]);
 
-  const sampleClosed = useMemo(
-    () =>
-      closed.length
-        ? closed
-        : [
-          {
-            id: 3,
-            title: "Appliance Repairs",
-            description:
-              "Drain pipe leaking, pipe clogged, replace the pipe lineDrain pipe leaking, pipe clogged, replace the pipe line",
-            rate: 63,
-            rating: 4.9,
-            reviews: 1210,
-            serviceDate: "10 Sep, 16:30",
-            status: "accepted",
-            image:
-              "https://images.unsplash.com/photo-1591453089816-0fbb971b454c?q=80&w=1200&auto=format&fit=crop",
-          },
-        ],
-    [closed]
-  );
+  const closedList = useMemo(() => {
+    const requests = closedRequests.map(req => ({ ...req, type: 'request' }));
+    const bundles = closedBundles.map(bundle => ({ ...bundle, type: 'bundle' }));
+    return [...requests, ...bundles];
+  }, [closedRequests, closedBundles]);
 
-  const list = tab === "open" ? sampleOpen : sampleClosed;
+  const list = tab === "open" ? openList : closedList;
 
   return (
     <div className="w-full">
@@ -160,11 +179,23 @@ export default function RequestsTabs({ open = [], closed = [] }) {
 
       {/* List */}
       <div className="flex flex-col gap-4">
-        {list.map((item) => (
-          <Link href={`/provider/signup/message/${item.id}`}>
-            <RequestRow key={item.id} item={item} />
-          </Link>
-        ))}
+        {isLoading ? (
+          <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+            <p className="text-center text-[#666]">Loading requests...</p>
+          </div>
+        ) : list.length > 0 ? (
+          list.map((item) => (
+            <Link key={item._id} href={`/provider/signup/message/${item._id}`}>
+              <RequestRow item={item} type={item.type} />
+            </Link>
+          ))
+        ) : (
+          <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+            <p className="text-center text-[#666]">
+              No {tab} requests at the moment.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
