@@ -16,24 +16,47 @@ export default function ProviderLoginPage() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock login for provider
-    setTimeout(() => {
-      const mockProvider = {
-        id: '1',
-        name: email.split('@')[0],
-        email: email,
-        profileImage: null,
-        role: 'provider'
-      };
+    try {
+      // Call real login API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          userType: 'provider'
+        }),
+      });
 
-      login({ user: mockProvider, userType: 'provider' });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Store token and user data
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', data.data.token);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        localStorage.setItem('userType', 'provider');
+      }
+
+      // Update Redux state
+      login({ user: data.data.user, userType: 'provider' });
+
       setIsLoading(false);
       router.push('/provider/signup/analytics');
-    }, 1000);
+    } catch (error) {
+      console.error('Login error:', error);
+      alert(error.message || 'Login failed. Please check your credentials.');
+      setIsLoading(false);
+    }
   };
 
   return (

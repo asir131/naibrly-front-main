@@ -1,6 +1,20 @@
 import Link from "next/link";
 
-function BundleRequestCard({ handleCencelOrderConfirm, handleCencelOrderConfirmClose, handleCencelOrderConfirmSubmit, open }) {
+function BundleRequestCard({ bundle, handleCencelOrderConfirm }) {
+    if (!bundle) return null;
+
+    const serviceDate = new Date(bundle.serviceDate);
+    const formattedDate = serviceDate.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+
+    const serviceName = bundle.services?.[0]?.name || 'Service';
+    const hourlyRate = bundle.services?.[0]?.hourlyRate || 0;
+    const participantCount = bundle.currentParticipants || 0;
+    const maxParticipants = bundle.maxParticipants || 0;
+
     return (
         <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5 md:p-6">
             {/* top row: left info + right avatars */}
@@ -8,13 +22,15 @@ function BundleRequestCard({ handleCencelOrderConfirm, handleCencelOrderConfirmC
                 {/* left content */}
                 <div className="flex-1">
                     <h3 className="text-[18px] font-semibold text-[#000]">
-                        Window Washing Bundle
+                        {bundle.title}
                     </h3>
 
                     <div className="mt-2">
-                        <p className="text-[16px] font-medium text-[#333]">3-Person Bundle</p>
+                        <p className="text-[16px] font-medium text-[#333]">
+                            {participantCount}-Person Bundle {maxParticipants > 0 && `(Max: ${maxParticipants})`}
+                        </p>
                         <p className="mt-1 text-[14px] text-[#666]">
-                            Service Date: Jun 10, 2025
+                            Service Date: {formattedDate}
                         </p>
 
                         {/* address */}
@@ -36,28 +52,28 @@ function BundleRequestCard({ handleCencelOrderConfirm, handleCencelOrderConfirmC
                                 />
                                 <circle cx="12" cy="11" r="2.5" stroke="#7F7F7F" strokeWidth="1.5" />
                             </svg>
-                            <span>Street Springfield, IL 62704</span>
+                            <span>
+                                {bundle.address?.street}, {bundle.address?.city}, {bundle.address?.state} {bundle.zipCode}
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 {/* avatar group */}
                 <div className="flex -space-x-2">
-                    <img
-                        src="https://i.pravatar.cc/40?img=11"
-                        alt="member"
-                        className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-[#0E7A60]"
-                    />
-                    <img
-                        src="https://i.pravatar.cc/40?img=22"
-                        alt="member"
-                        className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-[#0E7A60]"
-                    />
-                    <img
-                        src="https://i.pravatar.cc/40?img=33"
-                        alt="member"
-                        className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-[#0E7A60]"
-                    />
+                    {bundle.participants?.slice(0, 3).map((participant, index) => (
+                        <img
+                            key={participant._id || index}
+                            src={participant.customer?.profileImage?.url || `https://i.pravatar.cc/40?img=${index + 1}`}
+                            alt="member"
+                            className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-[#0E7A60]"
+                        />
+                    ))}
+                    {participantCount > 3 && (
+                        <div className="h-[50px] w-[50px] rounded-full bg-[#0E7A60] ring-2 ring-[#0E7A60] flex items-center justify-center text-white text-sm font-semibold">
+                            +{participantCount - 3}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -66,12 +82,12 @@ function BundleRequestCard({ handleCencelOrderConfirm, handleCencelOrderConfirmC
                 <div className="text-[15px] mt-[15px] leading-6">
                     <div>
                         <span className="font-semibold text-[#1D1D1F]">Date: </span>
-                        <span className="text-[#1D1D1F]">18 Sep 2025</span>
-                        <span className="ml-4 font-semibold text-[#0E7A60]">$55/hr</span>
+                        <span className="text-[#1D1D1F]">{formattedDate}</span>
+                        <span className="ml-4 font-semibold text-[#0E7A60]">${hourlyRate}/hr</span>
                     </div>
                     <div>
                         <span className="font-semibold text-[#1D1D1F]">Time: </span>
-                        <span className="text-[#1D1D1F]">14:00</span>
+                        <span className="text-[#1D1D1F]">{bundle.serviceTimeStart} - {bundle.serviceTimeEnd}</span>
                     </div>
                 </div>
 

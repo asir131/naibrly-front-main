@@ -5,9 +5,13 @@ import ReviewsList from '@/components/ReviewsList'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import CancelOrderConfirmModal from '@/components/CancelOrderConfirmModal'
+import { useGetProviderAnalyticsQuery, useGetProviderServiceRequestsQuery } from '@/redux/api/servicesApi'
 
 const Analytics = () => {
     const [open, setOpen] = useState(false)
+    const { data: analytics, isLoading, isError, error } = useGetProviderAnalyticsQuery()
+    const { data: requestsData, isLoading: requestsLoading } = useGetProviderServiceRequestsQuery()
+
     const handleCencelOrderConfirm = () => {
         setOpen(true)
     }
@@ -17,11 +21,21 @@ const Analytics = () => {
     const handleCencelOrderConfirmSubmit = (note) => {
         setOpen(false)
     }
+
     return (
         <div className='analytics_layout md:px-[126px] md:py-[80px] max-sm:py-6 max-sm:px-6 flex flex-col gap-6'>
             {/* this is for head of analytics */}
             <div className='w-full flex flex-col gap-[18px]'>
                 <h1 className='analytics_heading'>Analytics</h1>
+                {/* Error message if API fails */}
+                {isError && (
+                    <div className='w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm'>
+                        {error?.status === 401
+                            ? 'Please log in as a provider to view analytics.'
+                            : `Failed to load analytics data. ${error?.data?.message || 'Please try again later.'}`
+                        }
+                    </div>
+                )}
                 {/* this is for analytics card */}
                 <div className='flex flex-col md:flex-row gap-[48px] w-full'>
                     <div className='analytics_card w-full'>
@@ -38,11 +52,15 @@ const Analytics = () => {
                         </div>
                         <div className='flex justify-center items-center gap-6 w-full'>
                             <div className='flex items-center flex-col w-full border-r-[5px] border-[#0E7A60]'>
-                                <h2 className='analytics_heading'>05</h2>
+                                <h2 className='analytics_heading'>
+                                    {isLoading ? '...' : analytics?.today?.orders || 0}
+                                </h2>
                                 <h3 className='text-sm text-[#666]'>Today</h3>
                             </div>
                             <div className='flex items-center flex-col w-full'>
-                                <h2 className='analytics_heading'>82</h2>
+                                <h2 className='analytics_heading'>
+                                    {isLoading ? '...' : analytics?.month?.orders || 0}
+                                </h2>
                                 <h3 className='text-sm text-[#666]'>This Month</h3>
                             </div>
                         </div>
@@ -61,11 +79,15 @@ const Analytics = () => {
                         </div>
                         <div className='flex justify-center items-center gap-6 w-full'>
                             <div className='flex items-center flex-col w-full border-r-[5px] border-[#0E7A60]'>
-                                <h2 className='analytics_heading'>$2586</h2>
+                                <h2 className='analytics_heading'>
+                                    ${isLoading ? '...' : (analytics?.today?.earnings || 0).toFixed(2)}
+                                </h2>
                                 <h3 className='text-sm text-[#666]'>Today</h3>
                             </div>
                             <div className='flex items-center flex-col w-full'>
-                                <h2 className='analytics_heading'>$223</h2>
+                                <h2 className='analytics_heading'>
+                                    ${isLoading ? '...' : (analytics?.month?.earnings || 0).toFixed(2)}
+                                </h2>
                                 <h3 className='text-sm text-[#666]'>This Month</h3>
                             </div>
                         </div>
@@ -75,7 +97,25 @@ const Analytics = () => {
             {/* this is for active request */}
             <div className='flex flex-col gap-[18px] w-full'>
                 <h1 className='analytics_heading'>Active Request</h1>
-                <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+                {requestsLoading ? (
+                    <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+                        <p className="text-center text-[#666]">Loading active requests...</p>
+                    </div>
+                ) : requestsData?.serviceRequests?.items?.filter(req => req.status === 'pending').length > 0 ? (
+                    requestsData.serviceRequests.items.filter(req => req.status === 'pending').map((request) => {
+                        const scheduledDate = new Date(request.scheduledDate);
+                        const formattedDate = scheduledDate.toLocaleDateString('en-US', {
+                            day: 'numeric',
+                            month: 'short'
+                        });
+                        const formattedTime = scheduledDate.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        });
+
+                        return (
+                            <div key={request._id} className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
                     {/* status pill */}
                     <div className="absolute right-5 top-5">
                         <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-sm font-medium text-[#F3934F]">
@@ -84,96 +124,123 @@ const Analytics = () => {
                         </span>
                     </div>
 
-                    {/* header: title + price */}
-                    <div className="mb-5">
-                        <p className="text-[20px] font-bold text-[#333]">
-                            Appliance Repairs:{' '}
-                            <span className="text-[#0E7A60]">$500</span>
-                            <span className="text-[#0E7A60] text-sm font-medium">/consult</span>
-                        </p>
-                    </div>
+                                {/* header: title + price */}
+                                <div className="mb-5">
+                                    <p className="text-[20px] font-bold text-[#333]">
+                                        {request.serviceType}:{' '}
+                                        <span className="text-[#0E7A60]">${request.price}</span>
+                                        <span className="text-[#0E7A60] text-sm font-medium">/consult</span>
+                                    </p>
+                                </div>
 
-                    {/* user row */}
-                    <div className="mb-5 flex items-center gap-3">
-                        <img
-                            src="https://i.pravatar.cc/64?img=1"
-                            alt="Client"
-                            className="h-[80px] w-[80px] rounded-full object-cover"
-                        />
-                        <div className="flex flex-col">
-                            <span className="text-[24px] font-semibold text-black">Jane Doe</span>
-                            <div className="flex items-center gap-2 text-[16px] text-[#F1C400]">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                >
-                                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                </svg>
-                                <span className=" text-[#8F8F8F]">5.0</span>
-                                <span className="text-[#8F8F8F]">(1,513 reviews)</span>
+                                {/* user row */}
+                                <div className="mb-5 flex items-center gap-3">
+                                    <img
+                                        src={request.customer?.profileImage?.url || "https://i.pravatar.cc/64?img=1"}
+                                        alt="Client"
+                                        className="h-20 w-20 rounded-full object-cover"
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="text-[24px] font-semibold text-black">
+                                            {request.customer?.firstName} {request.customer?.lastName}
+                                        </span>
+                                        <div className="flex items-center gap-2 text-[16px] text-[#F1C400]">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-4 w-4"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                            >
+                                                <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                            <span className=" text-[#8F8F8F]">5.0</span>
+                                            <span className="text-[#8F8F8F]">(1,513 reviews)</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* problem note */}
+                                <div className="mb-4">
+                                    <p className="mb-1 text-[24px] font-semibold text-black">
+                                        Problem Note
+                                    </p>
+                                    <p className="text-[15px] lg:w-[574px] leading-6 text-[#8F8F8F]">
+                                        <strong>Problem:</strong> {request.problem}
+                                        {request.note && (
+                                            <>
+                                                <br />
+                                                <strong>Note:</strong> {request.note}
+                                            </>
+                                        )}
+                                    </p>
+                                </div>
+
+                                {/* address */}
+                                <div className="mb-2 text-[15px]">
+                                    <span className="font-semibold text-black">Address: </span>
+                                    <span className="text-[#7F7F7F]">
+                                        {request.customer?.address?.street}
+                                        {request.customer?.address?.aptSuite && `, ${request.customer.address.aptSuite}`}, {request.customer?.address?.city}, {request.customer?.address?.state} {request.customer?.address?.zipCode}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    {/* service date */}
+                                    <div className="text-[15px] text-[#666] whitespace-nowrap">
+                                        <span>Service Date: </span>
+                                        <span>{formattedDate}, {formattedTime}</span>
+                                    </div>
+
+                                    {/* actions */}
+                                    <div className="flex w-full justify-end gap-3">
+                                        <button
+                                            onClick={handleCencelOrderConfirm}
+                                            type="button"
+                                            className="decline_btn"
+                                        >
+                                            Decline
+                                        </button>
+                                        <Link href={`/provider/signup/order`}>
+                                            <button
+                                                type="button"
+                                                className="accept_btn"
+                                            >
+                                                Accept
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        );
+                    })
+                ) : (
+                    <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+                        <p className="text-center text-[#666]">No active requests at the moment.</p>
                     </div>
-
-                    {/* problem note */}
-                    <div className="mb-4">
-                        <p className="mb-1 text-[24px] font-semibold text-black">
-                            Problem Note for Fridge Repair
-                        </p>
-                        <p className="text-[15px] lg:w-[574px] leading-6 text-[#8F8F8F]">
-                            The fridge is not cooling properly, making strange noises, freezing
-                            food, leaking water, etc.
-                        </p>
-                    </div>
-
-                    {/* address */}
-                    <div className="mb-2 text-[15px]">
-                        <span className="font-semibold text-black">Address: </span>
-                        <span className="text-[#7F7F7F]">
-                            123 Oak Street Springfield, IL 62704
-                        </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        {/* service date */}
-                        <div className="text-[15px] text-[#666] whitespace-nowrap">
-                            <span>Service Date: </span>
-                            <span>18 Sep, 14:00</span>
-                        </div>
-
-                        {/* actions */}
-                        <div className="flex w-full justify-end gap-3">
-                            <button
-                                onClick={handleCencelOrderConfirm}
-                                type="button"
-                                className="decline_btn"
-                            >
-                                Decline
-                            </button>
-                            <Link href={`/provider/signup/order`}>
-                                <button
-                                    type="button"
-                                    className="accept_btn"
-                                >
-                                    Accept
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
             {/* this is for active bundle request */}
             <div className='flex flex-col gap-[18px] w-full'>
                 <h1 className='analytics_heading'>Active Bundle Request</h1>
-                <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
-                    <div className='w-full'>
-                        <BundleRequestCard handleCencelOrderConfirm={handleCencelOrderConfirm} handleCencelOrderConfirmClose={handleCencelOrderConfirmClose} handleCencelOrderConfirmSubmit={handleCencelOrderConfirmSubmit} open={open} />
+                {requestsLoading ? (
+                    <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+                        <p className="text-center text-[#666]">Loading bundle requests...</p>
                     </div>
-                    <div className='w-full'>
-                        <BundleRequestCard handleCencelOrderConfirm={handleCencelOrderConfirm} handleCencelOrderConfirmClose={handleCencelOrderConfirmClose} handleCencelOrderConfirmSubmit={handleCencelOrderConfirmSubmit} open={open} />
+                ) : requestsData?.bundles?.items?.length > 0 ? (
+                    <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
+                        {requestsData.bundles.items.map((bundle) => (
+                            <div key={bundle._id} className='w-full'>
+                                <BundleRequestCard
+                                    bundle={bundle}
+                                    handleCencelOrderConfirm={handleCencelOrderConfirm}
+                                />
+                            </div>
+                        ))}
                     </div>
-                </div>
+                ) : (
+                    <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
+                        <p className="text-center text-[#666]">No active bundle requests at the moment.</p>
+                    </div>
+                )}
             </div>
             {/* Client Feedback */}
             <div className='flex flex-col gap-[18px] w-full'>

@@ -1,33 +1,53 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { logout } from '@/redux/slices/authSlice';
 
-// Define the base API URL
-const BASE_URL = 'https://naibrly-backend.onrender.com/api';
+// Define the base API URL - use environment variable or fallback to production
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://naibrly-backend.onrender.com/api';
 
-// Custom fetchBaseQuery with timeout
-const customFetchBaseQuery = fetchBaseQuery({
-  baseUrl: BASE_URL,
-  timeout: 15000, // 15 second timeout
-  prepareHeaders: (headers, { endpoint }) => {
-    // Get token from localStorage
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
+// Custom fetchBaseQuery with timeout and automatic logout on 401
+const customFetchBaseQuery = async (args, api, extraOptions) => {
+  const baseQuery = fetchBaseQuery({
+    baseUrl: BASE_URL,
+    timeout: 15000, // 15 second timeout
+    prepareHeaders: (headers, { endpoint }) => {
+      // Get token from localStorage
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('authToken');
+        const userType = localStorage.getItem('userType');
+        console.log('[RTK Query] Auth Debug:', {
+          hasToken: !!token,
+          tokenPreview: token ? `${token.substring(0, 20)}...` : 'none',
+          userType,
+          endpoint
+        });
+        if (token) {
+          headers.set('Authorization', `Bearer ${token}`);
+        }
       }
-    }
 
-    // Only set Content-Type for non-FormData requests
-    // FormData requests should not have Content-Type set manually
-    if (!headers.has('Content-Type')) {
-      headers.set('Accept', 'application/json');
-      // Only set Content-Type if not already set (FormData will set it)
-      if (endpoint && !endpoint.includes('register') && !endpoint.includes('verify')) {
-        headers.set('Content-Type', 'application/json');
+      // Only set Content-Type for non-FormData requests
+      // FormData requests should not have Content-Type set manually
+      if (!headers.has('Content-Type')) {
+        headers.set('Accept', 'application/json');
+        // Only set Content-Type if not already set (FormData will set it)
+        if (endpoint && !endpoint.includes('register') && !endpoint.includes('verify')) {
+          headers.set('Content-Type', 'application/json');
+        }
       }
-    }
-    return headers;
-  },
-});
+      return headers;
+    },
+  });
+
+  const result = await baseQuery(args, api, extraOptions);
+
+  // Auto-logout on 401 Unauthorized
+  if (result.error && result.error.status === 401) {
+    console.warn('[RTK Query] 401 Unauthorized - Token expired or invalid. Logging out...');
+    api.dispatch(logout());
+  }
+
+  return result;
+};
 
 // Create the API slice
 export const servicesApi = createApi({
@@ -704,6 +724,51 @@ export const servicesApi = createApi({
         };
       },
     }),
+
+    // Get provider analytics
+    getProviderAnalytics: builder.query({
+      query: () => '/providers/analytics/my',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Get provider analytics API response:', response);
+        console.log('Analytics data structure:', JSON.stringify(response, null, 2));
+        if (!response || !response.success) {
+          return {
+            today: { orders: 0, earnings: 0 },
+            month: { orders: 0, earnings: 0 }
+          };
+        }
+        console.log('Returning analytics data:', response.data);
+        return response.data;
+      },
+    }),
+
+    // Get provider's service requests
+    getProviderServiceRequests: builder.query({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append('page', params.page);
+        if (params?.limit) queryParams.append('limit', params.limit);
+        if (params?.status) queryParams.append('status', params.status);
+
+        const queryString = queryParams.toString();
+        return `/service-requests/provider/my-requests${queryString ? `?${queryString}` : ''}`;
+      },
+      providesTags: ['ServiceRequests', 'Provider'],
+      transformResponse: (response) => {
+        console.log('Get provider service requests API response:', response);
+        console.log('Service requests data structure:', JSON.stringify(response, null, 2));
+        if (!response || !response.success) {
+          return {
+            serviceRequests: [],
+            bundles: { requests: [], total: 0 },
+            pagination: { current: 1, total: 0, pages: 1 }
+          };
+        }
+        console.log('Returning service requests data:', response.data);
+        return response.data;
+      },
+    }),
   }),
 });
 
@@ -745,4 +810,6 @@ export const {
   useGetUserProfileQuery,
   useGetVerifyInfoStatusQuery,
   useGetProviderZipQuery,
+  useGetProviderAnalyticsQuery,
+  useGetProviderServiceRequestsQuery,
 } = servicesApi;
