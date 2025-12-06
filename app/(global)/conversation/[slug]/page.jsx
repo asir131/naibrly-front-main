@@ -1,17 +1,16 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import ChatInterface from '@/components/ChatInterface';
-import { useGetServiceRequestByIdQuery, useGetBundleByIdQuery } from '@/redux/api/servicesApi';
+import { useGetMyServiceRequestsQuery } from '@/redux/api/servicesApi';
 
 export default function ConversationPage() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug;
 
-  // Parse slug to determine type and ID
   const [requestType, setRequestType] = useState(null); // 'service' or 'bundle'
   const [itemId, setItemId] = useState(null);
 
@@ -27,68 +26,76 @@ export default function ConversationPage() {
     }
   }, [slug]);
 
-  // Fetch data based on type
-  const { data: serviceData, isLoading: serviceLoading } = useGetServiceRequestByIdQuery(itemId, {
-    skip: requestType !== 'service' || !itemId,
-  });
+  const { data: myRequestsData, isLoading, error } = useGetMyServiceRequestsQuery();
 
-  const { data: bundleData, isLoading: bundleLoading } = useGetBundleByIdQuery(itemId, {
-    skip: requestType !== 'bundle' || !itemId,
-  });
+  const requestObject = useMemo(() => {
+    if (!itemId) return null;
+    const serviceRequest = myRequestsData?.serviceRequests?.items?.find((r) => r._id === itemId);
+    const bundle = myRequestsData?.bundles?.items?.find((b) => b._id === itemId);
 
-  const isLoading = serviceLoading || bundleLoading;
-
-  // Prepare request object for ChatInterface
-  const getRequestObject = () => {
-    console.log('🔍 Getting request object:', { requestType, serviceData, bundleData, itemId });
-
-    if (requestType === 'service' && serviceData?.data) {
-      const request = serviceData.data;
-      console.log('📦 Service request data:', request);
+    if (requestType === 'service' && serviceRequest) {
+      const request = serviceRequest;
       return {
-        id: itemId, // Use the itemId from the slug, not request._id
+        id: itemId,
         type: 'service',
         title: request.serviceType || request.service?.name || 'Service Request',
         description: request.problem || request.note || request.description || 'No description provided',
-        image: request.service?.image?.url || request.provider?.profileImage?.url || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
-        avgPrice: request.price ? `$${request.price}/hr` : request.service?.price ? `$${request.service.price}` : 'N/A',
+        image:
+          request.service?.image?.url ||
+          request.provider?.profileImage?.url ||
+          'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
+        avgPrice: request.price
+          ? `$${request.price}/hr`
+          : request.service?.price
+            ? `$${request.service.price}`
+            : 'N/A',
         rating: request.service?.rating || request.provider?.rating || 0,
         reviews: request.service?.reviews || 0,
-        date: request.scheduledDate ? new Date(request.scheduledDate).toLocaleDateString('en-US', {
-          day: 'numeric',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        }) : 'N/A',
+        date: request.scheduledDate
+          ? new Date(request.scheduledDate).toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : 'N/A',
         status: request.status,
         cancellationReason: request.cancellationReason,
         cancelledBy: request.cancelledBy,
       };
-    } else if (requestType === 'bundle' && bundleData?.data) {
-      const bundle = bundleData.data;
-      console.log('📦 Bundle data:', bundle);
+    }
+
+    if (requestType === 'bundle' && bundle) {
       return {
-        id: itemId, // Use the itemId from the slug, not bundle._id
+        id: itemId,
         type: 'bundle',
         title: bundle.title || bundle.name || 'Bundle Request',
         description: bundle.description || 'No description provided',
-        image: bundle.image?.url || bundle.provider?.businessLogo?.url || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
-        avgPrice: bundle.pricing?.finalPrice ? `$${bundle.pricing.finalPrice}` : bundle.finalPrice ? `$${bundle.finalPrice}` : 'N/A',
+        image:
+          bundle.image?.url ||
+          bundle.provider?.businessLogo?.url ||
+          'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
+        avgPrice: bundle.pricing?.finalPrice
+          ? `$${bundle.pricing.finalPrice}`
+          : bundle.finalPrice
+            ? `$${bundle.finalPrice}`
+            : 'N/A',
         rating: bundle.rating || bundle.provider?.rating || 0,
         reviews: bundle.reviews || 0,
-        date: bundle.serviceDate ? new Date(bundle.serviceDate).toLocaleDateString('en-US', {
-          day: 'numeric',
-          month: 'short',
-        }) : 'N/A',
+        date: bundle.serviceDate
+          ? new Date(bundle.serviceDate).toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'short',
+            })
+          : 'N/A',
         status: bundle.status,
         cancellationReason: bundle.cancellationReason,
         cancelledBy: bundle.cancelledBy,
       };
     }
-    return null;
-  };
 
-  const requestObject = getRequestObject();
+    return null;
+  }, [itemId, requestType, myRequestsData]);
 
   const handleCancel = () => {
     // TODO: Implement cancel functionality
@@ -106,7 +113,7 @@ export default function ConversationPage() {
     );
   }
 
-  if (!requestObject) {
+  if (!requestObject || error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

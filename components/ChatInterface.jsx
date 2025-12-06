@@ -5,9 +5,8 @@ import Image from 'next/image';
 import { MoreVertical, Send, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
-import { useGetQuickChatsQuery, useCreateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
+import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
 import { useGetUserProfileQuery } from '@/redux/api/servicesApi';
-import { format } from 'date-fns';
 
 export default function ChatInterface({
   request,
@@ -38,11 +37,15 @@ export default function ChatInterface({
   } = useSocket(token);
 
   // Quick Chats API
-  const { data: quickChatsData, isLoading: quickChatsLoading } = useGetQuickChatsQuery();
+  const [fetchQuickChats, { data: quickChatsData, isLoading: quickChatsLoading, isFetching: quickChatsFetching }] = useLazyGetQuickChatsQuery();
   const [createQuickChat] = useCreateQuickChatMutation();
   const [deleteQuickChat] = useDeleteQuickChatMutation();
 
   const quickChats = quickChatsData?.data?.quickChats || [];
+
+  useEffect(() => {
+    fetchQuickChats();
+  }, [fetchQuickChats]);
 
   // Join conversation on mount
   useEffect(() => {
@@ -158,7 +161,13 @@ export default function ChatInterface({
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
     try {
-      return format(new Date(timestamp), 'MMM d, h:mm a');
+      const date = new Date(timestamp);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      });
     } catch (error) {
       return '';
     }
@@ -361,7 +370,7 @@ export default function ChatInterface({
       {/* Quick Chats - Only show for accepted status */}
       {status === 'accepted' && (
         <div className="p-4 bg-white border-t border-gray-200">
-          {quickChatsLoading ? (
+          {quickChatsLoading || quickChatsFetching ? (
             <div className="text-center text-gray-500 text-sm py-4">Loading quick chats...</div>
           ) : (
             <>

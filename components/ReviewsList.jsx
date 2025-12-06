@@ -13,104 +13,190 @@ const Star = ({ filled }) => (
     </svg>
 );
 
+const formatTimeAgo = (dateString) => {
+    if (!dateString) return '';
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) {
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        if (diffHours <= 0) {
+            const diffMinutes = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+            return `${diffMinutes}m ago`;
+        }
+        return `${diffHours}h ago`;
+    }
+    if (diffDays < 30) return `${diffDays}d ago`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths < 12) return `${diffMonths}mo ago`;
+    const diffYears = Math.floor(diffMonths / 12);
+    return `${diffYears}y ago`;
+};
+
 function ReviewItem({ review }) {
     const rounded = Math.round(review.rating || 0);
+    const name = review.customerName || 'Anonymous';
+    const serviceInfo = review.serviceName
+        ? `${review.serviceName}${review.serviceDate ? ` · ${new Date(review.serviceDate).toLocaleDateString()}` : ''}`
+        : null;
+
     return (
         <div className="w-full">
             <div className="client_feedback_card">
                 {/* left: avatar + content */}
                 <div className="flex items-start gap-3">
                     <img
-                        src={review.avatar}
-                        alt={review.name}
+                        src={review.customerAvatar || "https://i.pravatar.cc/80"}
+                        alt={name}
                         className="h-[80px] w-[80px] rounded-full object-cover"
                     />
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                             <span className="text-[16px] font-semibold text-[#1D1D1F]">
-                                {review.name}
+                                {name}
                             </span>
-                            <span className="text-[13px] text-[#7F7F7F]">({review.rating.toFixed(1)})</span>
+                            <span className="text-[13px] text-[#7F7F7F]">({(review.rating || 0).toFixed(1)})</span>
                         </div>
                         <div className="mt-1 flex items-center gap-1">
                             {[...Array(5)].map((_, i) => (
                                 <Star key={i} filled={i < rounded} />
                             ))}
                         </div>
+                        {serviceInfo && (
+                            <p className="text-[13px] text-[#7F7F7F] mt-1">
+                                {serviceInfo}
+                            </p>
+                        )}
                         <p className="mt-2 text-[14px] leading-6 text-[#7F7F7F]">
-                            {review.comment}
-                            {" "}
-                            <button
-                                type="button"
-                                className="text-[#000] font-medium hover:underline"
-                                onClick={review.onSeeMore}
-                            >
-                                See more...
-                            </button>
+                            {review.comment || 'No comment provided.'}
                         </p>
                     </div>
                 </div>
 
                 {/* right: time ago */}
                 <div className="whitespace-nowrap text-[14px] text-[#7F7F7F]">
-                    {review.timeAgo}
+                    {formatTimeAgo(review.createdAt)}
                 </div>
             </div>
         </div>
     );
 }
 
-export default function ReviewsList({ reviews }) {
-    const data =
-        reviews && reviews.length
-            ? reviews
-            : [
-                {
-                    id: 1,
-                    name: "Jessica R",
-                    rating: 4.0,
-                    comment:
-                        "Thank you for your work! The service met my expectations and I am very happy.",
-                    timeAgo: "2 Days ago",
-                    avatar: "https://i.pravatar.cc/80?img=5",
-                },
-                {
-                    id: 2,
-                    name: "Jessica R",
-                    rating: 4.0,
-                    comment:
-                        "Thank you for your work! The service met my expectations and I am very happy.",
-                    timeAgo: "2 Days ago",
-                    avatar: "https://i.pravatar.cc/80?img=12",
-                },
-                {
-                    id: 3,
-                    name: "Jessica R",
-                    rating: 4.0,
-                    comment:
-                        "Thank you for your work! The service met my expectations and I am very happy.",
-                    timeAgo: "2 Days ago",
-                    avatar: "https://i.pravatar.cc/80?img=15",
-                },
-            ];
-
+const SummaryBar = ({ label, value, total }) => {
+    const percentage = total ? Math.round((value / total) * 100) : 0;
     return (
-        <div className="">
+        <div className="flex items-center gap-3 text-sm text-gray-700">
+            <span className="w-10 text-right">{label}★</span>
+            <div className="h-2 flex-1 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                    className="h-full bg-[#0E7A60]"
+                    style={{ width: `${percentage}%` }}
+                />
+            </div>
+            <span className="w-10 text-left text-gray-500">{value}</span>
+        </div>
+    );
+};
+
+export default function ReviewsList({ reviewsData, isLoading, isError, onRetry }) {
+    const statistics = reviewsData?.statistics || {
+        averageRating: 0,
+        totalReviews: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    };
+    const provider = reviewsData?.provider;
+    const reviews = reviewsData?.list || [];
+
+    if (isLoading) {
+        return (
             <div className="flex flex-col gap-4">
-                {data.map((r, idx) => (
-                    <div key={r.id || idx} className="">
-                        <ReviewItem review={r} />
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="client_feedback_card animate-pulse">
+                        <div className="flex items-start gap-3">
+                            <div className="h-[80px] w-[80px] rounded-full bg-gray-200" />
+                            <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-32" />
+                                <div className="h-4 bg-gray-200 rounded w-40" />
+                                <div className="h-4 bg-gray-200 rounded w-full" />
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
+        );
+    }
 
-            <div className="mt-4 flex justify-center">
-                <button
-                    type="button"
-                    className="px-5 py-2 rounded-full border border-[#0E7A60] text-[#0E7A60] bg-white hover:bg-[#0E7A60]/5 transition text-[14px] font-medium"
-                >
-                    View more
-                </button>
+    if (isError) {
+        return (
+            <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between gap-3">
+                <span>Unable to load client feedback.</span>
+                {onRetry && (
+                    <button
+                        type="button"
+                        onClick={onRetry}
+                        className="px-3 py-1 rounded-md bg-white border border-red-200 text-red-700 hover:bg-red-100 transition"
+                    >
+                        Retry
+                    </button>
+                )}
+            </div>
+        );
+    }
+
+    if (!reviews.length) {
+        return (
+            <div className="w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7 text-center text-[#666]">
+                No client feedback yet.
+            </div>
+        );
+    }
+
+    const distribution = statistics.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+    return (
+        <div className="flex flex-col gap-4">
+            {/* Summary header */}
+            <div className="w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+                        {provider?.businessLogo?.url ? (
+                            <img src={provider.businessLogo.url} alt={provider.businessName} className="h-full w-full object-cover" />
+                        ) : (
+                            <div className="h-full w-full flex items-center justify-center text-[#0E7A60] font-semibold">
+                                {(provider?.businessName || 'P').charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        <p className="text-sm text-[#7F7F7F]">Provider Rating</p>
+                        <p className="text-xl font-semibold text-[#1D1D1F]">
+                            {(statistics.averageRating || provider?.rating || 0).toFixed(1)} / 5
+                        </p>
+                        <p className="text-sm text-[#7F7F7F]">
+                            {statistics.totalReviews || provider?.totalReviews || 0} reviews
+                        </p>
+                    </div>
+                </div>
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[5, 4, 3, 2, 1].map((star) => (
+                        <SummaryBar
+                            key={star}
+                            label={star}
+                            value={distribution[star] || 0}
+                            total={statistics.totalReviews || 0}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Reviews list */}
+            <div className="flex flex-col gap-4">
+                {reviews.map((review) => (
+                    <div key={review.id} className="">
+                        <ReviewItem review={review} />
+                    </div>
+                ))}
             </div>
         </div>
     );

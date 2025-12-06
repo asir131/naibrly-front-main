@@ -94,7 +94,14 @@ const RequestRow = ({ item, type }) => {
         />
 
         <div className="flex-1">
-          <h3 className="text-[18px] font-semibold text-[#1D1D1F]">{title}</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-[18px] font-semibold text-[#1D1D1F]">{title}</h3>
+            {isBundle && (
+              <span className="rounded-md bg-[#F2E5FF] px-3 py-1 text-xs font-semibold text-[#7B1FA2]">
+                Bundle
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-[14px] leading-6 text-[#7F7F7F] line-clamp-2 md:line-clamp-none">
             {description}
           </p>

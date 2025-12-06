@@ -5,9 +5,8 @@ import Image from 'next/image';
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { Plus, X } from 'lucide-react';
 import { useSocket } from '@/hooks/useSocket';
-import { useGetQuickChatsQuery, useCreateQuickChatMutation, useUpdateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
+import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useUpdateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
 import { useGetUserProfileQuery } from '@/redux/api/servicesApi';
-import { format } from 'date-fns';
 import TaskCompletedModal from './TaskCompletedModal';
 import AddQuickChatModal from './AddQuickChatModal';
 import EditQuickChatModal from './EditQuickChatModal';
@@ -324,34 +323,40 @@ export default function ProviderChatInterface({
         setMessages,
         joinConversation,
         sendQuickChat,
+        getConversation,
     } = useSocket(token);
 
     // Quick Chats API
-    const { data: quickChatsData, isLoading: quickChatsLoading, refetch: refetchQuickChats } = useGetQuickChatsQuery();
+    const [fetchQuickChats, { data: quickChatsData, isLoading: quickChatsLoading, isFetching: quickChatsFetching, refetch: refetchQuickChats }] = useLazyGetQuickChatsQuery();
     const [createQuickChat] = useCreateQuickChatMutation();
     const [updateQuickChat] = useUpdateQuickChatMutation();
     const [deleteQuickChat] = useDeleteQuickChatMutation();
 
     const quickChats = quickChatsData?.data?.quickChats || [];
 
-    // Join conversation on mount
     useEffect(() => {
-        if (isConnected && (requestId || bundleId)) {
-            const conversationData = {};
+        fetchQuickChats();
+    }, [fetchQuickChats]);
 
-            if (requestId) {
-                conversationData.requestId = requestId;
-            } else if (bundleId) {
-                conversationData.bundleId = bundleId;
-                if (customerId) {
-                    conversationData.customerId = customerId;
-                }
+    // Join conversation on mount and fetch history
+    useEffect(() => {
+        if (!isConnected || (!requestId && !bundleId)) return;
+
+        const conversationData = {};
+
+        if (requestId) {
+            conversationData.requestId = requestId;
+        } else if (bundleId) {
+            conversationData.bundleId = bundleId;
+            if (customerId) {
+                conversationData.customerId = customerId;
             }
-
-            console.log('👥 Provider joining conversation:', conversationData);
-            joinConversation(conversationData);
         }
-    }, [isConnected, requestId, bundleId, customerId]);
+
+        console.log('👥 Provider joining conversation:', conversationData);
+        joinConversation(conversationData);
+        getConversation(conversationData);
+    }, [isConnected, requestId, bundleId, customerId, joinConversation, getConversation]);
 
     // Auto-scroll to bottom only when new messages arrive AND user is near bottom
     const prevMessagesLengthRef = useRef(messages.length);
@@ -435,7 +440,12 @@ export default function ProviderChatInterface({
             if (diffInDays === 1) return '1 day ago';
             if (diffInDays < 7) return `${diffInDays} days ago`;
 
-            return format(msgDate, 'MMM d, h:mm a');
+            return msgDate.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+            });
         } catch (error) {
             return '';
         }
@@ -604,7 +614,7 @@ export default function ProviderChatInterface({
                 <>
                     {/* Quick Chats list */}
                     <div className="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4 overflow-y-auto">
-                        {quickChatsLoading ? (
+                        {quickChatsLoading || quickChatsFetching ? (
                             <div className="text-center text-gray-500 py-4">Loading quick chats...</div>
                         ) : (
                             <div className="space-y-3 max-h-[310px] overflow-y-auto">

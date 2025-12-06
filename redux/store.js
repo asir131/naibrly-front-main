@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import servicesReducer from './slices/servicesSlice';
 import { servicesApi } from './api/servicesApi';
+import { quickChatApi } from './api/quickChatApi';
 
 export const store = configureStore({
   reducer: {
@@ -9,9 +10,10 @@ export const store = configureStore({
     services: servicesReducer,
     // Add the RTK Query API reducer
     [servicesApi.reducerPath]: servicesApi.reducer,
+    [quickChatApi.reducerPath]: quickChatApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat(servicesApi.middleware), // Add RTK Query middleware
+    }).concat(servicesApi.middleware, quickChatApi.middleware), // Add RTK Query middleware
 });

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useGetMyServiceRequestsQuery } from '@/redux/api/servicesApi';
 import PendingConfirmationModal from '@/components/Global/Modals/PendingConfirmationModal';
 import QuickChatMessaging from '@/components/Global/Modals/QuickChatMessaging';
@@ -12,6 +13,7 @@ import PaymentInformationModal from '@/components/Global/Modals/PaymentInformati
 import TaskCompletedModal from '@/components/Global/Modals/TaskCompletedModal';
 
 export default function RequestPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('open');
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [selectedAcceptedRequest, setSelectedAcceptedRequest] = useState(null);
@@ -183,21 +185,15 @@ export default function RequestPage() {
     const isCancelled = request.status === 'Cancel';
     const isBundle = request.type === 'bundle';
 
+    const handleNavigateToConversation = () => {
+      const slugPrefix = isBundle ? 'bundle' : 'request';
+      router.push(`/conversation/${slugPrefix}-${request.id}`);
+    };
+
     return (
       <div
         className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
-        onClick={() => {
-          if (isPending) handlePendingClick();
-          else if (isAccepted) handleAcceptedClick(request);
-          else if (isDone) {
-            setSelectedAcceptedRequest(request);
-            setRequestFlowState('done');
-          }
-          else if (isCancelled) {
-            setSelectedAcceptedRequest(request);
-            setRequestFlowState('cancelled');
-          }
-        }}
+        onClick={handleNavigateToConversation}
       >
         <div className="flex gap-4">
           {/* Image */}

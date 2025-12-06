@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# backend (local copy)
+naibrly-backend
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

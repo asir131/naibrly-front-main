@@ -4,16 +4,20 @@ import BundleRequestCard from '@/components/BundleRequestCard'
 import ReviewsList from '@/components/ReviewsList'
 import Link from 'next/link'
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import CancelOrderConfirmModal from '@/components/CancelOrderConfirmModal'
-import { useGetProviderAnalyticsQuery, useGetProviderServiceRequestsQuery, useUpdateServiceRequestStatusMutation, useUpdateBundleStatusMutation } from '@/redux/api/servicesApi'
+import { useGetProviderAnalyticsQuery, useGetProviderNearbyBundlesQuery, useGetProviderReviewsQuery, useGetProviderServiceRequestsQuery, useUpdateServiceRequestStatusMutation, useUpdateBundleStatusMutation } from '@/redux/api/servicesApi'
 
 const Analytics = () => {
+    const router = useRouter()
     const [open, setOpen] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState(null)
     const [selectedBundle, setSelectedBundle] = useState(null)
 
     const { data: analytics, isLoading, isError, error } = useGetProviderAnalyticsQuery()
-    const { data: requestsData, isLoading: requestsLoading } = useGetProviderServiceRequestsQuery()
+    const { data: requestsData, isLoading: requestsLoading, refetch: refetchRequests } = useGetProviderServiceRequestsQuery()
+    const { data: providerReviews, isLoading: reviewsLoading, isError: reviewsError, error: reviewsErrorData, refetch: refetchReviews } = useGetProviderReviewsQuery()
+    const { data: nearbyBundlesData, isLoading: nearbyBundlesLoading, isError: nearbyBundlesError, error: nearbyBundlesErrorData, refetch: refetchNearbyBundles } = useGetProviderNearbyBundlesQuery()
     const [updateServiceRequestStatus, { isLoading: isUpdatingRequest }] = useUpdateServiceRequestStatusMutation()
     const [updateBundleStatus, { isLoading: isUpdatingBundle }] = useUpdateBundleStatusMutation()
 
@@ -43,6 +47,10 @@ const Analytics = () => {
                     note: 'Bundle accepted by provider'
                 }).unwrap()
             }
+            // Refresh lists so accepted items disappear from pending
+            await Promise.all([refetchRequests(), refetchNearbyBundles()])
+            // Navigate to orders page where accepted items are shown
+            router.push('/provider/signup/order')
         } catch (error) {
             console.error('Failed to accept:', error)
         }
@@ -277,13 +285,28 @@ const Analytics = () => {
             {/* this is for active bundle request */}
             <div className='flex flex-col gap-[18px] w-full'>
                 <h1 className='analytics_heading'>Active Bundle Request</h1>
-                {requestsLoading ? (
+                {nearbyBundlesLoading ? (
                     <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
                         <p className="text-center text-[#666]">Loading bundle requests...</p>
                     </div>
-                ) : requestsData?.bundles?.items?.filter(bundle => bundle.status === 'pending').length > 0 ? (
+                ) : nearbyBundlesError ? (
+                    <div className='w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between gap-3'>
+                        <span>
+                            {nearbyBundlesErrorData?.status === 401
+                                ? 'Please log in as a provider to view bundle requests.'
+                                : nearbyBundlesErrorData?.data?.message || 'Failed to load bundle requests. Please try again.'}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => refetchNearbyBundles()}
+                            className="px-3 py-1 rounded-md bg-white border border-red-200 text-red-700 hover:bg-red-100 transition"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                ) : (nearbyBundlesData?.bundles || []).length > 0 ? (
                     <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
-                        {requestsData.bundles.items.filter(bundle => bundle.status === 'pending').map((bundle) => (
+                        {nearbyBundlesData.bundles.map((bundle) => (
                             <div key={bundle._id} className='w-full'>
                                 <BundleRequestCard
                                     bundle={bundle}
@@ -303,7 +326,28 @@ const Analytics = () => {
             {/* Client Feedback */}
             <div className='flex flex-col gap-[18px] w-full'>
                 <h1 className='analytics_heading'>Client Feedback</h1>
-                <ReviewsList />
+                {reviewsError && (
+                    <div className='w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between gap-3'>
+                        <span>
+                            {reviewsErrorData?.status === 401
+                                ? 'Please log in as a provider to view client feedback.'
+                                : reviewsErrorData?.data?.message || 'Failed to load reviews. Please try again.'}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => refetchReviews()}
+                            className="px-3 py-1 rounded-md bg-white border border-red-200 text-red-700 hover:bg-red-100 transition"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+                <ReviewsList
+                    reviewsData={providerReviews}
+                    isLoading={reviewsLoading}
+                    isError={reviewsError}
+                    onRetry={refetchReviews}
+                />
             </div>
             {
                 open && (

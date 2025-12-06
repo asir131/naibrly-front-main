@@ -80,6 +80,7 @@ export const quickChatApi = createApi({
 
 export const {
   useGetQuickChatsQuery,
+  useLazyGetQuickChatsQuery,
   useCreateQuickChatMutation,
   useUpdateQuickChatMutation,
   useDeleteQuickChatMutation,

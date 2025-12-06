@@ -283,6 +283,7 @@ export const servicesApi = createApi({
       invalidatesTags: (result, error, { requestId }) => [
         { type: 'ServiceRequests', id: requestId },
         { type: 'ServiceRequests', id: 'LIST' },
+        'Provider',
       ],
     }),
 
@@ -321,6 +322,7 @@ export const servicesApi = createApi({
         { type: 'Bundles', id: 'LIST' },
         'Provider',
         'ServiceRequests',
+        { type: 'ServiceRequests', id: 'LIST' },
       ],
     }),
 
@@ -603,6 +605,19 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Get nearby bundle requests for provider
+    getProviderNearbyBundles: builder.query({
+      query: () => '/zip/provider/nearby-bundles',
+      providesTags: [{ type: 'Bundles', id: 'NEARBY' }, { type: 'Bundles', id: 'LIST' }],
+      transformResponse: (response) => {
+        console.log('Get provider nearby bundles API response:', response);
+        if (!response || !response.success || !response.data) {
+          return { bundles: [], pagination: { current: 1, total: 0, pages: 1 } };
+        }
+        return response.data;
+      },
+    }),
+
     // Search Providers by service type and zip code (GET)
     searchProvidersByService: builder.query({
       query: ({ serviceType, zipCode, minRating, maxHourlyRate, sortBy, page, limit }) => {
@@ -758,6 +773,79 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Get provider reviews (authenticated)
+    getProviderReviews: builder.query({
+      query: () => '/providers/reviews/my',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Get provider reviews API response:', response);
+        if (!response || !response.success || !response.data) {
+          return {
+            provider: null,
+            statistics: {
+              averageRating: 0,
+              totalReviews: 0,
+              ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            },
+            list: [],
+            pagination: { current: 1, total: 0, pages: 1, limit: 10 },
+          };
+        }
+
+        const provider = response.data.provider || null;
+        const reviews = response.data.reviews || {};
+        const statistics = reviews.statistics || {
+          averageRating: 0,
+          totalReviews: 0,
+          ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        };
+        const pagination = reviews.pagination || {
+          current: 1,
+          total: 0,
+          pages: 1,
+          limit: 10,
+        };
+        const list = Array.isArray(reviews.list)
+          ? reviews.list.map((item) => ({
+            id: item.id || item._id,
+            rating: item.rating || 0,
+            comment: item.comment || '',
+            createdAt: item.createdAt,
+            serviceName: item.serviceName,
+            serviceDate: item.serviceDate,
+            customerName: `${item.customer?.firstName || ''} ${item.customer?.lastName || ''}`.trim() || 'Anonymous',
+            customerAvatar: item.customer?.profileImage?.url || '',
+          }))
+          : [];
+
+        return { provider, statistics, list, pagination };
+      },
+    }),
+
+    // Get single service request by id
+    getServiceRequestById: builder.query({
+      query: (requestId) => `/service-requests/${requestId}`,
+      providesTags: (result, error, requestId) => [
+        { type: 'ServiceRequests', id: requestId },
+      ],
+      transformResponse: (response) => {
+        console.log('Get service request by id response:', response);
+        return response || { data: null };
+      },
+    }),
+
+    // Get single bundle by id
+    getBundleById: builder.query({
+      query: (bundleId) => `/bundles/${bundleId}`,
+      providesTags: (result, error, bundleId) => [
+        { type: 'Bundles', id: bundleId },
+      ],
+      transformResponse: (response) => {
+        console.log('Get bundle by id response:', response);
+        return response || { data: null };
+      },
+    }),
+
     // Get provider's service requests
     getProviderServiceRequests: builder.query({
       query: (params) => {
@@ -769,7 +857,11 @@ export const servicesApi = createApi({
         const queryString = queryParams.toString();
         return `/service-requests/provider/my-requests${queryString ? `?${queryString}` : ''}`;
       },
-      providesTags: ['ServiceRequests', 'Provider'],
+      providesTags: (result) => [
+        { type: 'ServiceRequests', id: 'LIST' },
+        { type: 'Bundles', id: 'LIST' },
+        'Provider',
+      ],
       transformResponse: (response) => {
         console.log('Get provider service requests API response:', response);
         console.log('Service requests data structure:', JSON.stringify(response, null, 2));
@@ -780,8 +872,47 @@ export const servicesApi = createApi({
             pagination: { current: 1, total: 0, pages: 1 }
           };
         }
-        console.log('Returning service requests data:', response.data);
-        return response.data;
+        const data = response.data || {};
+
+        // Normalize bundles to mirror customer bundle structure (address, pricing, participants, etc.)
+        const bundles = data.bundles?.items || [];
+        const normalizedBundles = bundles.map((bundle) => ({
+          ...bundle,
+          // Ensure address exists for UI compatibility
+          address: bundle.address || {
+            street: bundle.locationInfo?.customerAddress?.street,
+            city: bundle.locationInfo?.customerAddress?.city,
+            state: bundle.locationInfo?.customerAddress?.state,
+            aptSuite: bundle.locationInfo?.customerAddress?.aptSuite,
+          },
+          // Ensure pricing object exists
+          pricing: bundle.pricing || {
+            originalPrice: bundle.price || bundle.finalPrice || 0,
+            discountAmount: bundle.discountAmount || 0,
+            finalPrice: bundle.finalPrice || bundle.price || 0,
+            discountPercent: bundle.discountPercent || 0,
+          },
+          // Normalize participants array
+          participants: Array.isArray(bundle.participants) ? bundle.participants : [],
+          // Preserve services list
+          services: Array.isArray(bundle.services) ? bundle.services : [],
+        }));
+
+        console.log('Returning service requests data:', {
+          ...data,
+          bundles: {
+            ...data.bundles,
+            items: normalizedBundles,
+          },
+        });
+
+        return {
+          ...data,
+          bundles: {
+            ...(data.bundles || {}),
+            items: normalizedBundles,
+          },
+        };
       },
     }),
   }),
@@ -809,6 +940,7 @@ export const {
   useGetNearbyBundlesQuery,
   useJoinBundleMutation,
   useGetBundleByTokenQuery,
+  useGetBundleByIdQuery,
   useJoinBundleByTokenMutation,
   useGetNearbyServicesQuery,
   // Password reset hooks
@@ -827,5 +959,8 @@ export const {
   useGetVerifyInfoStatusQuery,
   useGetProviderZipQuery,
   useGetProviderAnalyticsQuery,
+  useGetProviderReviewsQuery,
+  useGetProviderNearbyBundlesQuery,
+  useGetServiceRequestByIdQuery,
   useGetProviderServiceRequestsQuery,
 } = servicesApi;
