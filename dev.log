@@ -1,0 +1,32 @@
+
+> naibrly@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by process 20792, using available port 3004 instead.
+   ▲ Next.js 15.5.5
+   - Local:        http://localhost:3004
+   - Network:      http://10.10.11.82:3004
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 8.9s
+ ⚠ Found a change in next.config.mjs. Restarting the server to apply the changes...
+   ▲ Next.js 15.5.5
+   - Local:        http://localhost:3004
+   - Network:      http://10.10.11.82:3004
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
+   Reload env: .env.local
