@@ -40,8 +40,9 @@ const buildOrderData = (item, type) => {
   }
 
   if (type === "bundle" && item) {
-    const addr = item.address || {};
-    const creator = item.creator || {};
+    const participant = item.participant || {};
+    const customer = item.participantCustomer || item.customer || item.creator || {};
+    const addr = participant.address || item.address || customer.address || {};
     const date = item.serviceDate
       ? new Date(item.serviceDate).toLocaleDateString("en-US", {
           day: "numeric",
@@ -53,9 +54,9 @@ const buildOrderData = (item, type) => {
       title: item.title || "Bundle Request",
       price: item.pricing?.finalPrice || item.finalPrice || 0,
       client: {
-        name: `${creator.firstName || ""} ${creator.lastName || ""}`.trim() || "Customer",
+        name: `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "Customer",
         avatar:
-          creator.profileImage?.url ||
+          customer.profileImage?.url ||
           "https://i.pravatar.cc/80?img=5",
       },
       rating: item.provider?.rating || 0,

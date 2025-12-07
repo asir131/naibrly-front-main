@@ -58,7 +58,7 @@ export const servicesApi = createApi({
   refetchOnMountOrArgChange: 60, // Only refetch if data is older than 60 seconds
   refetchOnFocus: false, // Disable refetch on window focus
   refetchOnReconnect: true, // Refetch on network reconnect
-  tagTypes: ['Services', 'ServiceRequests', 'Bundles', 'Provider'],
+  tagTypes: ['Services', 'ServiceRequests', 'Bundles', 'Provider', 'MoneyRequests'],
   endpoints: (builder) => ({
     // Provider Registration Endpoints
     registerProvider: builder.mutation({
@@ -324,6 +324,91 @@ export const servicesApi = createApi({
         'ServiceRequests',
         { type: 'ServiceRequests', id: 'LIST' },
       ],
+    }),
+
+    // Create money request (provider -> customer) for service request or bundle
+    createMoneyRequest: builder.mutation({
+      query: (body) => ({
+        url: '/money-requests/create',
+        method: 'POST',
+        body,
+      }),
+      // Invalidate both service requests and bundles lists so UI refreshes
+      invalidatesTags: ['ServiceRequests', 'Bundles', 'Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to create money request');
+        }
+        return response.data;
+      },
+    }),
+
+    // Get customer money requests (optionally filtered by serviceRequestId or bundleId)
+    getCustomerMoneyRequests: builder.query({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.status) queryParams.append('status', params.status);
+        if (params?.page) queryParams.append('page', params.page);
+        if (params?.limit) queryParams.append('limit', params.limit);
+        if (params?.serviceRequestId) queryParams.append('serviceRequestId', params.serviceRequestId);
+        if (params?.bundleId) queryParams.append('bundleId', params.bundleId);
+
+        const queryString = queryParams.toString();
+        return `/money-requests/customer${queryString ? `?${queryString}` : ''}`;
+      },
+      providesTags: ['MoneyRequests'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to fetch money requests');
+        }
+        return response.data;
+      },
+    }),
+
+    // Customer accepts money request
+    acceptMoneyRequest: builder.mutation({
+      query: ({ moneyRequestId, tipAmount = 0 }) => ({
+        url: `/money-requests/${moneyRequestId}/accept`,
+        method: 'PATCH',
+        body: { tipAmount },
+      }),
+      invalidatesTags: ['MoneyRequests'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to accept money request');
+        }
+        return response.data;
+      },
+    }),
+
+    // Customer cancels money request
+    cancelMoneyRequest: builder.mutation({
+      query: ({ moneyRequestId }) => ({
+        url: `/money-requests/${moneyRequestId}/cancel`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['MoneyRequests'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to cancel money request');
+        }
+        return response.data;
+      },
+    }),
+
+    // Customer pay money request (Stripe checkout)
+    payMoneyRequest: builder.mutation({
+      query: ({ moneyRequestId }) => ({
+        url: `/money-requests/${moneyRequestId}/pay`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['MoneyRequests'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to create payment session');
+        }
+        return response.data;
+      },
     }),
 
     // Get customer's bundles
@@ -1044,6 +1129,11 @@ export const {
   useCancelServiceRequestMutation,
   useCreateBundleMutation,
   useUpdateBundleStatusMutation,
+  useCreateMoneyRequestMutation,
+  useGetCustomerMoneyRequestsQuery,
+  useAcceptMoneyRequestMutation,
+  useCancelMoneyRequestMutation,
+  usePayMoneyRequestMutation,
   useGetMyBundlesQuery,
   useGetAllBundlesQuery,
   useGetNearbyBundlesQuery,

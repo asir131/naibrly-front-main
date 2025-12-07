@@ -38,6 +38,7 @@ yarn-error.log*
 
 # backend (local copy)
 naibrly-backend
+naibrly-backend-main
 
 # typescript
 *.tsbuildinfo

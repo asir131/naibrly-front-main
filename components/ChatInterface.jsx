@@ -2,11 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { MoreVertical, Send, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
 import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
-import { useGetUserProfileQuery } from '@/redux/api/servicesApi';
+import { useGetUserProfileQuery, useGetCustomerMoneyRequestsQuery, useAcceptMoneyRequestMutation, useCancelMoneyRequestMutation, usePayMoneyRequestMutation } from '@/redux/api/servicesApi';
+import toast from 'react-hot-toast';
+import { skipToken } from '@reduxjs/toolkit/query';
 
 export default function ChatInterface({
   request,
@@ -16,6 +19,14 @@ export default function ChatInterface({
   cancelledBy = null
 }) {
   const messagesEndRef = useRef(null);
+  const [localStatus, setLocalStatus] = useState(status);
+  const [moneySignal, setMoneySignal] = useState(false);
+  const [acceptedRequest, setAcceptedRequest] = useState(null);
+  const [tipAmount, setTipAmount] = useState('');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const searchParams = useSearchParams();
   const [newQuickChatText, setNewQuickChatText] = useState('');
   const [showAddQuickChat, setShowAddQuickChat] = useState(false);
   const [imageErrors, setImageErrors] = useState({});
@@ -43,6 +54,32 @@ export default function ChatInterface({
 
   const quickChats = quickChatsData?.data?.quickChats || [];
 
+  // Money request fetching when request is completed
+  const isCompleted = (request?.status || localStatus || '').toLowerCase() === 'completed';
+  const moneyReqArgs =
+    (isCompleted || moneySignal) && request?.id
+      ? request.type === 'service'
+        ? { serviceRequestId: request.id }
+        : { bundleId: request.id }
+      : skipToken;
+
+  const shouldFetchMoneyReq = moneyReqArgs !== skipToken;
+
+  const {
+    data: moneyReqData,
+    isLoading: moneyReqLoading,
+    refetch: refetchMoneyReq,
+  } = useGetCustomerMoneyRequestsQuery(moneyReqArgs, { skip: !shouldFetchMoneyReq });
+
+  const [acceptMoneyRequest, { isLoading: isAccepting }] = useAcceptMoneyRequestMutation();
+  const [cancelMoneyRequest, { isLoading: isCancelling }] = useCancelMoneyRequestMutation();
+  const [payMoneyRequest, { isLoading: isPaying }] = usePayMoneyRequestMutation();
+
+  // Keep local status in sync with prop
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
   useEffect(() => {
     fetchQuickChats();
   }, [fetchQuickChats]);
@@ -66,8 +103,33 @@ export default function ChatInterface({
   // Auto-scroll to bottom only when new messages arrive AND user is near bottom
   const prevMessagesLengthRef = useRef(messages.length);
   const scrollContainerRef = useRef(null);
+  // Filter out system signals from chat display
+  const visibleMessages = messages.filter(
+    (msg) => !(msg?.content && msg.content.startsWith('__'))
+  );
+
+  // Track last processed message index for system signals
+  const lastProcessedIndexRef = useRef(0);
 
   useEffect(() => {
+    // Listen for special system messages to update status/money requests in realtime
+    for (let i = lastProcessedIndexRef.current; i < messages.length; i++) {
+      const msg = messages[i];
+      if (msg?.content?.startsWith('__TASK_COMPLETED__')) {
+        setMoneySignal(true);
+        if (shouldFetchMoneyReq) {
+          refetchMoneyReq();
+        }
+      }
+      if (msg?.content?.startsWith('__MONEY_REQUEST__')) {
+        setMoneySignal(true);
+        if (shouldFetchMoneyReq) {
+          refetchMoneyReq();
+        }
+      }
+    }
+    lastProcessedIndexRef.current = messages.length;
+
     // Only scroll if messages length increased (new message added)
     if (messages.length > prevMessagesLengthRef.current && messages.length > 0) {
       const container = scrollContainerRef.current;
@@ -173,6 +235,120 @@ export default function ChatInterface({
     }
   };
 
+  const handleAcceptMoneyRequest = async (moneyRequestId) => {
+    try {
+      const res = await acceptMoneyRequest({ moneyRequestId }).unwrap();
+      const accepted = res?.moneyRequest || moneyRequests.find((mr) => mr._id === moneyRequestId);
+      setAcceptedRequest(accepted || { _id: moneyRequestId, amount: 0 });
+      refetchMoneyReq();
+    } catch (error) {
+      console.error('Failed to accept money request:', error);
+      alert(error?.data?.message || 'Failed to accept money request. Please try again.');
+    }
+  };
+
+  const handleCancelMoneyRequest = async (moneyRequestId) => {
+    try {
+      await cancelMoneyRequest({ moneyRequestId }).unwrap();
+      refetchMoneyReq();
+    } catch (error) {
+      console.error('Failed to cancel money request:', error);
+      alert(error?.data?.message || 'Failed to cancel money request. Please try again.');
+    }
+  };
+
+  const moneyRequests = moneyReqData?.moneyRequests || [];
+
+  // Keep accepted request in sync with latest data
+  useEffect(() => {
+    const accepted = moneyRequests.find((mr) => mr.status === 'accepted');
+    setAcceptedRequest(accepted || null);
+  }, [moneyRequests]);
+
+  const handleConfirmPayment = async () => {
+    try {
+      const res = await payMoneyRequest({ moneyRequestId: acceptedRequest?._id }).unwrap();
+      const sessionUrl = res?.checkoutUrl || res?.sessionUrl || res?.sessionId;
+      if (sessionUrl) {
+        window.location.href = sessionUrl;
+      } else {
+        alert('Payment session created, but no redirect URL returned.');
+      }
+    } catch (error) {
+      console.error('Failed to initiate payment:', error);
+      alert(error?.data?.message || 'Failed to initiate payment. Please try again.');
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewRating) return toast.error('Please select a rating');
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      const body = JSON.stringify({ rating: reviewRating, comment: reviewComment });
+      const endpoint =
+        request.type === 'bundle'
+          ? `/api/bundles/${request.id}/review`
+          : `/api/service-requests/${request.id}/review`;
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.message || 'Failed to submit review');
+      }
+
+      toast.success('Thanks for your feedback!');
+      setShowReviewModal(false);
+    } catch (err) {
+      console.error('Review submit error:', err);
+      toast.error(err.message || 'Failed to submit review');
+    }
+  };
+
+  // Handle payment success via query params (redirect from Stripe)
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('paymentSuccess');
+    const moneyRequestId = searchParams.get('moneyRequestId');
+    const sessionId = searchParams.get('session_id');
+
+    const hasProcessed = sessionStorage.getItem(`paymentSuccess-${moneyRequestId}`);
+    if (paymentSuccess === '1' && moneyRequestId && sessionId && !hasProcessed) {
+      // Mark processed to avoid loops on re-render
+      sessionStorage.setItem(`paymentSuccess-${moneyRequestId}`, '1');
+
+      // Call backend success endpoint to finalize and then show toast/modal
+      const finalizePayment = async () => {
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+          await fetch(
+            `/api/money-requests/${moneyRequestId}/payment-success?session_id=${sessionId}&format=json`,
+            {
+              method: 'GET',
+              headers: token
+                ? { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+                : { Accept: 'application/json' },
+            }
+          );
+          toast.success('Payment completed');
+          setShowReviewModal(true);
+          refetchMoneyReq();
+        } catch (err) {
+          console.error('Finalize payment error:', err);
+          toast.error('Payment processed, but confirmation failed to sync.');
+        }
+      };
+
+      finalizePayment();
+    }
+  }, [searchParams, refetchMoneyReq]);
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Service Header */}
@@ -202,23 +378,23 @@ export default function ChatInterface({
               }`}>
                 {isConnected ? '• Connected' : '• Connecting...'}
               </span>
-              {status === 'accepted' && (
+              {localStatus === 'accepted' && (
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-600">
                   • Accepted
                 </span>
               )}
-              {status === 'done' && (
+              {localStatus === 'completed' && (
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                   • Done
                 </span>
               )}
-              {status === 'cancelled' && (
+              {localStatus === 'cancelled' && (
                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">
                   • Cancelled
                 </span>
               )}
             </div>
-            {status === 'accepted' && onCancel && (
+            {localStatus === 'accepted' && onCancel && (
               <Button
                 onClick={onCancel}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 h-8 text-sm rounded-md"
@@ -251,20 +427,20 @@ export default function ChatInterface({
           </div>
 
           {/* Date */}
-          <div className="mt-1 text-xs text-gray-500">
-            Date : {request.date}
-          </div>
-        </div>
+      <div className="mt-1 text-xs text-gray-500">
+        Date : {request.date}
       </div>
+    </div>
+  </div>
 
       {/* Chat Messages */}
       <div ref={scrollContainerRef} className="p-4 space-y-3 max-h-96 overflow-y-auto bg-gray-50">
-        {messages.length === 0 ? (
+        {visibleMessages.length === 0 ? (
           <div className="text-center text-gray-500 text-sm py-8">
             No messages yet. Start the conversation with a quick chat!
           </div>
         ) : (
-          messages.map((msg, index) => {
+          visibleMessages.map((msg, index) => {
             const currentUserRole = typeof window !== 'undefined' ? localStorage.getItem('userType') : null;
             const isCurrentUser = msg.senderRole === currentUserRole;
 
@@ -367,8 +543,127 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Money Request (visible when completed) - placed below conversation */}
+      {isCompleted && !acceptedRequest && (
+        <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-3">
+          <div className="text-sm font-semibold text-gray-900">Payment Request</div>
+          {moneyReqLoading ? (
+            <div className="text-sm text-gray-500">Loading payment request...</div>
+          ) : moneyRequests.length === 0 ? (
+            <div className="text-sm text-gray-500">No payment request available yet.</div>
+          ) : (
+            moneyRequests.map((mr) => (
+              <div key={mr._id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                {/* Header / summary */}
+                <div className="flex gap-4 p-4 border-b border-gray-100">
+                  <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                    <Image
+                      src={request.image}
+                      alt={request.title}
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          Request Amount: <span className="text-emerald-600">${mr.amount}</span>
+                          {request.type === 'service' ? '/consult' : ''}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">{request.description}</p>
+                      </div>
+                      <span
+                        className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${
+                          mr.status === 'pending'
+                            ? 'bg-amber-50 text-amber-700'
+                            : mr.status === 'accepted'
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {mr.status || 'pending'}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-700">
+                      <span className="font-semibold text-gray-900">
+                        Avg. price: <span className="text-emerald-600">{request.avgPrice}</span>
+                      </span>
+                      {request.rating > 0 && (
+                        <span className="flex items-center gap-1">
+                          <span className="text-yellow-400">★</span>
+                          <span className="font-medium text-gray-900">{request.rating}</span>
+                          <span className="text-gray-500">({request.reviews.toLocaleString()} reviews)</span>
+                        </span>
+                      )}
+                      <span className="text-gray-500">Date : {request.date}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 px-4 py-3 bg-gray-50 rounded-b-xl">
+                  <Button
+                    variant="outline"
+                    className="h-9 px-4 text-sm border-red-200 text-red-600 hover:bg-red-50"
+                    disabled={isAccepting || isCancelling || mr.status !== 'pending'}
+                    onClick={() => handleCancelMoneyRequest(mr._id)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="h-9 px-4 text-sm bg-emerald-600 hover:bg-emerald-700"
+                    disabled={isAccepting || isCancelling || mr.status !== 'pending'}
+                    onClick={() => handleAcceptMoneyRequest(mr._id)}
+                  >
+                    Accept
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Review and confirm UI after accept */}
+      {acceptedRequest?.status === 'accepted' && (
+        <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-3">
+          <div className="text-sm font-semibold text-gray-900">Review and confirm</div>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col md:flex-row md:items-center md:gap-3">
+              <div className="flex-1">
+                <label className="text-xs font-medium text-gray-700 block mb-1">Tips</label>
+                <input
+                  type="text"
+                  value={tipAmount}
+                  onChange={(e) => setTipAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                  placeholder="$10"
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div className="w-full md:w-40">
+                <div className="text-xs font-medium text-gray-700 mb-1">Total:</div>
+                <div className="h-10 rounded-md border border-gray-200 px-3 flex items-center text-sm font-semibold text-gray-900 bg-gray-50">
+                  ${((parseFloat(acceptedRequest.amount) || 0) + (parseFloat(tipAmount) || 0)).toFixed(2)}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5"
+                onClick={handleConfirmPayment}
+                disabled={isPaying}
+              >
+                {isPaying ? 'Redirecting...' : 'Confirm and payment'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Quick Chats - Only show for accepted status */}
-      {status === 'accepted' && (
+      {localStatus === 'accepted' && (
         <div className="p-4 bg-white border-t border-gray-200">
           {quickChatsLoading || quickChatsFetching ? (
             <div className="text-center text-gray-500 text-sm py-4">Loading quick chats...</div>
@@ -449,7 +744,7 @@ export default function ChatInterface({
       )}
 
       {/* Cancellation Reason - Show for cancelled or done status */}
-      {(status === 'cancelled' || status === 'done') && cancellationReason && (
+      {(localStatus === 'cancelled' || localStatus === 'completed') && cancellationReason && (
         <div className="p-6 bg-white border-t border-gray-200 text-center">
           <p className="text-sm text-gray-600 mb-2">
             {cancellationReason}
@@ -457,6 +752,70 @@ export default function ChatInterface({
           <p className="text-sm font-medium text-gray-900">
             Cancellation reason provided by {cancelledBy === 'user' ? 'you' : (cancelledBy || 'provider')}.
           </p>
+        </div>
+      )}
+
+      {/* Review modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="h-16 w-16 rounded-full border-2 border-emerald-500 flex items-center justify-center">
+                <span className="text-emerald-500 text-3xl">✓</span>
+              </div>
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-gray-900">Task Completed</h2>
+                <p className="text-sm text-gray-600">Average Rating and Feedback</p>
+              </div>
+              <div className="w-full">
+                <p className="text-sm font-medium text-gray-900 mb-2">Avg. Rating</p>
+                <div className="flex items-center justify-between">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setReviewRating(star)}
+                      className="flex flex-col items-center space-y-1"
+                    >
+                      <span
+                        className={`text-3xl ${
+                          reviewRating >= star ? 'text-emerald-500' : 'text-gray-300'
+                        }`}
+                      >
+                        ★
+                      </span>
+                      <span className="text-xs text-gray-600">
+                        {star === 1
+                          ? 'Bad'
+                          : star === 2
+                          ? 'Average'
+                          : star === 3
+                          ? 'Good'
+                          : star === 4
+                          ? 'Great'
+                          : 'Amazing'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="w-full">
+                <p className="text-sm font-medium text-gray-900 mb-1">Feedback Note</p>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  placeholder="Type here"
+                />
+              </div>
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={handleSubmitReview}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

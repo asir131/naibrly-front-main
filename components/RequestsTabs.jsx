@@ -50,18 +50,21 @@ const Star = () => (
 const RequestRow = ({ item, type }) => {
   const isBundle = type === 'bundle';
 
+  const participant = isBundle ? (item.participant || {}) : null;
+  const participantCustomer = isBundle ? (item.participantCustomer || item.customer) : null;
+
   const title = isBundle ? item.title : item.serviceType;
   const description = isBundle
     ? item.description
     : `${item.problem}${item.note ? ` - ${item.note}` : ''}`;
   const price = isBundle
-    ? item.services?.[0]?.hourlyRate || 0
+    ? item.pricing?.finalPrice || item.finalPrice || item.services?.[0]?.hourlyRate || 0
     : item.price || 0;
   const customerImage = isBundle
-    ? item.creator?.profileImage?.url
+    ? participantCustomer?.profileImage?.url || item.creator?.profileImage?.url
     : item.customer?.profileImage?.url;
   const customerName = isBundle
-    ? `${item.creator?.firstName} ${item.creator?.lastName}`
+    ? `${participantCustomer?.firstName || item.creator?.firstName || ''} ${participantCustomer?.lastName || item.creator?.lastName || ''}`.trim()
     : `${item.customer?.firstName} ${item.customer?.lastName}`;
 
   const scheduledDate = new Date(isBundle ? item.serviceDate : item.scheduledDate);
@@ -191,11 +194,27 @@ export default function RequestsTabs({
             <p className="text-center text-[#666]">Loading requests...</p>
           </div>
         ) : list.length > 0 ? (
-          list.map((item) => (
-            <Link key={item._id} href={`/provider/signup/message/${item._id}`}>
-              <RequestRow item={item} type={item.type} />
-            </Link>
-          ))
+          list.map((item) => {
+            const participantCustomerId = item.type === 'bundle'
+              ? item.participantCustomer?._id || item.customer?._id || item.creator?._id
+              : item.customer?._id;
+
+            const slug =
+              item.type === 'bundle' && participantCustomerId
+                ? `${item._id}-${participantCustomerId}`
+                : item._id;
+
+            const key =
+              item.type === 'bundle' && participantCustomerId
+                ? `${item._id}-${participantCustomerId}`
+                : item._id;
+
+            return (
+              <Link key={key} href={`/provider/signup/message/${slug}`}>
+                <RequestRow item={item} type={item.type} />
+              </Link>
+            );
+          })
         ) : (
           <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
             <p className="text-center text-[#666]">

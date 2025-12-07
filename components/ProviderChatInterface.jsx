@@ -6,7 +6,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { Plus, X } from 'lucide-react';
 import { useSocket } from '@/hooks/useSocket';
 import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useUpdateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
-import { useGetUserProfileQuery } from '@/redux/api/servicesApi';
+import { useGetUserProfileQuery, useUpdateBundleStatusMutation, useUpdateServiceRequestStatusMutation, useCreateMoneyRequestMutation } from '@/redux/api/servicesApi';
 import TaskCompletedModal from './TaskCompletedModal';
 import AddQuickChatModal from './AddQuickChatModal';
 import EditQuickChatModal from './EditQuickChatModal';
@@ -29,9 +29,16 @@ const StatusPill = ({ label = 'Accepted', isConnected = false }) => (
 
 const Dot = () => <span className="mx-1 inline-block h-1 w-1 rounded-full bg-[#C7C7C7]" />;
 
-const OrderHeader = ({ order, onTaskDone, isConnected }) => {
+const OrderHeader = ({
+    order,
+    onTaskDone,
+    isConnected,
+    taskDoneDisabled,
+    taskDoneHidden,
+    amount,
+    setAmount,
+}) => {
     const [open, setOpen] = useState(false);
-    const [amount, setAmount] = useState('');
 
     const handleDotClick = () => setOpen(!open);
 
@@ -83,15 +90,18 @@ const OrderHeader = ({ order, onTaskDone, isConnected }) => {
                 <div className="flex items-start">
                     <StatusPill label={order.statusLabel || 'Accepted'} isConnected={isConnected} />
                 </div>
-                <div className="absolute right-0 bottom-0">
-                    <button
-                        onClick={handleDotClick}
-                        type="button"
-                        className="rounded-[12px] bg-[#0E7A60] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#0b5f4b] transition"
-                    >
-                        Task Done
-                    </button>
-                </div>
+                {!taskDoneHidden && (
+                    <div className="absolute right-0 bottom-0">
+                        <button
+                            onClick={handleDotClick}
+                            type="button"
+                            disabled={taskDoneDisabled}
+                            className="rounded-[12px] bg-[#0E7A60] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[#0b5f4b] transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                            Task Done
+                        </button>
+                    </div>
+                )}
             </div>
 
             <TaskCompletedModal
@@ -282,6 +292,7 @@ export default function ProviderChatInterface({
     const messagesEndRef = useRef(null);
     const [click, setClick] = useState(false);
     const [stage, setStage] = useState('idle');
+    const [amount, setAmount] = useState('');
 
     // Initialize with default order data if not provided
     const defaultOrderData = {
@@ -310,6 +321,11 @@ export default function ProviderChatInterface({
     const { data: profileData } = useGetUserProfileQuery();
     const currentUser = profileData?.user;
 
+    // Mutations for marking complete
+    const [updateBundleStatus, { isLoading: isCompletingBundle }] = useUpdateBundleStatusMutation();
+    const [updateServiceRequestStatus, { isLoading: isCompletingRequest }] = useUpdateServiceRequestStatusMutation();
+    const [createMoneyRequest, { isLoading: isCreatingMoneyRequest }] = useCreateMoneyRequestMutation();
+
     // Debug: Log current user role
     useEffect(() => {
         console.log('🎭 Current User Role from localStorage:', currentUserRole);
@@ -322,9 +338,15 @@ export default function ProviderChatInterface({
         messages,
         setMessages,
         joinConversation,
+        sendMessage,
         sendQuickChat,
         getConversation,
     } = useSocket(token);
+
+    // Filter out system signals from display
+    const visibleMessages = messages.filter(
+        (msg) => !(msg?.content && msg.content.startsWith('__'))
+    );
 
     // Quick Chats API
     const [fetchQuickChats, { data: quickChatsData, isLoading: quickChatsLoading, isFetching: quickChatsFetching, refetch: refetchQuickChats }] = useLazyGetQuickChatsQuery();
@@ -517,24 +539,92 @@ export default function ProviderChatInterface({
         }
     };
 
-    const handleTaskDoneFlow = () => {
-        setStage('waiting');
-        setTimeout(() => setStage('feedback'), 2500);
+    const handleTaskDoneFlow = async () => {
+        try {
+            // Validate amount
+            const numericAmount = parseFloat(amount);
+            if (isNaN(numericAmount) || numericAmount <= 0) {
+                alert('Please enter a valid amount.');
+                return;
+            }
+
+            // Provider can mark either a service request or a bundle as completed
+            if (bundleId) {
+                await updateBundleStatus({
+                    bundleId,
+                    status: 'completed',
+                    message: 'Marked complete by provider',
+                }).unwrap();
+            } else if (requestId) {
+                await updateServiceRequestStatus({
+                    requestId,
+                    status: 'completed',
+                }).unwrap();
+            } else {
+                console.warn('No requestId or bundleId provided for completion');
+                return;
+            }
+
+            // Create money request (description/dueDate optional per requirements)
+            await createMoneyRequest({
+                bundleId: bundleId || undefined,
+                serviceRequestId: requestId || undefined,
+                amount: numericAmount,
+            }).unwrap();
+
+            // Notify via socket so the customer sees updates in real time
+            if (isConnected) {
+                const content = `__TASK_COMPLETED__${bundleId ? '_BUNDLE' : '_SERVICE'}`;
+                sendMessage({
+                    requestId,
+                    bundleId,
+                    customerId,
+                    content,
+                });
+                // Send a follow-up message to trigger money request refetch on client
+                sendMessage({
+                    requestId,
+                    bundleId,
+                    customerId,
+                    content: '__MONEY_REQUEST__',
+                });
+            }
+
+            // Reflect locally
+            setLocalOrderData((prev) => ({
+                ...prev,
+                statusLabel: 'Completed',
+            }));
+
+            setStage('feedback');
+            setAmount('');
+        } catch (error) {
+            console.error('Failed to mark task done:', error);
+            alert(error?.data?.message || 'Failed to mark task as completed. Please try again.');
+        }
     };
 
     return (
         <div className="w-full bg-white rounded-[24px] p-[32px]">
             {/* Header card */}
-            <OrderHeader order={localOrderData} onTaskDone={handleTaskDoneFlow} isConnected={isConnected} />
+            <OrderHeader
+                order={localOrderData}
+                onTaskDone={handleTaskDoneFlow}
+                isConnected={isConnected}
+                taskDoneDisabled={isCompletingBundle || isCompletingRequest || isCreatingMoneyRequest}
+                taskDoneHidden={(localOrderData?.statusLabel || '').toLowerCase() === 'completed'}
+                amount={amount}
+                setAmount={setAmount}
+            />
 
             {/* Conversation */}
             <div ref={scrollContainerRef} className="mt-8 space-y-6 max-h-[400px] overflow-y-auto">
-                {messages.length === 0 ? (
+                {visibleMessages.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                         No messages yet. Start the conversation with a quick chat!
                     </div>
                 ) : (
-                    messages.map((msg, index) => {
+                    visibleMessages.map((msg, index) => {
                         const isCurrentUser = msg.senderRole === currentUserRole;
 
                         // Get sender info - use current user's profile for their messages
