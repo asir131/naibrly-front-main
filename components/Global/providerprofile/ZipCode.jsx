@@ -5,12 +5,9 @@ import Image from 'next/image';
 
 const ZipCode = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [zipCodes, setZipCodes] = useState(['42574', '78577', '12473']);
+  const [zipCodes, setZipCodes] = useState(['156256', '156256']);
   const [selectedZipCodes, setSelectedZipCodes] = useState([...zipCodes]);
   const [searchZip, setSearchZip] = useState('');
-
-  // Mock available zip codes for the map
-  const availableZipCodes = ['158258', '158258', '42574', '78577', '12473'];
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -26,12 +23,17 @@ const ZipCode = () => {
     setIsEditing(false);
   };
 
-  const handleZipToggle = (zip) => {
-    if (selectedZipCodes.includes(zip)) {
-      setSelectedZipCodes(selectedZipCodes.filter(z => z !== zip));
-    } else {
-      setSelectedZipCodes([...selectedZipCodes, zip]);
+  const handleAddZip = () => {
+    const val = searchZip.trim();
+    if (!val) return;
+    if (!selectedZipCodes.includes(val)) {
+      setSelectedZipCodes(prev => [...prev, val]);
     }
+    setSearchZip('');
+  };
+
+  const handleRemoveZip = (zip) => {
+    setSelectedZipCodes(prev => prev.filter(z => z !== zip));
   };
 
   return (
@@ -78,52 +80,40 @@ const ZipCode = () => {
                 placeholder="Search zip code..."
                 value={searchZip}
                 onChange={(e) => setSearchZip(e.target.value)}
-                className="absolute top-4 right-4 w-8 h-8 text-gray-400 border-0 focus:outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddZip();
+                  }
+                }}
+                className="w-full border border-gray-200 rounded-md px-3 py-2 pr-10 text-sm text-gray-700 focus:outline-none"
               />
 
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-2 mt-3 mb-4">
                 {selectedZipCodes.map((zip, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-sm bg-teal-100 text-teal-800"
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-teal-100 text-teal-800"
                   >
-                    × {zip}
+                    • {zip}
+                    <button
+                      type="button"
+                      className="text-teal-700 hover:text-teal-900"
+                      onClick={() => handleRemoveZip(zip)}
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
 
               {/* Map placeholder */}
               <div className="relative w-full h-64 bg-gray-200 rounded-md overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {/* You can replace this with an actual map component */}
-                  <div className="w-full h-full bg-gradient-to-br from-green-200 via-green-300 to-green-400 relative">
-                    {/* Mock map regions */}
-                    <div className="absolute top-8 left-12 text-white text-sm font-medium">Edmonds</div>
-                    <div className="absolute top-24 left-8 text-white text-sm font-medium">Shoreline</div>
-                    <div className="absolute top-24 right-12 text-purple-600 text-sm font-medium">Bothel</div>
-                    <div className="absolute bottom-20 left-16 text-white text-sm font-medium">Kirkland</div>
-                    <div className="absolute bottom-12 right-12 text-purple-600 text-sm font-medium">Redmond</div>
-                    <div className="absolute top-1/2 right-4 text-gray-400 text-sm">Cotta</div>
-                    <div className="absolute top-12 right-8 text-gray-400 text-sm">Maltby</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="text-sm text-gray-600 mb-3">Select Zip Codes:</div>
-              <div className="grid grid-cols-3 gap-2">
-                {availableZipCodes.map((zip, index) => (
-                  <label key={index} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedZipCodes.includes(zip)}
-                      onChange={() => handleZipToggle(zip)}
-                      className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                    />
-                    <span className="text-sm text-gray-700">{zip}</span>
-                  </label>
-                ))}
+                <img
+                  src="/usersImg/map_img.png"
+                  alt="Service area map"
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 

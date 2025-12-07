@@ -21,7 +21,7 @@ import NotificationDropdown from "@/components/Global/Modals/NotificationDropdow
 import NaibrlyNowModal from "@/components/Global/Modals/NaibrlyNowModal";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { useGetServicesQuery } from "@/redux/api/servicesApi";
+import { useGetServicesQuery, useGetProviderBalanceQuery, useGetUserProfileQuery } from "@/redux/api/servicesApi";
 import { useSelector } from 'react-redux';
 
 const SubMenuItem = ({ item }) => {
@@ -75,6 +75,16 @@ export default function Navbar() {
   // Get authentication state and user data from Redux
   const { isAuthenticated, user, userType, logout } = useAuth();
   const reduxUser = useSelector((state) => state.auth.user);
+  const normalizedUserType = userType?.toLowerCase?.();
+  const isProvider = normalizedUserType === "provider";
+  const isUser = normalizedUserType === "user";
+  const { data: providerBalanceData } = useGetProviderBalanceQuery(undefined, {
+    skip: !isAuthenticated || !isProvider,
+  });
+  const { data: userProfileData } = useGetUserProfileQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const providerProfile = userProfileData?.user || reduxUser || user || {};
 
   // Fetch services from API using RTK Query
   const { data: servicesData, isLoading: servicesLoading, error: servicesError } = useGetServicesQuery();
@@ -90,8 +100,31 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
-  // Get profile image from Redux state
-  const profileImage = reduxUser?.profileImage?.url || null;
+  // Get profile image from Redux state with business logo fallback
+  const profileImage =
+    providerProfile?.profileImage?.url ||
+    providerProfile?.businessLogo?.url ||
+    userProfileData?.user?.profileImage?.url ||
+    userProfileData?.user?.businessLogo?.url ||
+    reduxUser?.profileImage?.url ||
+    reduxUser?.businessLogo?.url ||
+    user?.profileImage?.url ||
+    user?.businessLogo?.url ||
+    null;
+
+  const balanceDisplay =
+    providerBalanceData?.availableBalance ??
+    providerProfile?.balances?.availableBalance ??
+    userProfileData?.user?.balances?.availableBalance ??
+    user?.balance ??
+    "1258";
+
+  const providerName =
+    providerProfile?.businessNameRegistered ||
+    providerProfile?.businessName ||
+    [providerProfile?.firstName, providerProfile?.lastName].filter(Boolean).join(" ") ||
+    user?.name ||
+    "Jacob";
 
   const isHomePage =
     pathname === "/" || pathname === "/login" || pathname === "/signup";
@@ -279,7 +312,7 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-2 sm:gap-4 items-center">
           {/* Provider-specific navigation */}
-          {mounted && isAuthenticated && userType === "provider" ? (
+          {mounted && isAuthenticated && isProvider ? (
             <>
               {/* HOME BUTTON - Provider */}
               <Link href="/provider/dashboard">
@@ -325,7 +358,7 @@ export default function Navbar() {
           )}
 
           {/* EXPLORE SERVICES - Only for non-provider users */}
-          {!(mounted && isAuthenticated && userType === "provider") && (
+          {!(mounted && isAuthenticated && isProvider) && (
             <div className="relative service-dropdown-container">
               <Button
                 variant="outline"
@@ -519,7 +552,7 @@ export default function Navbar() {
           )}
 
           {/* BUNDLES button - Only for authenticated user type */}
-          {mounted && isAuthenticated && userType === "user" && (
+          {mounted && isAuthenticated && isUser && (
             <Link href="/bunddle-offer">
               <Button
                 className={`${
@@ -562,10 +595,10 @@ export default function Navbar() {
             // LOGGED IN STATE - Show user profile and notification bell
             <div className="flex items-center gap-3">
               {/* Provider Balance Display */}
-              {userType === "provider" && (
+              {isProvider && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
                   <span className="text-gray-900 font-semibold text-base">
-                    ${user?.balance || "1258"}
+                    ${balanceDisplay}
                   </span>
                 </div>
               )}
@@ -589,9 +622,9 @@ export default function Navbar() {
                       <UserIcon className="w-6 h-6 text-white" />
                     </div>
                   )}
-                  {userType === "provider" && (
+                  {isProvider && (
                     <span className="text-gray-900 font-medium text-base">
-                      {user?.name || "Jacob"}
+                      {providerName}
                     </span>
                   )}
                   <ChevronDown
@@ -629,7 +662,7 @@ export default function Navbar() {
               </div>
 
               {/* Notification Bell Button - Only for non-providers */}
-              {userType !== "provider" && (
+              {!isProvider && (
                 <div className="relative notification-container">
                   <button
                     onClick={() =>
@@ -655,7 +688,7 @@ export default function Navbar() {
               )}
 
               {/* Help Button - Only for providers */}
-              {userType === "provider" && (
+              {isProvider && (
                 <button
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-1"
                   title="Help"
@@ -689,7 +722,7 @@ export default function Navbar() {
         <div className="md:hidden bg-white border-t border-gray-200 absolute top-full left-0 right-0 max-h-[calc(100vh-80px)] overflow-y-auto shadow-lg">
           <div className="px-4 py-4 space-y-3">
             {/* HOME - Provider specific or general */}
-            {mounted && isAuthenticated && userType === "provider" ? (
+            {mounted && isAuthenticated && isProvider ? (
               <>
                 <Link href="/provider/dashboard">
                   <Button
@@ -748,7 +781,7 @@ export default function Navbar() {
             )}
 
             {/* EXPLORE SERVICES - Only for non-provider users */}
-            {!(mounted && isAuthenticated && userType === "provider") && (
+            {!(mounted && isAuthenticated && isProvider) && (
               <div className="space-y-2">
                 <Button
                   variant="outline"
@@ -936,7 +969,7 @@ export default function Navbar() {
             )}
 
             {/* BUNDLES - Only for user type */}
-            {mounted && isAuthenticated && userType === "user" && (
+            {mounted && isAuthenticated && isUser && (
               <Link href="/bundles">
                 <Button
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -953,11 +986,11 @@ export default function Navbar() {
             )}
 
             {/* REQUEST - Only for non-provider users */}
-            {!(mounted && isAuthenticated && userType === "provider") && (
+            {!(mounted && isAuthenticated && isProvider) && (
               <Link
                 href={
                   mounted && isAuthenticated
-                    ? userType === "provider"
+                    ? isProvider
                       ? "/provider/requests"
                       : "/request"
                     : "/join-provider"

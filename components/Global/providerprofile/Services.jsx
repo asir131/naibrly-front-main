@@ -1,42 +1,80 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  useGetUserProfileQuery,
+  useGetProviderServicesListQuery,
+  useAddProviderServiceMutation,
+  useDeleteProviderServiceMutation,
+  useGetServicesQuery,
+} from '@/redux/api/servicesApi';
 
 const Services = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [services, setServices] = useState([
-    'Window Washing',
-    'Plumbing',
-    'Locksmiths',
-    'Appliance Repairs'
-  ]);
-  const [selectedServices, setSelectedServices] = useState([...services]);
+  const [selectedServices, setSelectedServices] = useState([]);
+  useGetUserProfileQuery(); // keep data fresh; id not needed for self-services
+  const { data: servicesData, refetch, isLoading } = useGetProviderServicesListQuery();
+  const [addService, { isLoading: isAdding }] = useAddProviderServiceMutation();
+  const [deleteService, { isLoading: isDeleting }] = useDeleteProviderServiceMutation();
+  const { data: allServicesData } = useGetServicesQuery();
 
-  const availableServices = [
-    'Window Washing',
-    'Plumbing',
-    'Locksmiths',
-    'Appliance Repairs',
-    'Electrical',
-    'HVAC',
-    'Carpentry',
-    'Painting',
-    'Landscaping',
-    'Cleaning'
-  ];
+  // Available options (from API, fallback static)
+  const availableServices = useMemo(() => {
+    const svcList = allServicesData?.services || allServicesData?.data?.services;
+    if (Array.isArray(svcList) && svcList.length) {
+      return Array.from(new Set(svcList.map((s) => s.name))).sort();
+    }
+    return [
+      'Window Washing',
+      'Plumbing',
+      'Locksmiths',
+      'Appliance Repairs',
+      'Electrical',
+      'HVAC',
+      'Carpentry',
+      'Painting',
+      'Landscaping',
+      'Cleaning'
+    ];
+  }, [allServicesData]);
+
+  const currentServices = useMemo(() => servicesData?.services || [], [servicesData]);
+
+  useEffect(() => {
+    if (currentServices.length) {
+      setSelectedServices(currentServices.map((s) => s.name));
+    }
+  }, [currentServices]);
 
   const handleEdit = () => {
+    setSelectedServices(currentServices.map((s) => s.name));
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    setSelectedServices([...services]);
+    setSelectedServices(currentServices.map((s) => s.name));
     setIsEditing(false);
   };
 
-  const handleSave = () => {
-    setServices([...selectedServices]);
-    setIsEditing(false);
+  const handleSave = async () => {
+    const currentNames = currentServices.map((s) => s.name);
+    const toAdd = selectedServices.filter((name) => !currentNames.includes(name));
+    const toRemove = currentServices.filter((s) => !selectedServices.includes(s.name));
+
+    try {
+      // Add new services
+      for (const name of toAdd) {
+        await addService({ serviceName: name }).unwrap();
+      }
+      // Delete removed services
+      for (const svc of toRemove) {
+        await deleteService(svc.name).unwrap();
+      }
+      await refetch();
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update services:', err);
+    }
   };
 
   const handleServiceToggle = (service) => {
@@ -56,6 +94,7 @@ const Services = () => {
             <button
               onClick={handleEdit}
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
             >
               Edit
             </button>
@@ -64,9 +103,9 @@ const Services = () => {
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-gray-700">My Services</h2>
             <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-              {services.map((service, index) => (
+              {currentServices.map((service, index) => (
                 <div key={index} className="text-gray-600">
-                  {index + 1}. {service}
+                  {index + 1}. {service.name}
                 </div>
               ))}
             </div>
@@ -95,7 +134,15 @@ const Services = () => {
                       color: '#000'
                     }}
                   >
-                    <span>× {service}</span>
+                    <span>{service}</span>
+                    <button
+                      type="button"
+                      className="text-gray-700 hover:text-gray-900"
+                      onClick={() => handleServiceToggle(service)}
+                      aria-label={`Remove ${service}`}
+                    >
+                      ×
+                    </button>
                   </span>
                 ))}
               </div>
@@ -127,9 +174,10 @@ const Services = () => {
               </button>
               <button
                 onClick={handleSave}
-                className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+                className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors disabled:opacity-60"
+                disabled={isAdding || isDeleting}
               >
-                Save
+                {(isAdding || isDeleting) ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

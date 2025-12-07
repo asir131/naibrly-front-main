@@ -605,6 +605,34 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Provider services (self)
+    getProviderServicesList: builder.query({
+      query: () => '/providers/services/my-services',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) return { services: [] };
+        return response.data || { services: [] };
+      },
+    }),
+
+    addProviderService: builder.mutation({
+      query: ({ serviceName, hourlyRate }) => ({
+        url: '/providers/services/my-services',
+        method: 'POST',
+        body: { serviceName, hourlyRate },
+      }),
+      invalidatesTags: ['Provider'],
+    }),
+
+    deleteProviderService: builder.mutation({
+      query: (serviceName) => ({
+        url: '/providers/services/my-services',
+        method: 'DELETE',
+        body: { serviceName },
+      }),
+      invalidatesTags: ['Provider'],
+    }),
+
     // Get nearby bundle requests for provider
     getProviderNearbyBundles: builder.query({
       query: () => '/zip/provider/nearby-bundles',
@@ -755,6 +783,70 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Update provider profile (multipart form-data)
+    updateProviderProfile: builder.mutation({
+      query: (payload) => {
+        // Build FormData from payload
+        const formData = new FormData();
+
+        const appendIfValue = (key, value) => {
+          if (value !== undefined && value !== null && value !== '') {
+            formData.append(key, value);
+          }
+        };
+
+        appendIfValue('firstName', payload.firstName);
+        appendIfValue('lastName', payload.lastName);
+        appendIfValue('phone', payload.phone);
+        appendIfValue('businessNameRegistered', payload.businessNameRegistered);
+        appendIfValue('description', payload.description);
+        appendIfValue('experience', payload.experience);
+        appendIfValue('maxBundleCapacity', payload.maxBundleCapacity);
+
+        // Services payloads (expects JSON strings)
+        if (payload.servicesToAdd) {
+          appendIfValue('servicesToAdd', JSON.stringify(payload.servicesToAdd));
+        }
+        if (payload.servicesToUpdate) {
+          appendIfValue('servicesToUpdate', JSON.stringify(payload.servicesToUpdate));
+        }
+        if (payload.servicesToRemove) {
+          appendIfValue('servicesToRemove', JSON.stringify(payload.servicesToRemove));
+        }
+
+        // Business days / hours
+        if (payload.businessServiceDays) {
+          appendIfValue('businessServiceDays', JSON.stringify(payload.businessServiceDays));
+        }
+        if (payload.businessHours) {
+          appendIfValue('businessHours', JSON.stringify(payload.businessHours));
+        }
+
+        // Optional files
+        if (payload.businessLogo instanceof File) {
+          formData.append('businessLogo', payload.businessLogo);
+        }
+        if (payload.profileImage instanceof File) {
+          formData.append('profileImage', payload.profileImage);
+        }
+
+        return {
+          url: '/users/provider/update-profile',
+          method: 'PUT',
+          body: formData,
+        };
+      },
+      invalidatesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Update provider profile response:', response);
+        return response?.data || response;
+      },
+      transformErrorResponse: (response) => {
+        console.error('Update provider profile error:', response);
+        return response;
+      },
+    }),
+
     // Get provider analytics
     getProviderAnalytics: builder.query({
       query: () => '/providers/analytics/my',
@@ -769,6 +861,23 @@ export const servicesApi = createApi({
           };
         }
         console.log('Returning analytics data:', response.data);
+        return response.data;
+      },
+    }),
+
+    // Get provider balance
+    getProviderBalance: builder.query({
+      query: () => '/providers/balance/my',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success || !response.data) {
+          return {
+            availableBalance: 0,
+            pendingPayout: 0,
+            totalEarnings: 0,
+            totalPayout: 0,
+          };
+        }
         return response.data;
       },
     }),
@@ -959,8 +1068,13 @@ export const {
   useGetVerifyInfoStatusQuery,
   useGetProviderZipQuery,
   useGetProviderAnalyticsQuery,
+  useGetProviderBalanceQuery,
   useGetProviderReviewsQuery,
   useGetProviderNearbyBundlesQuery,
   useGetServiceRequestByIdQuery,
   useGetProviderServiceRequestsQuery,
+  useUpdateProviderProfileMutation,
+  useGetProviderServicesListQuery,
+  useAddProviderServiceMutation,
+  useDeleteProviderServiceMutation,
 } = servicesApi;

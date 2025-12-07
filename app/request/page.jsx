@@ -30,6 +30,55 @@ export default function RequestPage() {
   const { data, isLoading, error, refetch } = useGetMyServiceRequestsQuery();
 
 
+  // Helper: map service types to category types
+  const SERVICE_CATEGORY_MAP = {
+    Electrical: 'Home Repairs & Maintenance',
+    Plumbing: 'Home Repairs & Maintenance',
+    'Door, Cabinet, & Furniture Repair': 'Home Repairs & Maintenance',
+    'Furniture Assembly': 'Installation & Assembly',
+    'IKEA Assembly': 'Installation & Assembly',
+    'TV Mounting': 'Installation & Assembly',
+    Cleaning: 'Cleaning & Organization',
+    'Bathroom Remodeling': 'Renovations & Upgrades',
+    Carpenters: 'Renovations & Upgrades',
+    Moving: 'Moving',
+  };
+
+  // Helper: category type -> image
+  const CATEGORY_TYPE_IMAGES = {
+    'Home Repairs & Maintenance': '/topServices/image (1).png',
+    'Cleaning & Organization': '/clean.png',
+    'Renovations & Upgrades': '/provider/Paint.png',
+    'Exterior Home Care': '/provider/Sessor.png',
+    'Landscaping & Outdoor Services': '/provider/Hammer.png',
+    Moving: '/provider/design  (1).png',
+    'Installation & Assembly': '/provider/design  (2).png',
+  };
+
+  const getCategoryTypeName = (request) => {
+    return (
+      request?.categoryTypeName ||
+      request?.service?.categoryType?.name ||
+      request?.requestedServices?.[0]?.categoryTypeName ||
+      SERVICE_CATEGORY_MAP[request?.serviceType] ||
+      SERVICE_CATEGORY_MAP[request?.requestedServices?.[0]?.name] ||
+      null
+    );
+  };
+
+  const getCategoryImage = (request) => {
+    const categoryType = getCategoryTypeName(request);
+    if (categoryType && CATEGORY_TYPE_IMAGES[categoryType]) {
+      return CATEGORY_TYPE_IMAGES[categoryType];
+    }
+    // fallback to provider image or default placeholder
+    return (
+      request.provider?.profileImage?.url ||
+      request.provider?.businessLogo?.url ||
+      'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop'
+    );
+  };
+
   // Transform API data to component format and filter by status
   const { openRequests, closedRequests } = useMemo(() => {
     if (!data) {
@@ -68,7 +117,7 @@ export default function RequestPage() {
         status: statusInfo.label,
         statusColor: statusInfo.color,
         statusBg: statusInfo.bg,
-        image: request.provider?.profileImage?.url || request.provider?.businessLogo?.url || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop',
+        image: getCategoryImage(request),
         amount: request.price || (request.estimatedHours || 3) * 20,
         providerName: request.provider ? `${request.provider.firstName} ${request.provider.lastName}` : 'Unknown Provider',
         businessName: request.provider?.businessNameRegistered || '',
@@ -109,7 +158,10 @@ export default function RequestPage() {
         status: statusInfo.label,
         statusColor: statusInfo.color,
         statusBg: statusInfo.bg,
-        image: bundle.provider?.businessLogo?.url || 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop',
+        image:
+          CATEGORY_TYPE_IMAGES[bundle.categoryTypeName] ||
+          bundle.provider?.businessLogo?.url ||
+          'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop',
         amount: bundle.pricing?.finalPrice || bundle.finalPrice || 0,
         providerName: bundle.provider?.businessNameRegistered || 'No Provider Yet',
         businessName: bundle.provider?.businessNameRegistered || '',
