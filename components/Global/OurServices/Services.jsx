@@ -112,6 +112,7 @@ export default function OurServicesSection({ serviceType, zipCode }) {
       .filter(service => service.serviceName) // Only include services with names
       .map(service => ({
         title: service.serviceName,
+        serviceName: service.serviceName,
         description: service.hourlyRate
           ? `Professional ${service.serviceName.toLowerCase()} services - $${service.hourlyRate}/hour`
           : `Professional ${service.serviceName.toLowerCase()} services`,
@@ -141,7 +142,15 @@ export default function OurServicesSection({ serviceType, zipCode }) {
       setSelectedService(service);
       setIsAuthModalOpen(true);
     } else {
-      router.push('/providerprofile');
+      if (service.providerId && (service.serviceName || service.title)) {
+        router.push(
+          `/providerprofile?id=${service.providerId}&service=${encodeURIComponent(
+            service.serviceName || service.title
+          )}`
+        );
+      } else {
+        router.push('/providerprofile');
+      }
     }
   };
 

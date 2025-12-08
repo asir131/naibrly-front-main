@@ -30,7 +30,7 @@ export default function OurServicesSection() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('https://naibrly-backend.onrender.com/api/categories/services');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories/services`);
         if (!response.ok) {
           throw new Error('Failed to fetch services');
         }

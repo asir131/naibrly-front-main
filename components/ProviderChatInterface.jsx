@@ -11,6 +11,7 @@ import TaskCompletedModal from './TaskCompletedModal';
 import AddQuickChatModal from './AddQuickChatModal';
 import EditQuickChatModal from './EditQuickChatModal';
 import CancelledNoteModal from './CancelledNoteModal';
+import { Star } from 'lucide-react';
 
 const StatusPill = ({ label = 'Accepted', isConnected = false }) => (
     <div className="flex gap-2">
@@ -37,6 +38,7 @@ const OrderHeader = ({
     taskDoneHidden,
     amount,
     setAmount,
+    isPaid = false,
 }) => {
     const [open, setOpen] = useState(false);
 
@@ -88,7 +90,15 @@ const OrderHeader = ({
                 </div>
 
                 <div className="flex items-start">
-                    <StatusPill label={order.statusLabel || 'Accepted'} isConnected={isConnected} />
+                    <div className="flex flex-col items-end gap-2">
+                        <StatusPill label={order.statusLabel || 'Accepted'} isConnected={isConnected} />
+                        {isPaid && (
+                            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                Paid
+                            </span>
+                        )}
+                    </div>
                 </div>
                 {!taskDoneHidden && (
                     <div className="absolute right-0 bottom-0">
@@ -293,6 +303,10 @@ export default function ProviderChatInterface({
     const [click, setClick] = useState(false);
     const [stage, setStage] = useState('idle');
     const [amount, setAmount] = useState('');
+    const [reviewData, setReviewData] = useState([]);
+    const [reviewLoading, setReviewLoading] = useState(false);
+    const [isPaid, setIsPaid] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
 
     // Initialize with default order data if not provided
     const defaultOrderData = {
@@ -316,6 +330,7 @@ export default function ProviderChatInterface({
     // Get auth token
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     const currentUserRole = typeof window !== 'undefined' ? localStorage.getItem('userType') : null;
+    const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 
     // Get current user's profile
     const { data: profileData } = useGetUserProfileQuery();
@@ -360,6 +375,38 @@ export default function ProviderChatInterface({
         fetchQuickChats();
     }, [fetchQuickChats]);
 
+    // Fetch payment status for this task for provider
+    useEffect(() => {
+        const fetchPaymentStatus = async () => {
+            if (!token || (!requestId && !bundleId)) return;
+            setPaymentLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (requestId) params.append('serviceRequestId', requestId);
+                if (bundleId) params.append('bundleId', bundleId);
+                const res = await fetch(`${apiBase}/money-requests/provider?${params.toString()}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (!res.ok) {
+                    setPaymentLoading(false);
+                    return;
+                }
+                const data = await res.json();
+                const requests = data?.data?.moneyRequests || [];
+                const paid = requests.some((mr) => mr.status === 'paid');
+                setIsPaid(paid);
+            } catch (err) {
+                console.error('Failed to load payment status', err);
+            } finally {
+                setPaymentLoading(false);
+            }
+        };
+
+        fetchPaymentStatus();
+    }, [requestId, bundleId, token, apiBase]);
+
     // Join conversation on mount and fetch history
     useEffect(() => {
         if (!isConnected || (!requestId && !bundleId)) return;
@@ -379,6 +426,68 @@ export default function ProviderChatInterface({
         joinConversation(conversationData);
         getConversation(conversationData);
     }, [isConnected, requestId, bundleId, customerId, joinConversation, getConversation]);
+
+    // Fetch review for this task (provider view)
+    useEffect(() => {
+        const fetchReview = async () => {
+            if (!token || (!requestId && !bundleId)) return;
+            setReviewLoading(true);
+            try {
+                const endpoint = requestId
+                    ? `${apiBase}/providers/reviews/my/service/${requestId}`
+                    : `${apiBase}/providers/reviews/my/bundle/${bundleId}`;
+
+                const res = await fetch(endpoint, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                if (!res.ok) {
+                    setReviewLoading(false);
+                    return;
+                }
+
+                const contentType = res.headers.get('content-type') || '';
+                const data = contentType.includes('application/json') ? await res.json() : null;
+                if (!data?.success) {
+                    setReviewLoading(false);
+                    return;
+                }
+
+                if (requestId && data.data?.review) {
+                    setReviewData([
+                        {
+                            type: 'service',
+                            rating: data.data.review.rating,
+                            comment: data.data.review.comment,
+                            createdAt: data.data.review.createdAt,
+                            customer: data.data.customer,
+                            title: data.data.serviceName || 'Service',
+                        }
+                    ]);
+                } else if (bundleId && Array.isArray(data.data?.reviews)) {
+                    const list = data.data.reviews
+                        .map((rev) => ({
+                            type: 'bundle',
+                            rating: rev.rating,
+                            comment: rev.comment,
+                            createdAt: rev.createdAt,
+                            customer: rev.customer,
+                            title: data.data.title || 'Bundle',
+                        }))
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    setReviewData(list);
+                }
+            } catch (err) {
+                console.error('Failed to load review', err);
+            } finally {
+                setReviewLoading(false);
+            }
+        };
+
+        fetchReview();
+    }, [requestId, bundleId, customerId, token, apiBase]);
 
     // Auto-scroll to bottom only when new messages arrive AND user is near bottom
     const prevMessagesLengthRef = useRef(messages.length);
@@ -471,6 +580,20 @@ export default function ProviderChatInterface({
         } catch (error) {
             return '';
         }
+    };
+
+    const formatTimeAgo = (timestamp) => {
+        if (!timestamp) return '';
+        const now = new Date();
+        const date = new Date(timestamp);
+        const diffMs = now - date;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays > 1) return `${diffDays} days ago`;
+        if (diffDays === 1) return '1 day ago';
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        if (diffHours >= 1) return `${diffHours}h ago`;
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        return `${Math.max(diffMinutes, 1)}m ago`;
     };
 
     // Handle quick chat send
@@ -615,6 +738,7 @@ export default function ProviderChatInterface({
                 taskDoneHidden={(localOrderData?.statusLabel || '').toLowerCase() === 'completed'}
                 amount={amount}
                 setAmount={setAmount}
+                isPaid={isPaid}
             />
 
             {/* Conversation */}
@@ -699,8 +823,62 @@ export default function ProviderChatInterface({
                 )}
             </div>
 
-            {/* Quick Chats + Composer (only when not waiting/feedback) */}
-            {stage !== 'waiting' && stage !== 'feedback' && (
+            {/* Review card inside conversation */}
+            {reviewData.length > 0 && (
+                <div className="mt-4 w-full space-y-3">
+                    {reviewData.map((rev, idx) => (
+                        <div
+                            key={rev.createdAt || idx}
+                            className="rounded-2xl border border-gray-200 bg-white/70 p-5 shadow-sm"
+                        >
+                            <div className="mb-3">
+                                <p className="text-sm font-semibold text-gray-900">Received feedback from the customer.</p>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700">
+                                    {rev.customer?.profileImage?.url ? (
+                                        <img
+                                            src={rev.customer.profileImage.url}
+                                            alt="Customer"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        (rev.customer?.firstName?.[0] || 'C')
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                                        <div>
+                                            <p className="font-semibold text-gray-900">
+                                                {rev.customer
+                                                    ? `${rev.customer.firstName || ''} ${rev.customer.lastName || ''}`.trim() || 'Customer'
+                                                    : 'Customer'}
+                                            </p>
+                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                <div className="flex items-center gap-1 text-amber-500">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <Star
+                                                            key={star}
+                                                            size={16}
+                                                            className={star <= rev.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-gray-500">({Number(rev.rating).toFixed(1)})</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs text-gray-500">{formatTimeAgo(rev.createdAt)}</span>
+                                    </div>
+                                    <p className="mt-2 text-sm leading-6 text-gray-700">{rev.comment || 'No comment provided.'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Quick Chats + Composer (only when not waiting/feedback and not paid) */}
+            {stage !== 'waiting' && stage !== 'feedback' && !isPaid && (
                 <>
                     {/* Quick Chats list */}
                     <div className="mt-8 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4 overflow-y-auto">

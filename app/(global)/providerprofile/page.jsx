@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Hero from "@/components/Global/providerprofile/Hero";
 import Services from "@/components/Global/providerprofile/JacobServices";
@@ -18,6 +18,39 @@ function ProviderProfileContent() {
         { skip: !providerId || !serviceName }
     );
 
+    // Normalize feedback to match component expectations (avatar/name fields)
+    const normalizedFeedback = useMemo(() => {
+        if (!data?.feedback) return undefined;
+
+        const list = (data.feedback.list || []).map((item) => ({
+            rating: item.rating,
+            comment: item.comment,
+            createdAt: item.createdAt,
+            customerAvatar: item.customer?.profileImage?.url,
+            customerName: item.customer
+                ? `${item.customer.firstName || ''} ${item.customer.lastName || ''}`.trim() || 'Customer'
+                : 'Customer',
+            serviceName: item.serviceName,
+        }));
+
+        return {
+            list,
+            pagination: data.feedback.pagination || {},
+            aggregates: data.feedback.aggregates || {},
+        };
+    }, [data]);
+
+    if (!providerId || !serviceName) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center space-y-2">
+                    <p className="text-lg font-semibold text-gray-800">No provider selected.</p>
+                    <p className="text-sm text-gray-600">Please select a service from the Our Services page to view provider details.</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div>
             <Hero
@@ -29,10 +62,11 @@ function ProviderProfileContent() {
             <Services
                 otherServices={data?.otherServices}
                 providerName={data?.provider?.businessName}
+                providerId={providerId}
                 isLoading={isLoading}
             />
             <ClientFeedback
-                feedback={data?.feedback}
+                feedback={normalizedFeedback}
                 isLoading={isLoading}
             />
         </div>

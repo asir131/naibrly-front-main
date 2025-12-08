@@ -284,11 +284,12 @@ export default function ChatInterface({
     if (!reviewRating) return toast.error('Please select a rating');
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
       const body = JSON.stringify({ rating: reviewRating, comment: reviewComment });
       const endpoint =
         request.type === 'bundle'
-          ? `/api/bundles/${request.id}/review`
-          : `/api/service-requests/${request.id}/review`;
+          ? `${apiBase}/bundles/${request.id}/review`
+          : `${apiBase}/service-requests/${request.id}/review`;
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -299,7 +300,8 @@ export default function ChatInterface({
         body,
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      const data = contentType.includes('application/json') ? await res.json() : { message: await res.text() };
       if (!res.ok || !data?.success) {
         throw new Error(data?.message || 'Failed to submit review');
       }

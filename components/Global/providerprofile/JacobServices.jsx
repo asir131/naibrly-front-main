@@ -1,8 +1,15 @@
 'use client';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import clean from "@/public/clean.png";
 
-export default function JacobsOtherServices({ otherServices, providerName, isLoading }) {
+export default function JacobsOtherServices({ otherServices, providerName, providerId, isLoading }) {
+  const router = useRouter();
+
+  const handleServiceSelect = (service) => {
+    if (!providerId || !service?.name) return;
+    router.push(`/providerprofile?id=${providerId}&service=${encodeURIComponent(service.name)}`);
+  };
   // Loading state
   if (isLoading) {
     return (
@@ -62,7 +69,8 @@ export default function JacobsOtherServices({ otherServices, providerName, isLoa
           {otherServices.map((service, index) => (
             <div
               key={service._id || index}
-              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
+              className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+              onClick={() => handleServiceSelect(service)}
             >
               <div className="flex gap-6 items-start">
                 {/* Service Image */}

@@ -16,6 +16,7 @@ export default function NaibrlybundelOfferSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [offers, setOffers] = useState([]);
 
   // Create Bundle Modal Flow States
   const [isCreateBundleOpen, setIsCreateBundleOpen] = useState(false);
@@ -38,6 +39,13 @@ export default function NaibrlybundelOfferSection() {
       console.log('Bundles data:', bundlesData);
     }
   }, [error, bundlesData]);
+
+  // Sync offers when data loads
+  React.useEffect(() => {
+    if (bundlesData?.bundles) {
+      setOffers(bundlesData.bundles.map(formatBundleForDisplay));
+    }
+  }, [bundlesData]);
 
   // Helper function to format bundle data for display
   const formatBundleForDisplay = (bundle) => {
@@ -155,6 +163,12 @@ const LocationIcon = () => (
     setCreatedBundleData(bundleData);
     setIsCreateBundleOpen(false);
     setIsBundlePublishedOpen(true);
+
+    // Optimistically add the new bundle to the list without reload
+    if (bundleData?.bundle) {
+      const formatted = formatBundleForDisplay(bundleData.bundle);
+      setOffers((prev) => [formatted, ...prev]);
+    }
   };
 
   const handleShareWithText = () => {
@@ -181,9 +195,6 @@ const LocationIcon = () => (
     setIsBundlePublishedOpen(false);
     setIsShareBundleOpen(true);
   };
-
-  // Format bundles for display
-  const offers = bundlesData?.bundles?.map(formatBundleForDisplay) || [];
 
   return (
     <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
