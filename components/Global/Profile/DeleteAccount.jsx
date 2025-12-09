@@ -1,16 +1,59 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const DeleteAccount = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   const handleDeleteClick = () => {
     setShowConfirmDialog(true);
   };
 
-  const handleConfirmDelete = () => {
-    console.log('Account deleted');
-    setShowConfirmDialog(false);
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const token =
+        typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/auth/delete-account`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.message || 'Failed to delete account');
+      }
+
+      // Clear local auth state
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userType');
+      }
+
+      toast.success('Account deleted successfully');
+      setShowConfirmDialog(false);
+      router.push('/');
+      // Ensure UI fully resets
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete account');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -55,9 +98,10 @@ const DeleteAccount = () => {
               </Button>
               <Button
                 onClick={handleConfirmDelete}
-                className="px-6 bg-red-600 hover:bg-red-700 text-white"
+                disabled={isDeleting}
+                className="px-6 bg-red-600 hover:bg-red-700 text-white disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </Button>
             </div>
           </div>

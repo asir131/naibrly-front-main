@@ -1,13 +1,27 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useUpdateProviderCapacityMutation } from '@/redux/api/servicesApi';
 
 export default function BundleSetup() {
-  const [persons, setPersons] = useState('05');
+  const [persons, setPersons] = useState('');
+  const [updateCapacity, { isLoading }] = useUpdateProviderCapacityMutation();
+  const [message, setMessage] = useState(null);
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log('Saving bundle setup:', { persons });
+  const handleSave = async () => {
+    setMessage(null);
+    const parsed = Number(persons);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) {
+      setMessage('Please enter a whole number between 1 and 10.');
+      return;
+    }
+
+    try {
+      await updateCapacity({ maxBundleCapacity: parsed }).unwrap();
+      setMessage('Capacity updated successfully.');
+    } catch (err) {
+      setMessage(err?.data?.message || 'Failed to update capacity');
+    }
   };
 
   return (
@@ -23,20 +37,26 @@ export default function BundleSetup() {
               Persons
             </label>
             <input
-              type="text"
+              type="number"
               value={persons}
               onChange={(e) => setPersons(e.target.value)}
               className="w-full sm:w-64 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm sm:text-base"
               placeholder="Enter number of persons"
+              min={1}
+              max={10}
             />
+            {message && (
+              <p className="mt-2 text-sm text-gray-600">{message}</p>
+            )}
           </div>
 
           <div className="pt-4 sm:pt-6">
             <button
               onClick={handleSave}
-              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-sm sm:text-base"
+              disabled={isLoading}
+              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {isLoading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>

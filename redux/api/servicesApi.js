@@ -1000,6 +1000,22 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Update provider bundle capacity
+    updateProviderCapacity: builder.mutation({
+      query: ({ maxBundleCapacity }) => ({
+        url: '/providers/capacity',
+        method: 'PUT',
+        body: { maxBundleCapacity },
+      }),
+      invalidatesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to update capacity');
+        }
+        return response.data;
+      },
+    }),
+
     // Get provider analytics
     getProviderAnalytics: builder.query({
       query: () => '/providers/analytics/my',
@@ -1032,6 +1048,21 @@ export const servicesApi = createApi({
           };
         }
         return response.data;
+      },
+    }),
+
+    // Get provider finance history (money requests + withdrawals)
+    getProviderFinanceHistory: builder.query({
+      query: ({ page = 1, limit = 20 } = {}) => {
+        const params = new URLSearchParams({ page, limit });
+        return `/money-requests/provider/finance-history?${params.toString()}`;
+      },
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          return { history: [], pagination: { current: 1, total: 0, pages: 1 } };
+        }
+        return response.data || { history: [], pagination: { current: 1, total: 0, pages: 1 } };
       },
     }),
 
@@ -1229,12 +1260,14 @@ export const {
   useGetProviderZipQuery,
   useGetProviderAnalyticsQuery,
   useGetProviderBalanceQuery,
+  useGetProviderFinanceHistoryQuery,
   useGetProviderPayoutInformationQuery,
   useGetProviderReviewsQuery,
   useGetProviderNearbyBundlesQuery,
   useGetServiceRequestByIdQuery,
   useGetProviderServiceRequestsQuery,
   useUpdateProviderProfileMutation,
+  useUpdateProviderCapacityMutation,
   useGetProviderServicesListQuery,
   useAddProviderServiceMutation,
   useDeleteProviderServiceMutation,

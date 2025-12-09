@@ -1,76 +1,85 @@
 import React from 'react';
+import { useGetProviderFinanceHistoryQuery } from '@/redux/api/servicesApi';
 
 const PaymentsHistory = () => {
-  const payments = [
-    {
-      id: 1,
-      title: 'Stripe payment',
-      description: 'Jacob, Window Cleaner.',
-      amount: '-500.00₮',
-      date: '15:42 11 Sep, 2025'
-    },
-    {
-      id: 2,
-      title: 'Stripe payment',
-      description: 'Jacob, Window Cleaner.',
-      amount: '-500.00₮',
-      date: '15:42 11 Sep, 2025'
-    },
-    {
-      id: 3,
-      title: 'Stripe payment',
-      description: 'Jacob, Window Cleaner.',
-      amount: '-500.00₮',
-      date: '15:42 11 Sep, 2025'
-    },
-    {
-      id: 4,
-      title: 'Stripe payment',
-      description: 'Jacob, Window Cleaner.',
-      amount: '-500.00₮',
-      date: '15:42 11 Sep, 2025'
-    },
-    {
-      id: 5,
-      title: 'Stripe payment',
-      description: 'Jacob, Window Cleaner.',
-      amount: '-500.00₮',
-      date: '15:42 11 Sep, 2025'
-    }
-  ];
+  const { data, isLoading, isError, error } = useGetProviderFinanceHistoryQuery();
+  const history = data?.history || [];
+
+  const formatAmount = (item) => {
+    if (item.type === 'withdrawal') return `-$${Number(item.amount || 0).toFixed(2)}`;
+    const providerAmount = item.commission?.providerAmount ?? item.amount ?? item.totalAmount ?? 0;
+    return `+$${Number(providerAmount).toFixed(2)}`;
+  };
+
+  const formatTitle = (item) => {
+    if (item.type === 'withdrawal') return 'Withdrawal';
+    if (item.serviceRequest) return `Service: ${item.serviceRequest.serviceType || 'Payment'}`;
+    if (item.bundle) return `Bundle: ${item.bundle.title || 'Payment'}`;
+    return 'Payment';
+  };
+
+  const formatDescription = (item) => {
+    if (item.type === 'withdrawal') return `Status: ${item.status || 'pending'}`;
+    const customer =
+      item.customer?.firstName || item.customer?.lastName
+        ? `${item.customer?.firstName || ''} ${item.customer?.lastName || ''}`.trim()
+        : item.customer?.email || 'Customer';
+    return `${customer} • Status: ${item.status || 'pending'}`;
+  };
+
+  const formatDate = (item) => {
+    const ts = item.updatedAt || item.createdAt;
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
-    <div className="flex-1 h-screen p-8">
+    <div className="flex-1 p-8">
       <div className="mb-8 pb-4 border-b border-gray-200">
-        <h1 className="text-3xl font-bold text-gray-900">Payments History</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Payments & Withdrawals</h1>
       </div>
 
-      <div className="space-y-4 ">
-        {payments.map((payment) => (
+      {isLoading && <div className="text-gray-600">Loading history...</div>}
+      {isError && (
+        <div className="text-red-600 text-sm">
+          Failed to load history: {error?.data?.message || error?.error || 'Unknown error'}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {history.map((item) => (
           <div
-            key={payment.id}
-            className="flex items-center pr-4 pl-4 gap-4 py-4 border-1 rounded-2xl border-gray-200 last:border-b-2"
+            key={item._id}
+            className="flex items-center pr-4 pl-4 gap-4 py-4 border rounded-2xl border-gray-200"
           >
-            {/* Icon */}
             <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gray-100 rounded-lg">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-blue-500 rounded-lg flex items-center justify-center text-white text-xl">
-                🏠
+                $
               </div>
             </div>
 
-            {/* Payment Details */}
             <div className="flex-1">
-              <div className="font-medium text-gray-900">{payment.title}</div>
-              <div className="text-sm text-gray-500">{payment.description}</div>
+              <div className="font-medium text-gray-900">{formatTitle(item)}</div>
+              <div className="text-sm text-gray-500">{formatDescription(item)}</div>
             </div>
 
-            {/* Amount and Date */}
             <div className="text-right">
-              <div className="font-medium text-gray-900">{payment.amount}</div>
-              <div className="text-sm text-gray-500">{payment.date}</div>
+              <div className="font-medium text-gray-900">{formatAmount(item)}</div>
+              <div className="text-sm text-gray-500">{formatDate(item)}</div>
             </div>
           </div>
         ))}
+
+        {!isLoading && history.length === 0 && (
+          <div className="text-gray-500 text-sm">No transactions found.</div>
+        )}
       </div>
     </div>
   );
