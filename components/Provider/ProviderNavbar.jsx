@@ -7,7 +7,10 @@ import { LogOut, User as UserIcon, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { useGetUserProfileQuery, useGetProviderBalanceQuery } from '@/redux/api/servicesApi';
+import {
+    useGetProviderBalanceQuery,
+    useGetUserProfileQuery,
+} from '@/redux/api/servicesApi';
 
 export default function ProviderNavbar() {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -18,25 +21,37 @@ export default function ProviderNavbar() {
 
     // Get authentication state
     const { isAuthenticated, user, logout } = useAuth();
-    const { data: userProfileData } = useGetUserProfileQuery(undefined, {
-        skip: !isAuthenticated,
-    });
+    const isProvider =
+        (user?.role || user?.userType)?.toLowerCase?.() === 'provider';
+
+    // Fetch live provider balance (availableBalance, pendingPayout, etc.)
     const { data: balanceData } = useGetProviderBalanceQuery(undefined, {
+        skip: !isAuthenticated || !isProvider,
+    });
+
+    // Fetch provider profile to get latest profile image/name
+    const { data: profileData } = useGetUserProfileQuery(undefined, {
         skip: !isAuthenticated,
     });
-    const profile = userProfileData?.user || user || {};
-    const profileImage =
-        profile?.profileImage?.url ||
-        profile?.businessLogo?.url ||
-        user?.profileImage?.url ||
-        user?.businessLogo?.url ||
-        null;
-    // Display name: prefer personal name, then email local part
-    const profileName =
-        [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') ||
+
+    const profileUser = profileData?.user || {};
+    const profileImageSrc =
+        profileUser?.profileImage?.url ||
+        profileUser?.businessLogo?.url ||
+        user?.profileImage ||
+        '/provider/Ellipse  (2).png';
+
+    const providerName =
+        profileUser?.businessNameRegistered ||
+        profileUser?.businessName ||
+        [profileUser?.firstName, profileUser?.lastName].filter(Boolean).join(' ') ||
         user?.name ||
         user?.email?.split('@')[0] ||
-        'Provider';
+        'Jacob';
+
+    const availableBalance = Number(
+        balanceData?.availableBalance ?? user?.availableBalance ?? user?.balance ?? 0
+    ).toFixed(2);
 
     // Handle logout with redirect
     const handleLogout = () => {
@@ -122,10 +137,10 @@ export default function ProviderNavbar() {
                     </Link>
 
                     {/* Balance Display */}
-                    {mounted && isAuthenticated && (
+                    {mounted && isAuthenticated && isProvider && (
                         <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
                             <span className="text-gray-900 font-semibold text-base">
-                                ${Number(balanceData?.availableBalance ?? 0).toFixed(2)}
+                                ${availableBalance}
                             </span>
                         </div>
                     )}
@@ -137,22 +152,14 @@ export default function ProviderNavbar() {
                                 className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                             >
-                                {profileImage ? (
-                                    <Image
-                                        src={profileImage}
-                                        alt="Provider Profile"
-                                        width={40}
-                                        height={40}
-                                        className="rounded-full w-10 h-10 object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
-                                        <UserIcon className="w-6 h-6 text-white" />
-                                    </div>
-                                )}
-                                <span className="text-gray-900 font-medium text-base">
-                                    {profileName}
-                                </span>
+                                <Image
+                                    src={profileImageSrc}
+                                    alt="Provider Profile"
+                                    width={40}
+                                    height={40}
+                                    className="rounded-full w-10 h-10 object-cover"
+                                />
+                               
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="20"
