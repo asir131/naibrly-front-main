@@ -1,12 +1,44 @@
 import React from 'react';
-import { useGetProviderFinanceHistoryQuery } from '@/redux/api/servicesApi';
+import {
+  useGetProviderFinanceHistoryQuery,
+  useGetCustomerPaymentHistoryQuery,
+} from '@/redux/api/servicesApi';
+import { useAuth } from '@/hooks/useAuth';
 
 const PaymentsHistory = () => {
-  const { data, isLoading, isError, error } = useGetProviderFinanceHistoryQuery();
-  const history = data?.history || [];
+  const { user, userType } = useAuth();
+  const role = (userType || user?.role || '').toLowerCase();
+  const isCustomer = role === 'customer';
+
+  const {
+    data: providerData,
+    isLoading: isLoadingProvider,
+    isError: isErrorProvider,
+    error: errorProvider,
+  } = useGetProviderFinanceHistoryQuery(undefined, { skip: isCustomer });
+
+  const {
+    data: customerData,
+    isLoading: isLoadingCustomer,
+    isError: isErrorCustomer,
+    error: errorCustomer,
+  } = useGetCustomerPaymentHistoryQuery(undefined, { skip: !isCustomer });
+
+  const history = isCustomer
+    ? customerData?.payments || customerData?.data?.payments || []
+    : providerData?.history || providerData?.data?.history || [];
+
+  const isLoading = isCustomer ? isLoadingCustomer : isLoadingProvider;
+  const isError = isCustomer ? isErrorCustomer : isErrorProvider;
+  const error = isCustomer ? errorCustomer : errorProvider;
 
   const formatAmount = (item) => {
     if (item.type === 'withdrawal') return `-$${Number(item.amount || 0).toFixed(2)}`;
+    // Customer view shows main amount; provider view shows provider amount
+    if (isCustomer) {
+      const main = item.amount ?? item.totalAmount ?? 0;
+      return `-$${Number(main).toFixed(2)}`;
+    }
     const providerAmount = item.commission?.providerAmount ?? item.amount ?? item.totalAmount ?? 0;
     return `+$${Number(providerAmount).toFixed(2)}`;
   };
@@ -20,6 +52,10 @@ const PaymentsHistory = () => {
 
   const formatDescription = (item) => {
     if (item.type === 'withdrawal') return `Status: ${item.status || 'pending'}`;
+    if (isCustomer) {
+      const provider = item.provider?.businessNameRegistered || item.provider?.email || 'Provider';
+      return `${provider} • Status: ${item.status || 'pending'}`;
+    }
     const customer =
       item.customer?.firstName || item.customer?.lastName
         ? `${item.customer?.firstName || ''} ${item.customer?.lastName || ''}`.trim()

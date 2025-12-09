@@ -1066,6 +1066,21 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Get customer payment history
+    getCustomerPaymentHistory: builder.query({
+      query: ({ page = 1, limit = 20 } = {}) => {
+        const params = new URLSearchParams({ page, limit });
+        return `/money-requests/customer/history?${params.toString()}`;
+      },
+      providesTags: ['ServiceRequests'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          return { payments: [], pagination: { current: 1, total: 0, pages: 1 } };
+        }
+        return response.data || { payments: [], pagination: { current: 1, total: 0, pages: 1 } };
+      },
+    }),
+
     // Get provider reviews (authenticated)
     getProviderReviews: builder.query({
       query: () => '/providers/reviews/my',
@@ -1261,6 +1276,7 @@ export const {
   useGetProviderAnalyticsQuery,
   useGetProviderBalanceQuery,
   useGetProviderFinanceHistoryQuery,
+  useGetCustomerPaymentHistoryQuery,
   useGetProviderPayoutInformationQuery,
   useGetProviderReviewsQuery,
   useGetProviderNearbyBundlesQuery,
