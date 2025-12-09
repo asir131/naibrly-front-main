@@ -1,16 +1,63 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  useGetProviderPayoutInformationQuery,
+  useGetProviderBalanceQuery,
+  useUpdatePayoutInformationMutation,
+  useCreateWithdrawalRequestMutation,
+  useGetUserProfileQuery,
+} from '@/redux/api/servicesApi';
 
 const Withdraw = () => {
   const [step, setStep] = useState('form'); // 'form' or 'success'
+  const [isEditing, setIsEditing] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [createWithdrawal, { isLoading: isWithdrawing }] =
+    useCreateWithdrawalRequestMutation();
   const [formData, setFormData] = useState({
-    accountHolderName: 'Jacob Mehle',
+    accountHolderName: '',
     bankName: '',
-    accountNumber: '0123456789',
-    routingNumber: '0123456789',
-    amount: ''
+    accountNumber: '',
+    routingNumber: '',
+    amount: '',
   });
+
+  // Fetch payout info (bank details)
+  const {
+    data: payoutData,
+    isLoading: payoutLoading,
+  } = useGetProviderPayoutInformationQuery();
+
+  // Fetch balances
+  const { data: balanceData } = useGetProviderBalanceQuery();
+  const [updatePayout, { isLoading: isUpdating }] =
+    useUpdatePayoutInformationMutation();
+  const { data: profileData } = useGetUserProfileQuery();
+
+  const profileUser = profileData?.user || profileData?.data?.user;
+
+  // Handle both transformed and raw response shapes defensively
+  const payoutInformation =
+    payoutData?.payoutInformation ||
+    payoutData?.data?.payoutInformation ||
+    profileUser?.payoutInformation;
+  const hasPayoutSetup =
+    payoutData?.hasPayoutSetup ??
+    payoutData?.data?.hasPayoutSetup ??
+    profileUser?.hasPayoutSetup;
+
+  // Populate form with payout info when fetched
+  useEffect(() => {
+    if (!payoutInformation) return;
+    setFormData((prev) => ({
+      ...prev,
+      accountHolderName: payoutInformation.accountHolderName || '',
+      bankName: payoutInformation.bankName || '',
+      accountNumber: payoutInformation.accountNumber || '',
+      routingNumber: payoutInformation.routingNumber || '',
+    }));
+  }, [payoutInformation]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,23 +67,59 @@ const Withdraw = () => {
     }));
   };
 
-  const handleUpdate = () => {
-    // Here you would typically make an API call to update bank details
-    console.log('Updating bank details:', formData);
-    // For now, just show a success message
-    alert('Bank details updated successfully');
+  const handleUpdate = async () => {
+    const payload = {
+      accountHolderName: formData.accountHolderName,
+      bankName: formData.bankName,
+      accountNumber: formData.accountNumber,
+      routingNumber: formData.routingNumber,
+      accountType: payoutInformation?.accountType || 'checking',
+    };
+
+    const res = await updatePayout(payload).unwrap();
+    const updatedInfo = res?.payoutInformation;
+    if (updatedInfo) {
+      setFormData((prev) => ({
+        ...prev,
+        accountHolderName: updatedInfo.accountHolderName || prev.accountHolderName,
+        bankName: updatedInfo.bankName || prev.bankName,
+        accountNumber: updatedInfo.accountNumber || prev.accountNumber,
+        routingNumber: updatedInfo.routingNumber || prev.routingNumber,
+      }));
+    }
   };
 
-  const handleTransfer = () => {
+  const handleEditToggle = async () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    try {
+      await handleUpdate();
+      setIsEditing(false);
+      alert('Bank details updated successfully');
+    } catch (err) {
+      console.error('Update payout information failed:', err);
+      alert(err?.data?.message || err?.message || 'Failed to update payout information');
+    }
+  };
+
+  const handleTransfer = async () => {
     // Validate amount
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       alert('Please enter a valid amount');
       return;
     }
 
-    // Here you would typically make an API call to process the withdrawal
-    console.log('Processing withdrawal:', formData.amount);
-    setStep('success');
+    try {
+      await createWithdrawal({ amount: Number(formData.amount) }).unwrap();
+      setShowWithdrawModal(false);
+      setStep('success');
+    } catch (err) {
+      console.error('Create withdrawal failed:', err);
+      alert(err?.data?.message || err?.message || 'Failed to create withdrawal request');
+    }
   };
 
   const handleGoHome = () => {
@@ -91,7 +174,8 @@ const Withdraw = () => {
               name="accountHolderName"
               value={formData.accountHolderName}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              readOnly={!isEditing}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-50"
               placeholder="Jacob Mehle"
             />
           </div>
@@ -100,31 +184,28 @@ const Withdraw = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Bank Name
             </label>
-            <select
+            <input
+              type="text"
               name="bankName"
               value={formData.bankName}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-500"
-            >
-              <option value="">Choose your bank</option>
-              <option value="Chase">Chase Bank</option>
-              <option value="BankOfAmerica">Bank of America</option>
-              <option value="Wells Fargo">Wells Fargo</option>
-              <option value="Citi">Citibank</option>
-              <option value="US Bank">US Bank</option>
-            </select>
+              readOnly={!isEditing}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-900 focus:ring-0 focus:border-gray-300"
+              placeholder={payoutLoading ? "Loading..." : "Bank name"}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Enter Your Bank Account Number
+             Your Bank Account Number
             </label>
             <input
               type="text"
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              readOnly={!isEditing}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-50"
               placeholder="0123456789"
             />
           </div>
@@ -138,10 +219,17 @@ const Withdraw = () => {
               name="routingNumber"
               value={formData.routingNumber}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              readOnly={!isEditing}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-50"
               placeholder="0123456789"
             />
           </div>
+
+          {payoutInformation && payoutInformation.isVerified === false && (
+            <p className="text-sm text-amber-600">
+              Verification is pending admin approval.
+            </p>
+          )}
 
           <div className="bg-teal-50 border border-teal-200 rounded-md p-4 flex items-start gap-3">
             <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -154,16 +242,35 @@ const Withdraw = () => {
           </div>
 
           <button
-            onClick={handleUpdate}
-            className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+            onClick={handleEditToggle}
+            disabled={isUpdating}
+            className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Update
+            {isEditing ? (isUpdating ? 'Updating...' : 'Update Information') : 'Edit'}
           </button>
         </div>
 
-        {/* Withdrawal Request Section */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
+        <div className="pt-4">
+          <button
+            onClick={() => setShowWithdrawModal(true)}
+            className="px-6 py-3 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors font-medium"
+          >
+            Withdraw
+          </button>
+        </div>
+      </div>
+
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8 relative">
+            <button
+              onClick={() => setShowWithdrawModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
             <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-teal-100 flex items-center justify-center">
               <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -173,8 +280,12 @@ const Withdraw = () => {
             <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
               Request fund transfer to
             </h3>
-            <p className="text-center text-gray-600 text-sm mb-1">Acc: **********6789</p>
-            <p className="text-center text-gray-600 text-sm mb-6">Available balance: $500</p>
+            <p className="text-center text-gray-600 text-sm mb-1">
+              Acc: {payoutInformation?.accountNumber || 'N/A'}
+            </p>
+            <p className="text-center text-gray-600 text-sm mb-6">
+              Available balance: ${Number(balanceData?.availableBalance || 0).toFixed(2)}
+            </p>
 
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,13 +303,14 @@ const Withdraw = () => {
 
             <button
               onClick={handleTransfer}
-              className="w-full py-3 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors font-medium"
+              disabled={isWithdrawing}
+              className="w-full py-3 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Transfer
+            {isWithdrawing ? 'Processing...' : 'Transfer'}
             </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

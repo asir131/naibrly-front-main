@@ -868,6 +868,74 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Update payout information
+    updatePayoutInformation: builder.mutation({
+      query: (data) => ({
+        url: '/payout/information',
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to update payout information');
+        }
+        return response.data;
+      },
+      transformErrorResponse: (response, meta) => {
+        console.error('Update payout information error response:', {
+          status: meta?.response?.status,
+          statusText: meta?.response?.statusText,
+          data: response?.data || response,
+          headers: meta?.response?.headers,
+        });
+        return {
+          status: response?.status || meta?.response?.status,
+          data: response?.data || response,
+        };
+      },
+    }),
+
+    // Create withdrawal request
+    createWithdrawalRequest: builder.mutation({
+      query: ({ amount, notes }) => ({
+        url: '/withdrawals',
+        method: 'POST',
+        body: { amount, notes },
+      }),
+      invalidatesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to create withdrawal request');
+        }
+        return response.data;
+      },
+      transformErrorResponse: (response, meta) => {
+        console.error('Create withdrawal error response:', {
+          status: meta?.response?.status,
+          statusText: meta?.response?.statusText,
+          data: response?.data || response,
+          headers: meta?.response?.headers,
+        });
+        return {
+          status: response?.status || meta?.response?.status,
+          data: response?.data || response,
+        };
+      },
+    }),
+
+    // Get provider payout information (bank details)
+    getProviderPayoutInformation: builder.query({
+      query: () => '/providers/payout/my-information',
+      providesTags: ['Provider'],
+      transformResponse: (response) => {
+        if (!response || !response.success) {
+          return { hasPayoutSetup: false, payoutInformation: null };
+        }
+        return response.data || { hasPayoutSetup: false, payoutInformation: null };
+      },
+    }),
+
     // Update provider profile (multipart form-data)
     updateProviderProfile: builder.mutation({
       query: (payload) => {
@@ -1119,6 +1187,8 @@ export const {
   useSubmitVerifyInformationMutation,
   useUpdateProviderZipCodeMutation,
   useSubmitPayoutInformationMutation,
+  useUpdatePayoutInformationMutation,
+  useCreateWithdrawalRequestMutation,
   // Service hooks
   useGetServicesQuery,
   useGetServicesByCategoryQuery,
@@ -1159,6 +1229,7 @@ export const {
   useGetProviderZipQuery,
   useGetProviderAnalyticsQuery,
   useGetProviderBalanceQuery,
+  useGetProviderPayoutInformationQuery,
   useGetProviderReviewsQuery,
   useGetProviderNearbyBundlesQuery,
   useGetServiceRequestByIdQuery,
