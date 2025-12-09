@@ -21,7 +21,7 @@ import NotificationDropdown from "@/components/Global/Modals/NotificationDropdow
 import NaibrlyNowModal from "@/components/Global/Modals/NaibrlyNowModal";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { useGetServicesQuery, useGetProviderBalanceQuery, useGetUserProfileQuery } from "@/redux/api/servicesApi";
+import { useGetServicesQuery, useGetUserProfileQuery } from "@/redux/api/servicesApi";
 import { useSelector } from 'react-redux';
 
 const SubMenuItem = ({ item }) => {
@@ -63,6 +63,8 @@ export default function Navbar() {
   const [isSignInMenuOpen, setIsSignInMenuOpen] = useState(false);
   const [isUserTypeModalOpen, setIsUserTypeModalOpen] = useState(false);
   const [userTypeModalMode, setUserTypeModalMode] = useState("signup"); // 'signup' or 'signin'
+  const [balance, setBalance] = useState(0);
+  const [balanceLoading, setBalanceLoading] = useState(false);
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const [isNaibrlyNowModalOpen, setIsNaibrlyNowModalOpen] = useState(false);
@@ -75,17 +77,19 @@ export default function Navbar() {
   // Get authentication state and user data from Redux
   const { isAuthenticated, user, userType, logout } = useAuth();
   const reduxUser = useSelector((state) => state.auth.user);
-  const normalizedUserType = userType?.toLowerCase?.();
-  const isProvider = normalizedUserType === "provider";
-  const isUser = normalizedUserType === "user";
-  const { data: providerBalanceData } = useGetProviderBalanceQuery(undefined, {
-    skip: !isAuthenticated || !isProvider,
-  });
+  const derivedRole = (
+    userType ||
+    reduxUser?.role ||
+    user?.role ||
+    reduxUser?.userType ||
+    user?.userType
+  )?.toLowerCase?.();
+  const isProvider = derivedRole === "provider";
+  const isUser = derivedRole === "user";
   const { data: userProfileData } = useGetUserProfileQuery(undefined, {
     skip: !isAuthenticated,
   });
   const providerProfile = userProfileData?.user || reduxUser || user || {};
-
   // Fetch services from API using RTK Query
   const { data: servicesData, isLoading: servicesLoading, error: servicesError } = useGetServicesQuery();
 
@@ -112,13 +116,50 @@ export default function Navbar() {
     user?.businessLogo?.url ||
     null;
 
-  const balanceDisplay =
-    providerBalanceData?.availableBalance ??
-    providerProfile?.balances?.availableBalance ??
-    userProfileData?.user?.balances?.availableBalance ??
-    user?.balance ??
-    "1258";
+  // Balance: fetch and cache for providers
+  const rawBalance = balance;
+  const balanceDisplay = isProvider ? Number(balance || 0).toFixed(2) : null;
 
+  // Fetch available balance for providers
+  useEffect(() => {
+    if (!isAuthenticated || !isProvider) return;
+    if (balance !== null || balanceLoading) return;
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+    if (!token) return;
+
+    setBalanceLoading(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || ""}/providers/balance/my`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        const text = await res.text();
+        let parsed = text;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          // keep as text
+        }
+        console.log("[Navbar] manual balance fetch", {
+          status: res.status,
+          ok: res.ok,
+          body: parsed,
+        });
+        if (res.ok && parsed?.data?.availableBalance !== undefined) {
+          setBalance(parsed.data.availableBalance);
+        }
+      })
+      .catch((err) => console.error("[Navbar] manual balance fetch error", err))
+      .finally(() => setBalanceLoading(false));
+  }, [isAuthenticated, isProvider, balance, balanceLoading]);
+
+  // Debug balance display resolution
+  useEffect(() => {
+    console.log('[Navbar] balanceDisplay resolved:', balanceDisplay, { rawBalance });
+  }, [balanceDisplay, rawBalance]);
+
+ 
+  
   const providerName =
     providerProfile?.businessNameRegistered ||
     providerProfile?.businessName ||
@@ -595,7 +636,7 @@ export default function Navbar() {
             // LOGGED IN STATE - Show user profile and notification bell
             <div className="flex items-center gap-3">
               {/* Provider Balance Display */}
-              {isProvider && (
+              {isProvider && balanceDisplay !== null && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
                   <span className="text-gray-900 font-semibold text-base">
                     ${balanceDisplay}
