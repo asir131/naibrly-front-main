@@ -27,6 +27,13 @@ export default function OurServicesSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const getSafeImageSrc = (image) => {
+    // Handle string URLs, object URLs (e.g., { url }), and fall back when empty
+    if (typeof image === 'string' && image.trim()) return image.trim();
+    if (image && typeof image.url === 'string' && image.url.trim()) return image.url.trim();
+    return '/LandingService/image (7).png';
+  };
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -98,8 +105,8 @@ export default function OurServicesSection() {
                     <div className="pt-6 px-6">
                       <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
                         <Image
-                          src={service.image || "/LandingService/image (7).png"}
-                          alt={service.name || service.title}
+                          src={getSafeImageSrc(service.image)}
+                          alt={service.name || service.title || 'Service'}
                           fill
                           className="object-cover"
                         />
