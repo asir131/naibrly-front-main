@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const Star = ({ filled }) => (
     <svg
@@ -100,6 +100,9 @@ const SummaryBar = ({ label, value, total }) => {
 };
 
 export default function ReviewsList({ reviewsData, isLoading, isError, onRetry }) {
+    const PAGE_SIZE = 5;
+    const [page, setPage] = useState(1);
+
     const statistics = reviewsData?.statistics || {
         averageRating: 0,
         totalReviews: 0,
@@ -107,6 +110,17 @@ export default function ReviewsList({ reviewsData, isLoading, isError, onRetry }
     };
     const provider = reviewsData?.provider;
     const reviews = reviewsData?.list || [];
+    const totalPages = Math.max(1, Math.ceil(reviews.length / PAGE_SIZE));
+
+    useEffect(() => {
+        setPage(1);
+    }, [reviewsData]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     if (isLoading) {
         return (
@@ -192,12 +206,41 @@ export default function ReviewsList({ reviewsData, isLoading, isError, onRetry }
 
             {/* Reviews list */}
             <div className="flex flex-col gap-4">
-                {reviews.map((review) => (
+                {reviews
+                    .slice((page - 1) * PAGE_SIZE, (page - 1) * PAGE_SIZE + PAGE_SIZE)
+                    .map((review) => (
                     <div key={review.id} className="">
                         <ReviewItem review={review} />
                     </div>
                 ))}
             </div>
+            {reviews.length > PAGE_SIZE && (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-4">
+                    <p className="text-sm text-gray-600">
+                        Showing{" "}
+                        {Math.min((page - 1) * PAGE_SIZE + 1, reviews.length)}-
+                        {Math.min(page * PAGE_SIZE, reviews.length)} of {reviews.length}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                            disabled={page === 1}
+                            className="px-3 py-2 rounded-md border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={page >= totalPages}
+                            className="px-3 py-2 rounded-md border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
