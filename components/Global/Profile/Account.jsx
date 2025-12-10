@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { useDispatch } from 'react-redux';
 import { updateUser } from '@/redux/slices/authSlice';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
 const Account = () => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
@@ -46,7 +48,7 @@ const Account = () => {
           return;
         }
 
-        const response = await fetch('https://naibrly-backend.onrender.com/api/users/profile', {
+        const response = await fetch(`${API_BASE_URL}/users/profile`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -151,7 +153,7 @@ const Account = () => {
         formDataToSend.append('aptSuite', formData.aptSuite);
         formDataToSend.append('profileImage', selectedFile);
 
-        response = await fetch('https://naibrly-backend.onrender.com/api/users/update-profile', {
+        response = await fetch(`${API_BASE_URL}/users/update-profile`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -159,7 +161,7 @@ const Account = () => {
           body: formDataToSend,
         });
       } else {
-        response = await fetch('https://naibrly-backend.onrender.com/api/users/update-profile', {
+        response = await fetch(`${API_BASE_URL}/users/update-profile`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,

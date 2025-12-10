@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import BundleDetailModal from '@/components/Global/Modals/BundleDetailModal';
 import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
 // Custom Location Icon Component
 const LocationIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
@@ -47,7 +49,7 @@ export default function NaibrlybundelOfferSection() {
   useEffect(() => {
     const fetchBundles = async () => {
       try {
-        const response = await fetch('https://naibrly-backend.onrender.com/api/bundles/all');
+        const response = await fetch(`${API_BASE_URL}/bundles/all`);
         if (!response.ok) {
           throw new Error('Failed to fetch bundles');
         }

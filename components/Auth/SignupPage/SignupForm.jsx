@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+
 function SignupFormContent() {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -105,7 +107,7 @@ function SignupFormContent() {
       console.log('======================================');
 
       // Make API call to backend with FormData
-      const response = await fetch('https://naibrly-backend.onrender.com/api/auth/register/customer', {
+      const response = await fetch(`${API_BASE_URL}/auth/register/customer`, {
         method: 'POST',
         body: formDataToSend,
       });

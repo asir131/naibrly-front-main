@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { logout } from '@/redux/slices/authSlice';
 
 // Define the base API URL - use environment variable or fallback to production
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://naibrly-backend.onrender.com/api';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 // Custom fetchBaseQuery with timeout and automatic logout on 401
 const customFetchBaseQuery = async (args, api, extraOptions) => {

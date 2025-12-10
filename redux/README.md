@@ -17,7 +17,7 @@ redux/
 ## Services API Integration
 
 ### Overview
-The services API fetches data from: `https://naibrly-backend.onrender.com/api/categories/services`
+The services API base URL should come from `NEXT_PUBLIC_API_BASE_URL` (e.g., `https://naibrly-backend-main-1.onrender.com/api`).
 
 The API returns a 3-level hierarchy:
 1. **Main Categories**: Interior, Exterior, More Services
