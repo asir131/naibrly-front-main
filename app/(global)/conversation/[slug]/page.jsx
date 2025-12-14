@@ -130,16 +130,16 @@ export default function ConversationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-full bg-gray-50">
+      <div className=" xl:w-full mx-auto p-4 sm:p-6 lg:p-8">
         {/* Back Button */}
-        <button
+        {/* <button
           onClick={() => router.back()}
           className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="font-medium">Back</span>
-        </button>
+        </button> */}
 
         {/* Chat Interface */}
         <ChatInterface

@@ -6,10 +6,92 @@ import { useSearchParams } from 'next/navigation';
 import { MoreVertical, Send, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSocket } from '@/hooks/useSocket';
-import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
+import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useDeleteQuickChatMutation, useUpdateQuickChatMutation } from '@/redux/api/quickChatApi';
 import { useGetUserProfileQuery, useGetCustomerMoneyRequestsQuery, useAcceptMoneyRequestMutation, useCancelMoneyRequestMutation, usePayMoneyRequestMutation } from '@/redux/api/servicesApi';
 import toast from 'react-hot-toast';
 import { skipToken } from '@reduxjs/toolkit/query';
+import AddQuickChatModal from '@/components/AddQuickChatModal';
+import EditQuickChatModal from '@/components/EditQuickChatModal';
+
+const StatusPill = ({ label = 'Accepted', isConnected = false }) => (
+  <div className="flex gap-2 flex-wrap">
+    {isConnected && (
+      <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+        <span className="h-2 w-2 rounded-full bg-green-500" />
+        Connected
+      </span>
+    )}
+    <span className="inline-flex items-center gap-2 rounded-full bg-[#E8F7EE] px-3 py-1 text-xs font-semibold text-[#0E7A60]">
+      <span className="h-2 w-2 rounded-full bg-[#34D399]" />
+      {label}
+    </span>
+  </div>
+);
+
+const QuickChatItem = ({ chat, onSend, onDelete, onEdit }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const isAdmin = chat.createdByRole === 'admin';
+
+  return (
+    <div
+      className="rounded-[14px] border w-full border-amber-200 bg-amber-50 px-4 py-2 shadow-sm cursor-pointer "
+      onClick={() => onSend?.(chat)}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 flex items-start justify-between gap-2">
+          <p className="text-sm text-gray-800 leading-6">{chat.content}</p>
+          {isAdmin && (
+            <span className="text-xs font-medium flex items-center text-gray-800 opacity-50">Admin</span>
+          )}
+        </div>
+        {!isAdmin && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((v) => !v);
+              }}
+              className="h-8 w-8 inline-flex items-center justify-center text-gray-700 hover:text-gray-900 transition"
+              title="Actions"
+            >
+              <MoreVertical className="w-4 h-4 opa" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-32 rounded-lg border border-gray-200 bg-white shadow-lg z-10" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setEditOpen(true);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete?.(chat._id);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+            <EditQuickChatModal
+              open={editOpen}
+              onClose={() => setEditOpen(false)}
+              initialText={chat.content}
+              size={10}
+              onSubmit={(value) => onEdit?.(chat._id, value)}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function ChatInterface({
   request,
@@ -27,7 +109,6 @@ export default function ChatInterface({
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const searchParams = useSearchParams();
-  const [newQuickChatText, setNewQuickChatText] = useState('');
   const [showAddQuickChat, setShowAddQuickChat] = useState(false);
   const [imageErrors, setImageErrors] = useState({});
 
@@ -42,7 +123,6 @@ export default function ChatInterface({
   const {
     isConnected,
     messages,
-    setMessages,
     joinConversation,
     sendQuickChat,
   } = useSocket(token);
@@ -51,6 +131,7 @@ export default function ChatInterface({
   const [fetchQuickChats, { data: quickChatsData, isLoading: quickChatsLoading, isFetching: quickChatsFetching }] = useLazyGetQuickChatsQuery();
   const [createQuickChat] = useCreateQuickChatMutation();
   const [deleteQuickChat] = useDeleteQuickChatMutation();
+  const [updateQuickChat] = useUpdateQuickChatMutation();
 
   const quickChats = quickChatsData?.data?.quickChats || [];
 
@@ -198,13 +279,11 @@ export default function ChatInterface({
   };
 
   // Handle add new quick chat
-  const handleAddQuickChat = async () => {
-    if (!newQuickChatText.trim()) return;
-
+  const handleAddQuickChat = async (text) => {
+    const value = (text || '').trim();
+    if (!value) return;
     try {
-      await createQuickChat(newQuickChatText.trim()).unwrap();
-      setNewQuickChatText('');
-      setShowAddQuickChat(false);
+      await createQuickChat(value).unwrap();
     } catch (error) {
       console.error('Failed to create quick chat:', error);
     }
@@ -216,6 +295,14 @@ export default function ChatInterface({
       await deleteQuickChat(quickChatId).unwrap();
     } catch (error) {
       console.error('Failed to delete quick chat:', error);
+    }
+  };
+
+  const handleUpdateQuickChat = async (quickChatId, content) => {
+    try {
+      await updateQuickChat({ quickChatId, content }).unwrap();
+    } catch (error) {
+      console.error('Failed to update quick chat:', error);
     }
   };
 
@@ -352,7 +439,8 @@ export default function ChatInterface({
   }, [searchParams, refetchMoneyReq]);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="min-h-[calc(100vh-140px)] bg-[#F6F7FB] p-4 sm:p-6">
+      <div className=" mx-auto space-y-4">
       {/* Service Header */}
       <div className="bg-gray-50 p-4 border-b border-gray-200 flex gap-4">
         {/* Image */}
@@ -436,7 +524,7 @@ export default function ChatInterface({
   </div>
 
       {/* Chat Messages */}
-      <div ref={scrollContainerRef} className="p-4 space-y-3 max-h-96 overflow-y-auto bg-gray-50">
+      <div ref={scrollContainerRef} className="p-4 space-y-4 max-h-[60vh] min-h-[400px] overflow-y-auto bg-gray-50">
         {visibleMessages.length === 0 ? (
           <div className="text-center text-gray-500 text-sm py-8">
             No messages yet. Start the conversation with a quick chat!
@@ -666,80 +754,41 @@ export default function ChatInterface({
 
       {/* Quick Chats - Only show for accepted status */}
       {localStatus === 'accepted' && (
-        <div className="p-4 bg-white border-t border-gray-200">
+        <div className="p-4 bg-white rounded-2xl space-y-3 ">
+          <div className="flex items-center justify-between">
+            
+            
+          </div>
           {quickChatsLoading || quickChatsFetching ? (
             <div className="text-center text-gray-500 text-sm py-4">Loading quick chats...</div>
           ) : (
             <>
-              {quickChats.length > 0 && (
-                <div className="space-y-2 mb-3">
+              {quickChats.length === 0 ? (
+                <div className="text-sm text-gray-500 py-4 text-center">No quick chats yet.</div>
+              ) : (
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                   {quickChats.map((chat) => (
-                    <div
+                    <QuickChatItem
                       key={chat._id}
-                      className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center justify-between cursor-pointer hover:bg-yellow-100 transition-colors"
-                      onClick={() => handleQuickChatClick(chat)}
-                    >
-                      <p className="text-sm text-gray-700 flex-1">{chat.content}</p>
-                      <div className="flex items-center gap-2 ml-2">
-                        {chat.createdByRole !== 'admin' && (
-                          <button
-                            className="text-red-400 hover:text-red-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteQuickChat(chat._id);
-                            }}
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                        <MoreVertical className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </div>
+                      chat={chat}
+                      onSend={handleQuickChatClick}
+                      onDelete={handleDeleteQuickChat}
+                      onEdit={handleUpdateQuickChat}
+                    />
                   ))}
                 </div>
               )}
 
-              {/* Add Quick Chat Section */}
-              {showAddQuickChat ? (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={newQuickChatText}
-                    onChange={(e) => setNewQuickChatText(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddQuickChat()}
-                    placeholder="Enter quick chat message..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleAddQuickChat}
-                      className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
-                    >
-                      Create Quick Chat
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setShowAddQuickChat(false);
-                        setNewQuickChatText('');
-                      }}
-                      variant="outline"
-                      className="px-4"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
+              <div className="flex justify-end">
                 <Button
                   onClick={() => setShowAddQuickChat(true)}
                   variant="outline"
-                  className="w-full border-2 border-teal-600 text-teal-600 hover:bg-teal-50 h-10 rounded-lg font-medium flex items-center justify-center gap-2"
+                  className="border border-[#0E7A60] text-[#0E7A60] hover:bg-[#0E7A60]/5 h-10 rounded-lg font-semibold flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add Quick Chat
                 </Button>
-              )}
+              </div>
             </>
           )}
         </div>
@@ -756,6 +805,12 @@ export default function ChatInterface({
           </p>
         </div>
       )}
+
+      <AddQuickChatModal
+        open={showAddQuickChat}
+        onClose={() => setShowAddQuickChat(false)}
+        onSubmit={handleAddQuickChat}
+      />
 
       {/* Review modal */}
       {showReviewModal && (
@@ -820,6 +875,7 @@ export default function ChatInterface({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
