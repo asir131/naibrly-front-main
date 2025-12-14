@@ -108,6 +108,33 @@ export const useSocket = (token) => {
         console.log('🔔 Conversation updated:', payload);
         break;
 
+      case 'money_request_created':
+        // Add a synthetic message to trigger money-request UI refresh
+        setMessages((prev) => [
+          ...prev,
+          {
+            _id: payload.moneyRequestId || Date.now().toString(),
+            senderId: payload.providerId || 'system',
+            senderRole: 'provider',
+            content: '__MONEY_REQUEST__',
+            timestamp: new Date().toISOString(),
+            meta: {
+              moneyRequestId: payload.moneyRequestId,
+              amount: payload.amount,
+              serviceRequestId: payload.serviceRequestId,
+              bundleId: payload.bundleId,
+              status: payload.status,
+            },
+          },
+        ]);
+        // Fire a DOM event so screens can refetch immediately
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('money-request-created', { detail: payload })
+          );
+        }
+        break;
+
       case 'error':
         console.error('❌ Socket error:', payload.message);
         break;

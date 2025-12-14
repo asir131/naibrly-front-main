@@ -22,7 +22,9 @@ import NaibrlyNowModal from "@/components/Global/Modals/NaibrlyNowModal";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetServicesQuery, useGetUserProfileQuery } from "@/redux/api/servicesApi";
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNotificationSocket } from "@/hooks/useNotificationSocket";
+import { markAsRead, setNotifications } from "@/redux/slices/notificationsSlice";
 
 const SubMenuItem = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -77,6 +79,9 @@ export default function Navbar() {
   // Get authentication state and user data from Redux
   const { isAuthenticated, user, userType, logout } = useAuth();
   const reduxUser = useSelector((state) => state.auth.user);
+  const notifications = useSelector((state) => state.notifications.items);
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const dispatch = useDispatch();
   const derivedRole = (
     userType ||
     reduxUser?.role ||
@@ -92,6 +97,29 @@ export default function Navbar() {
   const providerProfile = userProfileData?.user || reduxUser || user || {};
   // Fetch services from API using RTK Query
   const { data: servicesData, isLoading: servicesLoading, error: servicesError } = useGetServicesQuery();
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+  useNotificationSocket(isAuthenticated ? token : null);
+
+  // Fetch persisted notifications on mount/login
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!isAuthenticated || !token) return;
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+      try {
+        const res = await fetch(`${apiBase}/api/notifications/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data?.success && Array.isArray(data.data)) {
+          dispatch(setNotifications(data.data));
+        }
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      }
+    };
+    fetchNotifications();
+  }, [isAuthenticated, token, dispatch]);
 
   // Handle logout with redirect
   const handleLogout = () => {
@@ -712,17 +740,24 @@ export default function Navbar() {
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
                   >
                     <Bell className="w-6 h-6 text-gray-700" />
-                    {/* Notification Badge */}
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-teal-600 rounded-full"></span>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">
+                        {unreadCount}
+                      </span>
+                    )}
+                    <span className="sr-only">Notifications</span>
                   </button>
 
-                  {/* Notification Dropdown */}
                   <NotificationDropdown
                     isOpen={isNotificationDropdownOpen}
+                    notifications={notifications}
                     onClose={() => setIsNotificationDropdownOpen(false)}
-                    onNotificationClick={() => {
+                    onSelect={(notif) => {
+                      dispatch(markAsRead(notif.id));
                       setIsNotificationDropdownOpen(false);
-                      setIsNaibrlyNowModalOpen(true);
+                      if (notif.link) {
+                        router.push(notif.link);
+                      }
                     }}
                   />
                 </div>

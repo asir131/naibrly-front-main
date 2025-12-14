@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   useGetUserProfileQuery,
   useGetProviderServicesListQuery,
@@ -12,6 +12,9 @@ import {
 const Services = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
   useGetUserProfileQuery(); // keep data fresh; id not needed for self-services
   const { data: servicesData, refetch, isLoading } = useGetProviderServicesListQuery();
   const [addService, { isLoading: isAdding }] = useAddProviderServiceMutation();
@@ -45,6 +48,17 @@ const Services = () => {
       setSelectedServices(currentServices.map((s) => s.name));
     }
   }, [currentServices]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleEdit = () => {
     setSelectedServices(currentServices.map((s) => s.name));
@@ -85,6 +99,11 @@ const Services = () => {
     }
   };
 
+  const filteredOptions = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    return availableServices.filter((s) => s.toLowerCase().includes(term));
+  }, [availableServices, searchTerm]);
+
   return (
     <div className="flex-1 p-8">
       {!isEditing ? (
@@ -124,20 +143,16 @@ const Services = () => {
 
             <div className="border border-gray-300 rounded-md p-4">
               <div className="text-sm text-gray-600 mb-2">Select services</div>
-              <div className="flex flex-wrap gap-2">
-                {selectedServices.map((service, index) => (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedServices.map((service) => (
                   <span
-                    key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm"
-                    style={{
-                      backgroundColor: index === 0 ? '#FED7AA' : index === 1 ? '#FEF3C7' : '#FEE2E2',
-                      color: '#000'
-                    }}
+                    key={service}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-teal-50 text-teal-800 border border-teal-200"
                   >
                     <span>{service}</span>
                     <button
                       type="button"
-                      className="text-gray-700 hover:text-gray-900"
+                      className="text-teal-700 hover:text-teal-900"
                       onClick={() => handleServiceToggle(service)}
                       aria-label={`Remove ${service}`}
                     >
@@ -146,22 +161,63 @@ const Services = () => {
                   </span>
                 ))}
               </div>
-            </div>
 
-            <div className="mt-6">
-              <div className="text-sm text-gray-600 mb-3">Available Services:</div>
-              <div className="grid grid-cols-2 gap-2">
-                {availableServices.map((service) => (
-                  <label key={service} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedServices.includes(service)}
-                      onChange={() => handleServiceToggle(service)}
-                      className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="w-full flex justify-between items-center border border-gray-300 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                >
+                  <span>
+                    {selectedServices.length > 0
+                      ? `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} selected`
+                      : 'Choose services'}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                      clipRule="evenodd"
                     />
-                    <span className="text-sm text-gray-700">{service}</span>
-                  </label>
-                ))}
+                  </svg>
+                </button>
+
+                {showDropdown && (
+                  <div className="absolute z-20 mt-2 w-full max-h-64 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                    <div className="p-2">
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search services..."
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {filteredOptions.map((service) => (
+                        <label
+                          key={service}
+                          className="flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                        >
+                          <span>{service}</span>
+                          <input
+                            type="checkbox"
+                            checked={selectedServices.includes(service)}
+                            onChange={() => handleServiceToggle(service)}
+                            className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                          />
+                        </label>
+                      ))}
+                      {filteredOptions.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-gray-500">No services found</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

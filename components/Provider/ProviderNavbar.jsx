@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, User as UserIcon, Menu, X } from 'lucide-react';
+import { LogOut, User as UserIcon, Menu, X, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,16 +11,27 @@ import {
     useGetProviderBalanceQuery,
     useGetUserProfileQuery,
 } from '@/redux/api/servicesApi';
+import NotificationDropdown from '@/components/Global/Modals/NotificationDropdown';
+import { useNotificationSocket } from '@/hooks/useNotificationSocket';
+import { useSelector, useDispatch } from 'react-redux';
+import { markAsRead, setNotifications } from '@/redux/slices/notificationsSlice';
 
 export default function ProviderNavbar() {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
 
     // Get authentication state
     const { isAuthenticated, user, logout } = useAuth();
+    const notifications = useSelector((state) => state.notifications.items);
+    const unreadCount = notifications.filter((n) => !n.isRead).length;
+    const dispatch = useDispatch();
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    useNotificationSocket(isAuthenticated ? token : null);
     const isProvider =
         (user?.role || user?.userType)?.toLowerCase?.() === 'provider';
 
@@ -35,10 +46,17 @@ export default function ProviderNavbar() {
     });
 
     const profileUser = profileData?.user || {};
+    // Ensure Image always receives a string src
+    const getImageUrl = (img) => {
+        if (!img) return null;
+        if (typeof img === 'string') return img;
+        return img.url || null;
+    };
+
     const profileImageSrc =
-        profileUser?.profileImage?.url ||
-        profileUser?.businessLogo?.url ||
-        user?.profileImage ||
+        getImageUrl(profileUser?.profileImage) ||
+        getImageUrl(profileUser?.businessLogo) ||
+        getImageUrl(user?.profileImage) ||
         '/provider/Ellipse  (2).png';
 
     const providerName =
@@ -93,6 +111,26 @@ export default function ProviderNavbar() {
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Fetch persisted notifications on mount/login
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            if (!isAuthenticated || !token) return;
+            const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+            try {
+                const res = await fetch(`${apiBase}/api/notifications/me`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = await res.json();
+                if (data?.success && Array.isArray(data.data)) {
+                    dispatch(setNotifications(data.data));
+                }
+            } catch (err) {
+                console.error('Failed to load notifications', err);
+            }
+        };
+        fetchNotifications();
+    }, [isAuthenticated, token, dispatch]);
 
     return (
         <nav className="sticky top-0 bg-white border-b border-gray-200 z-[100] shadow-sm">
@@ -201,6 +239,33 @@ export default function ProviderNavbar() {
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* Notifications */}
+                    {mounted && isAuthenticated && (
+                        <div className="relative">
+                            <button
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+                                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                            >
+                                <Bell className="w-6 h-6 text-gray-700" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            <NotificationDropdown
+                                isOpen={isNotificationOpen}
+                                notifications={notifications}
+                                onClose={() => setIsNotificationOpen(false)}
+                                onSelect={(notif) => {
+                                    dispatch(markAsRead(notif.id));
+                                    setIsNotificationOpen(false);
+                                    if (notif.link) router.push(notif.link);
+                                }}
+                            />
                         </div>
                     )}
 

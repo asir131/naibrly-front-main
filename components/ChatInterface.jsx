@@ -102,7 +102,7 @@ export default function ChatInterface({
 }) {
   const messagesEndRef = useRef(null);
   const [localStatus, setLocalStatus] = useState(status);
-  const [moneySignal, setMoneySignal] = useState(false);
+  const [optimisticMoneyRequests, setOptimisticMoneyRequests] = useState([]);
   const [acceptedRequest, setAcceptedRequest] = useState(null);
   const [tipAmount, setTipAmount] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -137,12 +137,11 @@ export default function ChatInterface({
 
   // Money request fetching when request is completed
   const isCompleted = (request?.status || localStatus || '').toLowerCase() === 'completed';
-  const moneyReqArgs =
-    (isCompleted || moneySignal) && request?.id
-      ? request.type === 'service'
-        ? { serviceRequestId: request.id }
-        : { bundleId: request.id }
-      : skipToken;
+  const moneyReqArgs = request?.id
+    ? request.type === 'service'
+      ? { serviceRequestId: request.id }
+      : { bundleId: request.id }
+    : skipToken;
 
   const shouldFetchMoneyReq = moneyReqArgs !== skipToken;
 
@@ -160,6 +159,36 @@ export default function ChatInterface({
   useEffect(() => {
     setLocalStatus(status);
   }, [status]);
+
+  // Listen for direct money-request events from socket
+  useEffect(() => {
+    const handleMoneyReqCreated = (event) => {
+      const payload = event?.detail;
+      setMoneySignal(true);
+      if (payload) {
+        setOptimisticMoneyRequests((prev) => {
+          if (payload.moneyRequestId && prev.some((p) => p._id === payload.moneyRequestId)) {
+            return prev;
+          }
+          return [
+            ...prev,
+            {
+              _id: payload.moneyRequestId || `temp-${Date.now()}` ,
+              amount: payload.amount || 0,
+              status: payload.status || 'pending',
+              createdAt: new Date().toISOString(),
+              fromRealtime: true,
+            },
+          ];
+        });
+      }
+      if (shouldFetchMoneyReq) {
+        refetchMoneyReq();
+      }
+    };
+    window.addEventListener('money-request-created', handleMoneyReqCreated);
+    return () => window.removeEventListener('money-request-created', handleMoneyReqCreated);
+  }, [shouldFetchMoneyReq, refetchMoneyReq]);
 
   useEffect(() => {
     fetchQuickChats();
@@ -197,13 +226,12 @@ export default function ChatInterface({
     for (let i = lastProcessedIndexRef.current; i < messages.length; i++) {
       const msg = messages[i];
       if (msg?.content?.startsWith('__TASK_COMPLETED__')) {
-        setMoneySignal(true);
+        setLocalStatus('completed');
         if (shouldFetchMoneyReq) {
           refetchMoneyReq();
         }
       }
       if (msg?.content?.startsWith('__MONEY_REQUEST__')) {
-        setMoneySignal(true);
         if (shouldFetchMoneyReq) {
           refetchMoneyReq();
         }
@@ -345,6 +373,12 @@ export default function ChatInterface({
   };
 
   const moneyRequests = moneyReqData?.moneyRequests || [];
+  const mergedMoneyRequests = [
+    ...moneyRequests,
+    ...optimisticMoneyRequests.filter(
+      (opt) => !moneyRequests.some((mr) => mr._id === opt._id)
+    ),
+  ];
 
   // Keep accepted request in sync with latest data
   useEffect(() => {
@@ -633,16 +667,14 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Money Request (visible when completed) - placed below conversation */}
-      {isCompleted && !acceptedRequest && (
+      {/* Money Request - shown when conversation has any money request */}
+      {shouldFetchMoneyReq && mergedMoneyRequests.length > 0 && !acceptedRequest && (
         <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-3">
           <div className="text-sm font-semibold text-gray-900">Payment Request</div>
           {moneyReqLoading ? (
             <div className="text-sm text-gray-500">Loading payment request...</div>
-          ) : moneyRequests.length === 0 ? (
-            <div className="text-sm text-gray-500">No payment request available yet.</div>
           ) : (
-            moneyRequests.map((mr) => (
+            mergedMoneyRequests.map((mr) => (
               <div key={mr._id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
                 {/* Header / summary */}
                 <div className="flex gap-4 p-4 border-b border-gray-100">
