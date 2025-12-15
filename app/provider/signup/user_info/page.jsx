@@ -1,14 +1,19 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { IoIosArrowDown } from "react-icons/io";
-import { useRegisterProviderMutation } from '@/redux/api/servicesApi';
+import { useRegisterProviderMutation, useGetServicesQuery } from '@/redux/api/servicesApi';
 import { toast } from 'react-hot-toast';
 
 export default function UserInfo() {
     // this is for navigate
     const router = useRouter()
     const [registerProvider, { isLoading }] = useRegisterProviderMutation();
+    const { data: allServicesData, isLoading: servicesLoading } = useGetServicesQuery();
+    const serviceOptions = useMemo(
+        () => allServicesData?.services || allServicesData?.data?.services || [],
+        [allServicesData]
+    );
 
     const [formData, setFormData] = useState({
         businessName: '',
@@ -44,6 +49,8 @@ export default function UserInfo() {
     };
     const fileInputRef = useRef(null);
     const [businessLogo, setBusinessLogo] = useState(null);
+    const [serviceSelection, setServiceSelection] = useState({ name: '', rate: '' });
+    const [selectedServicesWithRates, setSelectedServicesWithRates] = useState([]);
 
     const handleClick = () => {
         fileInputRef.current.click();
@@ -122,15 +129,22 @@ export default function UserInfo() {
         submitData.append('businessHoursStart', formData.businessHoursStart);
         submitData.append('businessHoursEnd', formData.businessHoursEnd);
 
-        // Services provided - as plain text comma-separated (not JSON array)
-        if (formData.servicesProvided) {
-            submitData.append('servicesProvided', formData.servicesProvided);
+        // Services provided with hourly rates
+        if (selectedServicesWithRates.length > 0) {
+            selectedServicesWithRates.forEach((svc) => {
+                submitData.append('servicesProvidedName', svc.name);
+                submitData.append('servicesProvidedHourlyRate', svc.rate);
+            });
+        } else if (formData.servicesProvided) {
+            submitData.append('servicesProvidedName', formData.servicesProvided);
+            if (formData.hourlyRate) {
+                submitData.append('servicesProvidedHourlyRate', formData.hourlyRate);
+            }
         }
 
-        // Profile/Business logo image file
+        // Business logo image file (provider upload only allows businessLogo)
         if (businessLogo) {
-            submitData.append('profileImage', businessLogo); // Backend expects 'profileImage'
-            submitData.append('businessLogo', businessLogo); // Also send as businessLogo for compatibility
+            submitData.append('businessLogo', businessLogo);
         }
 
         // Optional fields
@@ -533,62 +547,77 @@ export default function UserInfo() {
                             </div>
                         </div>
                         <div className="mb-3 relative">
-                            <IoIosArrowDown className='absolute right-4 top-12' />
+                            <IoIosArrowDown className='absolute right-4 top-12 pointer-events-none' />
                             <label className="text-[#2D3748] text-sm font-semibold">Services Provided</label>
-                            <select
-                                name="servicesProvided"
-                                value={formData.servicesProvided}
-                                onChange={handleChange}
-                                className="input_box text-[#999] text-[16px] mt-2"
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <select
+                                    value={serviceSelection.name}
+                                    onChange={(e) => setServiceSelection({ ...serviceSelection, name: e.target.value })}
+                                    className="input_box text-[#111] text-[16px] bg-white"
+                                >
+                                    <option value="">
+                                        {servicesLoading ? 'Loading services...' : 'Select a service'}
+                                    </option>
+                                    {serviceOptions.map((svc) => (
+                                        <option key={svc._id || svc.name} value={svc.name}>
+                                            {svc.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    placeholder="Hourly rate ($)"
+                                    value={serviceSelection.rate}
+                                    onChange={(e) => setServiceSelection({ ...serviceSelection, rate: e.target.value })}
+                                    className="input_box text-[16px]"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!serviceSelection.name || !serviceSelection.rate) return;
+                                    setSelectedServicesWithRates((prev) => {
+                                        const filtered = prev.filter((s) => s.name !== serviceSelection.name);
+                                        return [...filtered, { name: serviceSelection.name, rate: Number(serviceSelection.rate) }];
+                                    });
+                                    setServiceSelection({ name: '', rate: '' });
+                                }}
+                                className="px-4 py-2 mt-3 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors disabled:opacity-60"
+                                disabled={servicesLoading}
                             >
-                                <option value="">Select services</option>
-                                <option value="Plumbing">Plumbing</option>
-                                <option value="Locksmiths">Locksmiths</option>
-                                <option value="Cleaning & Organization">Cleaning & Organization</option>
-                                <option value="Home Repairs & Maintenance">Home Repairs & Maintenance</option>
-                                <option value="Renovations & Upgrades">Renovations & Upgrades</option>
-                            </select>
-                        </div>
-                        <div className='flex flex-col gap-[10px]'>
-                            <p>
-                                <p className='home_status inline-flex items-center'>
-                                    <span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                            <path d="M10 7.5C9.50555 7.5 9.0222 7.64662 8.61108 7.92133C8.19995 8.19603 7.87952 8.58648 7.6903 9.04329C7.50108 9.50011 7.45157 10.0028 7.54804 10.4877C7.6445 10.9727 7.8826 11.4181 8.23223 11.7678C8.58187 12.1174 9.02732 12.3555 9.51228 12.452C9.99723 12.5484 10.4999 12.4989 10.9567 12.3097C11.4135 12.1205 11.804 11.8 12.0787 11.3889C12.3534 10.9778 12.5 10.4945 12.5 10C12.5 9.33696 12.2366 8.70107 11.7678 8.23223C11.2989 7.76339 10.663 7.5 10 7.5ZM10 11.25C9.75277 11.25 9.5111 11.1767 9.30554 11.0393C9.09998 10.902 8.93976 10.7068 8.84515 10.4784C8.75054 10.2499 8.72579 9.99861 8.77402 9.75614C8.82225 9.51366 8.9413 9.29093 9.11612 9.11612C9.29093 8.9413 9.51366 8.82225 9.75614 8.77402C9.99861 8.72579 10.2499 8.75054 10.4784 8.84515C10.7068 8.93976 10.902 9.09998 11.0393 9.30554C11.1767 9.5111 11.25 9.75277 11.25 10C11.25 10.3315 11.1183 10.6495 10.8839 10.8839C10.6495 11.1183 10.3315 11.25 10 11.25Z" fill="#F3934F" />
-                                        </svg>
-                                    </span>
-                                    <span>
-                                        Home Repairs & Maintenance
-                                    </span>
-                                </p>
-                            </p>
-                            <div>
-                                <div>
-                                    <p className='home_status2 inline-flex items-center'>
-                                        <span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                                <path d="M10 7.5C9.50555 7.5 9.0222 7.64662 8.61108 7.92133C8.19995 8.19603 7.87952 8.58648 7.6903 9.04329C7.50108 9.50011 7.45157 10.0028 7.54804 10.4877C7.6445 10.9727 7.8826 11.4181 8.23223 11.7678C8.58187 12.1174 9.02732 12.3555 9.51228 12.452C9.99723 12.5484 10.4999 12.4989 10.9567 12.3097C11.4135 12.1205 11.804 11.8 12.0787 11.3889C12.3534 10.9778 12.5 10.4945 12.5 10C12.5 9.33696 12.2366 8.70107 11.7678 8.23223C11.2989 7.76339 10.663 7.5 10 7.5ZM10 11.25C9.75277 11.25 9.5111 11.1767 9.30554 11.0393C9.09998 10.902 8.93976 10.7068 8.84515 10.4784C8.75054 10.2499 8.72579 9.99861 8.77402 9.75614C8.82225 9.51366 8.9413 9.29093 9.11612 9.11612C9.29093 8.9413 9.51366 8.82225 9.75614 8.77402C9.99861 8.72579 10.2499 8.75054 10.4784 8.84515C10.7068 8.93976 10.902 9.09998 11.0393 9.30554C11.1767 9.5111 11.25 9.75277 11.25 10C11.25 10.3315 11.1183 10.6495 10.8839 10.8839C10.6495 11.1183 10.3315 11.25 10 11.25Z" fill="#F1C400" />
-                                            </svg>
-                                        </span>
-                                        <span>
-                                            Cleaning & Organization
-                                        </span>
-                                    </p>
-                                </div>
+                                Add Service
+                            </button>
 
-                            </div>
-                            <div>
-                                <p className='home_status3 inline-flex items-center'>
-                                    <span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                            <path d="M10 7.5C9.50555 7.5 9.0222 7.64662 8.61108 7.92133C8.19995 8.19603 7.87952 8.58648 7.6903 9.04329C7.50108 9.50011 7.45157 10.0028 7.54804 10.4877C7.6445 10.9727 7.8826 11.4181 8.23223 11.7678C8.58187 12.1174 9.02732 12.3555 9.51228 12.452C9.99723 12.5484 10.4999 12.4989 10.9567 12.3097C11.4135 12.1205 11.804 11.8 12.0787 11.3889C12.3534 10.9778 12.5 10.4945 12.5 10C12.5 9.33696 12.2366 8.70107 11.7678 8.23223C11.2989 7.76339 10.663 7.5 10 7.5ZM10 11.25C9.75277 11.25 9.5111 11.1767 9.30554 11.0393C9.09998 10.902 8.93976 10.7068 8.84515 10.4784C8.75054 10.2499 8.72579 9.99861 8.77402 9.75614C8.82225 9.51366 8.9413 9.29093 9.11612 9.11612C9.29093 8.9413 9.51366 8.82225 9.75614 8.77402C9.99861 8.72579 10.2499 8.75054 10.4784 8.84515C10.7068 8.93976 10.902 9.09998 11.0393 9.30554C11.1767 9.5111 11.25 9.75277 11.25 10C11.25 10.3315 11.1183 10.6495 10.8839 10.8839C10.6495 11.1183 10.3315 11.25 10 11.25Z" fill="#F34F4F" />
-                                        </svg>
-                                    </span>
-                                    <span>
-                                        Renovations & Upgrades
-                                    </span>
-                                </p>
-                            </div>
+                            {selectedServicesWithRates.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="text-sm font-semibold text-gray-700">Selected Services</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedServicesWithRates.map((svc) => (
+                                            <span
+                                                key={svc.name}
+                                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-teal-50 text-teal-800 border border-teal-200"
+                                            >
+                                                <span className="font-medium">{svc.name}</span>
+                                                <span className="text-xs text-gray-600">${svc.rate}/hr</span>
+                                                <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setSelectedServicesWithRates((prev) =>
+                                                        prev.filter((item) => item.name !== svc.name)
+                                                    )
+                                                }
+                                                className="text-teal-700 hover:text-teal-900"
+                                                aria-label={`Remove ${svc.name}`}
+                                                >
+                                                ?
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <button
                             type="submit"
@@ -618,4 +647,3 @@ export default function UserInfo() {
         </div>
     );
 }
-
