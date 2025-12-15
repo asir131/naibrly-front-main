@@ -116,7 +116,11 @@ export const servicesApi = createApi({
         if (!response || !response.success) {
           throw new Error(response?.message || 'Failed to register provider');
         }
-        return response.data;
+        return {
+          token: response.token || response.data?.token || null,
+          data: response.data,
+          userType: 'provider',
+        };
       },
       transformErrorResponse: (response, meta) => {
         const status = meta?.response?.status ?? response?.status ?? 'FETCH_ERROR';
