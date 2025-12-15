@@ -2,13 +2,15 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { logout } from '@/redux/slices/authSlice';
 
 // Define the base API URL - use environment variable or fallback to production
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 // Custom fetchBaseQuery with timeout and automatic logout on 401
 const customFetchBaseQuery = async (args, api, extraOptions) => {
   const baseQuery = fetchBaseQuery({
     baseUrl: BASE_URL,
-    timeout: 15000, // 15 second timeout
+    // Increase timeout to better accommodate slow local tunnels / large form-data
+    timeout: 120000, // 2 minutes to avoid aborting large uploads (was 15ms)
     prepareHeaders: (headers, { endpoint }) => {
       // Get token from localStorage
       if (typeof window !== 'undefined') {
@@ -39,6 +41,31 @@ const customFetchBaseQuery = async (args, api, extraOptions) => {
   });
 
   const result = await baseQuery(args, api, extraOptions);
+
+  // Log fetch-layer errors for easier debugging (network/CORS/timeouts)
+  if (result.error) {
+    const isEmptyError =
+      typeof result.error === 'object' &&
+      result.error !== null &&
+      Object.keys(result.error).length === 0;
+
+    // Normalize empty errors so we at least have a message
+    if (isEmptyError) {
+      result.error = {
+        status: 'FETCH_ERROR',
+        error: 'Unknown fetch error (empty error object). Possible network/CORS/timeout.',
+        meta: result.meta,
+      };
+    }
+
+    console.error('[RTK Query] Base query error', {
+      endpoint: api?.endpoint,
+      url: typeof args === 'string' ? args : args?.url,
+      error: result.error,
+      meta: result.meta,
+      raw: result,
+    });
+  }
 
   // Auto-logout on 401 Unauthorized
   if (result.error && result.error.status === 401) {
@@ -91,9 +118,24 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
-      transformErrorResponse: (response) => {
-        console.error('Register provider error response:', response);
-        return response;
+      transformErrorResponse: (response, meta) => {
+        const status = meta?.response?.status ?? response?.status ?? 'FETCH_ERROR';
+        const data = response?.data ?? response ?? {};
+        const message =
+          data?.message ||
+          data?.error ||
+          meta?.error ||
+          (typeof response === 'string' ? response : 'Request failed');
+
+        console.error('Register provider error response:', {
+          status,
+          message,
+          data,
+          headers: meta?.response?.headers,
+          error: response?.error,
+        });
+
+        return { status, message, data, error: response?.error };
       },
     }),
 

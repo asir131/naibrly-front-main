@@ -167,12 +167,20 @@ export default function UserInfo() {
         if (result.token) {
             localStorage.setItem('authToken', result.token);
         }
+        // Persist user type for downstream API calls (RTK Query header prep)
+        localStorage.setItem('userType', 'provider');
 
         toast.success('Registration successful!');
         router.push('/provider/signup/verify_info');
         
     } catch (error) {
-        console.error('Registration error:', error);
+        console.error('Registration error:', {
+            status: error?.status,
+            message: error?.message,
+            data: error?.data,
+            error: error?.error,
+            raw: error,
+        });
 
         // Enhanced error logging
         if (error?.data) {

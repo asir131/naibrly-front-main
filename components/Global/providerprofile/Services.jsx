@@ -11,7 +11,8 @@ import {
 
 const Services = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedService, setSelectedService] = useState('');
+  const [selectedRate, setSelectedRate] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
@@ -44,8 +45,9 @@ const Services = () => {
   const currentServices = useMemo(() => servicesData?.services || [], [servicesData]);
 
   useEffect(() => {
-    if (currentServices.length) {
-      setSelectedServices(currentServices.map((s) => s.name));
+    if (currentServices.length === 0) {
+      setSelectedService('');
+      setSelectedRate('');
     }
   }, [currentServices]);
 
@@ -61,42 +63,36 @@ const Services = () => {
   }, []);
 
   const handleEdit = () => {
-    setSelectedServices(currentServices.map((s) => s.name));
+    setSelectedService('');
+    setSelectedRate('');
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    setSelectedServices(currentServices.map((s) => s.name));
+    setSelectedService('');
+    setSelectedRate('');
     setIsEditing(false);
   };
 
-  const handleSave = async () => {
-    const currentNames = currentServices.map((s) => s.name);
-    const toAdd = selectedServices.filter((name) => !currentNames.includes(name));
-    const toRemove = currentServices.filter((s) => !selectedServices.includes(s.name));
-
+  const handleAddService = async () => {
+    if (!selectedService) return;
+    const hourlyRate = selectedRate === '' ? undefined : Number(selectedRate);
     try {
-      // Add new services
-      for (const name of toAdd) {
-        await addService({ serviceName: name }).unwrap();
-      }
-      // Delete removed services
-      for (const svc of toRemove) {
-        await deleteService(svc.name).unwrap();
-      }
+      await addService({ serviceName: selectedService, hourlyRate }).unwrap();
       await refetch();
+      setSelectedService('');
+      setSelectedRate('');
+      setShowDropdown(false);
+      setSearchTerm('');
       setIsEditing(false);
     } catch (err) {
-      console.error('Failed to update services:', err);
+      console.error('Failed to add service:', err);
     }
   };
 
-  const handleServiceToggle = (service) => {
-    if (selectedServices.includes(service)) {
-      setSelectedServices(selectedServices.filter(s => s !== service));
-    } else {
-      setSelectedServices([...selectedServices, service]);
-    }
+  const handleRateInputChange = (value) => {
+    const sanitized = value === '' ? '' : value.replace(/[^0-9.]/g, '');
+    setSelectedRate(sanitized);
   };
 
   const filteredOptions = useMemo(() => {
@@ -125,6 +121,7 @@ const Services = () => {
               {currentServices.map((service, index) => (
                 <div key={index} className="text-gray-600">
                   {index + 1}. {service.name}
+                  {service.hourlyRate ? ` - $${service.hourlyRate}/hr` : ''}
                 </div>
               ))}
             </div>
@@ -142,26 +139,7 @@ const Services = () => {
             </label>
 
             <div className="border border-gray-300 rounded-md p-4">
-              <div className="text-sm text-gray-600 mb-2">Select services</div>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {selectedServices.map((service) => (
-                  <span
-                    key={service}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-teal-50 text-teal-800 border border-teal-200"
-                  >
-                    <span>{service}</span>
-                    <button
-                      type="button"
-                      className="text-teal-700 hover:text-teal-900"
-                      onClick={() => handleServiceToggle(service)}
-                      aria-label={`Remove ${service}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-
+              <div className="text-sm text-gray-600 mb-2">Select a service</div>
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
@@ -169,9 +147,7 @@ const Services = () => {
                   className="w-full flex justify-between items-center border border-gray-300 rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:border-teal-500 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 >
                   <span>
-                    {selectedServices.length > 0
-                      ? `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} selected`
-                      : 'Choose services'}
+                    {selectedService || 'Choose a service'}
                   </span>
                   <svg
                     className={`w-4 h-4 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
@@ -205,9 +181,14 @@ const Services = () => {
                         >
                           <span>{service}</span>
                           <input
-                            type="checkbox"
-                            checked={selectedServices.includes(service)}
-                            onChange={() => handleServiceToggle(service)}
+                            type="radio"
+                            name="serviceOption"
+                            checked={selectedService === service}
+                            onChange={() => {
+                              setSelectedService(service);
+                              const existing = currentServices.find((s) => s.name === service);
+                              setSelectedRate(existing?.hourlyRate ?? '');
+                            }}
                             className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                           />
                         </label>
@@ -219,6 +200,51 @@ const Services = () => {
                   </div>
                 )}
               </div>
+
+              <div className="mt-4">
+                <div className="text-sm font-medium text-gray-700 mb-2">Hourly rate (USD)</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={selectedRate}
+                    onChange={(e) => handleRateInputChange(e.target.value)}
+                    className="w-32 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                    placeholder="0"
+                  />
+                  <span className="text-xs text-gray-500">/hr</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="text-sm font-medium text-gray-700 mb-2">Current services</div>
+                <div className="divide-y divide-gray-100 border border-gray-200 rounded-md">
+                  {currentServices.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">No services added yet</div>
+                  )}
+                  {currentServices.map((svc) => (
+                    <div key={svc.name} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <div className="text-gray-700">
+                        {svc.name} {svc.hourlyRate ? `- $${svc.hourlyRate}/hr` : ''}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          deleteService(svc.name)
+                            .unwrap()
+                            .then(() => refetch())
+                            .catch((err) => console.error('Failed to delete service:', err))
+                        }
+                        className="text-red-600 hover:text-red-700 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -229,11 +255,11 @@ const Services = () => {
                 Cancel
               </button>
               <button
-                onClick={handleSave}
+                onClick={handleAddService}
                 className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors disabled:opacity-60"
-                disabled={isAdding || isDeleting}
+                disabled={isAdding || !selectedService}
               >
-                {(isAdding || isDeleting) ? 'Saving...' : 'Save'}
+                {isAdding ? 'Saving...' : 'Save service'}
               </button>
             </div>
           </div>
