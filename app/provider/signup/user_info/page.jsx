@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { IoIosArrowDown } from "react-icons/io";
 import { useRegisterProviderMutation, useGetServicesQuery } from '@/redux/api/servicesApi';
 import { toast } from 'react-hot-toast';
@@ -51,7 +51,6 @@ export default function UserInfo() {
     const [businessLogo, setBusinessLogo] = useState(null);
     const [serviceSelection, setServiceSelection] = useState({ name: '', rate: '' });
     const [selectedServicesWithRates, setSelectedServicesWithRates] = useState([]);
-    const [authWarningShown, setAuthWarningShown] = useState(false);
 
     const handleClick = () => {
         fileInputRef.current.click();
@@ -66,17 +65,6 @@ export default function UserInfo() {
 
     const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Require existing token for authorized registration
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-    if (!token) {
-        toast.error('Please log in first to register a provider (missing token).');
-        if (!authWarningShown) {
-            setAuthWarningShown(true);
-        }
-        return;
-    }
-
     // Enhanced validation
     if (!formData.businessName || !formData.businessEmail || !formData.password || !formData.phone || !formData.role) {
         toast.error('Please fill in all required fields');
@@ -236,15 +224,6 @@ export default function UserInfo() {
     }
     };
 
-    // On mount, warn/redirect if no token is present so the user knows they must authenticate
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const token = localStorage.getItem('authToken');
-        if (!token && !authWarningShown) {
-            setAuthWarningShown(true);
-            toast.error('Missing auth token. Please log in as a provider/admin before registering.');
-        }
-    }, [authWarningShown]);
 
     return (
         <div className="">

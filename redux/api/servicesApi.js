@@ -863,7 +863,7 @@ export const servicesApi = createApi({
 
     // Get provider zip/service areas
     getProviderZip: builder.query({
-      query: () => '/zip/provider/zip',
+      query: () => '/zip/provider/service-areas',
       providesTags: ['Provider'],
       transformResponse: (response) => {
         console.log('Get provider zip API response:', response);
