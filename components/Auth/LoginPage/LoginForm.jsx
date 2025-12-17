@@ -16,6 +16,7 @@ function LoginFormContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState('user'); // Default to 'user'
   const [error, setError] = useState('');
+  const [redirectPath, setRedirectPath] = useState(null);
 
   const { login } = useAuth();
   const router = useRouter();
@@ -26,6 +27,10 @@ function LoginFormContent() {
     const type = searchParams.get('type');
     if (type === 'provider' || type === 'user') {
       setUserType(type);
+    }
+    const redirect = searchParams.get('redirect');
+    if (redirect && redirect.startsWith('/')) {
+      setRedirectPath(redirect);
     }
   }, [searchParams]);
 
@@ -86,14 +91,10 @@ function LoginFormContent() {
       // Call the login function with user data and userType
       login({ user, userType: user.role });
 
-      // Redirect based on user role
-      if (user.role === 'provider') {
-        console.log('LoginForm - Redirecting to /business');
-        window.location.href = '/business';
-      } else {
-        console.log('LoginForm - Redirecting to /');
-        window.location.href = '/';
-      }
+      // Redirect to requested page if provided (e.g., join-bundle), else role-based default
+      const destination = redirectPath || (user.role === 'provider' ? '/business' : '/');
+      console.log('LoginForm - Redirecting to', destination);
+      router.push(destination);
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'An error occurred during login. Please try again.');

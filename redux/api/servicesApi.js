@@ -686,11 +686,19 @@ export const servicesApi = createApi({
     }),
 
     resetPassword: builder.mutation({
-      query: (data) => ({
-        url: '/auth/password-reset/reset-password',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => {
+        const { resetToken, ...payload } = data || {};
+        const headers = {};
+        if (resetToken) {
+          headers['x-reset-token'] = resetToken;
+        }
+        return {
+          url: '/auth/password-reset/reset-password',
+          method: 'POST',
+          body: payload,
+          headers: Object.keys(headers).length ? headers : undefined,
+        };
+      },
       transformResponse: (response) => {
         console.log('Reset password API response:', response);
         if (!response || !response.success) {

@@ -12,6 +12,7 @@ function NewPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
+  const tokenFromQuery = searchParams.get('token');
 
   const [formData, setFormData] = useState({
     password: '',
@@ -21,15 +22,27 @@ function NewPasswordContent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [resetToken, setResetToken] = useState(null);
 
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
-  // Redirect if no email
+  // Redirect if no email and load reset token
   useEffect(() => {
     if (!email) {
       router.push('/forgot-password');
     }
-  }, [email, router]);
+    if (tokenFromQuery) {
+      setResetToken(tokenFromQuery);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('resetToken', tokenFromQuery);
+      }
+    } else if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('resetToken');
+      if (stored) {
+        setResetToken(stored);
+      }
+    }
+  }, [email, router, tokenFromQuery]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +65,8 @@ function NewPasswordContent() {
       await resetPassword({
         email,
         newPassword: formData.password,
-        confirmPassword: formData.confirmPassword
+        confirmPassword: formData.confirmPassword,
+        resetToken: resetToken || undefined,
       }).unwrap();
 
       setSuccess('Password reset successfully! Redirecting to login...');
@@ -164,16 +178,23 @@ function NewPasswordContent() {
           )}
 
           {/* Error Message */}
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
-              {error}
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+          {error}
+        </div>
+      )}
+
+          {/* Missing token warning */}
+          {!resetToken && (
+            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              Reset link is missing a token. Please restart the password reset flow.
             </div>
           )}
 
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={isLoading || !formData.password || !formData.confirmPassword}
+            disabled={isLoading || !formData.password || !formData.confirmPassword || !resetToken}
             className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-lg font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-6"
           >
             {isLoading ? 'Setting Password...' : 'Set New Password'}

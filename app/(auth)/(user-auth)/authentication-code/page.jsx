@@ -96,12 +96,20 @@ function AuthenticationCodeContent() {
 
     if (fullCode.length === 4) {
       try {
-        await verifyOtp({ email, otp: fullCode }).unwrap();
+        const result = await verifyOtp({ email, otp: fullCode }).unwrap();
+        const resetToken = result?.resetToken;
+
+        // Persist reset token for the next step
+        if (resetToken && typeof window !== 'undefined') {
+          sessionStorage.setItem('resetToken', resetToken);
+        }
+
         setSuccess('OTP verified successfully!');
 
-        // Navigate to new password page after short delay
+        // Navigate to new password page with token
         setTimeout(() => {
-          router.push(`/new-password?email=${encodeURIComponent(email)}`);
+          const nextUrl = `/new-password?email=${encodeURIComponent(email)}${resetToken ? `&token=${encodeURIComponent(resetToken)}` : ''}`;
+          router.push(nextUrl);
         }, 1000);
       } catch (err) {
         console.error('Verify OTP error:', err);
