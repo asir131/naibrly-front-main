@@ -4,12 +4,14 @@ import { useRef, useState, useMemo } from 'react';
 import { IoIosArrowDown } from "react-icons/io";
 import { useRegisterProviderMutation, useGetServicesQuery } from '@/redux/api/servicesApi';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function UserInfo() {
     // this is for navigate
     const router = useRouter()
     const [registerProvider, { isLoading }] = useRegisterProviderMutation();
     const { data: allServicesData, isLoading: servicesLoading } = useGetServicesQuery();
+    const { login } = useAuth();
     const serviceOptions = useMemo(
         () => allServicesData?.services || allServicesData?.data?.services || [],
         [allServicesData]
@@ -163,11 +165,17 @@ export default function UserInfo() {
         const result = await registerProvider(submitData).unwrap();
 
         // Success handling
-        if (result.token) {
-            localStorage.setItem('authToken', result.token);
+        const token = result?.token || result?.data?.token;
+        if (token) {
+            localStorage.setItem('authToken', token);
         }
         // Persist user type for downstream API calls (RTK Query header prep)
         localStorage.setItem('userType', 'provider');
+        const userPayload = result?.data?.user || result?.user;
+        if (userPayload) {
+            localStorage.setItem('user', JSON.stringify(userPayload));
+            login({ user: userPayload, userType: 'provider' });
+        }
 
         toast.success('Registration successful!');
         router.push('/provider/signup/verify_info');

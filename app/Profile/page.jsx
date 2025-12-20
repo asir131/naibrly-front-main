@@ -1,13 +1,21 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Star, MapPin, Briefcase, CheckCircle, Clock, MessageCircle } from 'lucide-react';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 export default function ServicePage() {
   const [selectedService, setSelectedService] = useState('Plumbing Drain Repair');
-  const [zipCode, setZipCode] = useState('94040');
+  const customerZipCode = useCustomerZipCode();
+  const [zipCode, setZipCode] = useState('');
   const [selectedDrain, setSelectedDrain] = useState('');
   const [selectedUrgency, setSelectedUrgency] = useState('');
   const [selectedNumber, setSelectedNumber] = useState('');
+
+  useEffect(() => {
+    if (!zipCode && customerZipCode) {
+      setZipCode(customerZipCode);
+    }
+  }, [customerZipCode, zipCode]);
 
   return (
     <div className="min-h-screen bg-white py-8 px-4 md:px-8 ">

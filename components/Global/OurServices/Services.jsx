@@ -8,10 +8,12 @@ import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 import { useRouter } from 'next/navigation';
 import { useGetNearbyServicesQuery, useSearchProvidersByServiceQuery } from '@/redux/api/servicesApi';
 import { Star, Clock, MapPin } from 'lucide-react';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 export default function OurServicesSection({ serviceType, zipCode }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const customerZipCode = useCustomerZipCode();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [localZipCode, setLocalZipCode] = useState(zipCode || '');
@@ -32,6 +34,16 @@ export default function OurServicesSection({ serviceType, zipCode }) {
     { limit: 15 },
     { skip: !!serviceType } // Skip if serviceType is provided
   );
+
+  useEffect(() => {
+    if (zipCode) {
+      setLocalZipCode(zipCode);
+      return;
+    }
+    if (!localZipCode && customerZipCode) {
+      setLocalZipCode(customerZipCode);
+    }
+  }, [zipCode, customerZipCode, localZipCode]);
 
   // Fallback static services for when API fails or is loading
   const fallbackServices = [

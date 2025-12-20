@@ -207,6 +207,21 @@ export const servicesApi = createApi({
         return response.data;
       },
     }),
+    removeProviderZipCode: builder.mutation({
+      query: (zipCodeData) => ({
+        url: '/zip/provider/service-areas/remove',
+        method: 'DELETE',
+        body: zipCodeData,
+      }),
+      invalidatesTags: ['Provider'],
+      transformResponse: (response) => {
+        console.log('Remove provider zip code API response:', response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || 'Failed to remove zip code');
+        }
+        return response.data;
+      },
+    }),
 
     // Get all services with categories
     getServices: builder.query({
@@ -1286,6 +1301,7 @@ export const {
   useRegisterProviderMutation,
   useSubmitVerifyInformationMutation,
   useUpdateProviderZipCodeMutation,
+  useRemoveProviderZipCodeMutation,
   useSubmitPayoutInformationMutation,
   useUpdatePayoutInformationMutation,
   useCreateWithdrawalRequestMutation,

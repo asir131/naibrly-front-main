@@ -4,11 +4,19 @@ import { Link as LinkIcon, MapPin } from 'lucide-react';
 import Link from 'next/link'; // Make sure to import Next.js Link
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 export default function PlumberFinder() {
-  const [zipCode, setZipCode] = useState('51502');
+  const customerZipCode = useCustomerZipCode();
+  const [zipCode, setZipCode] = useState('');
+
+  useEffect(() => {
+    if (!zipCode && customerZipCode) {
+      setZipCode(customerZipCode);
+    }
+  }, [customerZipCode, zipCode]);
 
   return (
     <div className="bg-white px-4 py-12 md:py-0.5">

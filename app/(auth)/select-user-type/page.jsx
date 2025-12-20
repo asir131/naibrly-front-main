@@ -167,7 +167,7 @@ export default function SelectUserTypePage() {
                 if (selectedType === 'user') {
                   router.push('/create-account?type=user');
                 } else if (selectedType === 'provider') {
-                  router.push('/provider/signup?type=provider');
+                  router.push('/provider/signup/user_info');
                 } else {
                   // If no type selected, show a message or go to signup selection
                   alert('Please select whether you are a User or Provider first');

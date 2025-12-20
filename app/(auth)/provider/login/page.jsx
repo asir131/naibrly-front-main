@@ -168,7 +168,7 @@ export default function ProviderLoginPage() {
 
         {/* Create Account Link */}
         <p className="text-center text-slate-600 text-sm">
-          <a href="/provider/signup" className="text-slate-700 hover:text-teal-600 underline font-medium">
+          <a href="/provider/signup/user_info" className="text-slate-700 hover:text-teal-600 underline font-medium">
             Create provider account
           </a>
         </p>

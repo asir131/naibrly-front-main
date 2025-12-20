@@ -1,13 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit2 } from 'lucide-react';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 export default function EditProfileModal({ isOpen, onClose }) {
+  const customerZipCode = useCustomerZipCode();
   const [profileImage, setProfileImage] = useState('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop');
   const [formData, setFormData] = useState({
     name: 'Jane Doe',
@@ -15,8 +17,14 @@ export default function EditProfileModal({ isOpen, onClose }) {
     countryCode: '+1',
     phoneNumber: '012 345 6987',
     address: '123 Oak Street Springfield, IL 62704',
-    zipCode: '62704'
+    zipCode: ''
   });
+
+  useEffect(() => {
+    if (!formData.zipCode && customerZipCode) {
+      setFormData((prev) => ({ ...prev, zipCode: customerZipCode }));
+    }
+  }, [customerZipCode, formData.zipCode]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];

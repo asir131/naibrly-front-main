@@ -10,10 +10,12 @@ import MapBg from "@/public/map image.png";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
+import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 
 export default function NaibrlyHeroSection({ onSearch, isSearching }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const customerZipCode = useCustomerZipCode();
 
   // Fetch services from API
   const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
@@ -84,6 +86,12 @@ export default function NaibrlyHeroSection({ onSearch, isSearching }) {
     if (service) setSearchQuery(service);
     if (zip) setZipCode(zip);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!zipCode && customerZipCode) {
+      setZipCode(customerZipCode);
+    }
+  }, [customerZipCode, zipCode]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {

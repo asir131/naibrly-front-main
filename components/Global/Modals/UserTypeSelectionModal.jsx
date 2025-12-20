@@ -22,8 +22,8 @@ export default function UserTypeSelectionModal({ isOpen, onClose, mode = 'signup
         // Route to customer signup: app/(auth)/(user-auth)/create-account/page.jsx
         router.push(`/create-account?type=${typeParam}`);
       } else if (userType === 'provider') {
-        // Route to provider signup: app/(auth)/provider/signup/page.jsx
-        router.push(`provider/signup/user_info`);
+        // Route to provider signup flow
+        router.push('/provider/signup/user_info');
       }
     } else if (mode === 'signin') {
       if (userType === 'customer') {

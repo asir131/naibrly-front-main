@@ -10,9 +10,11 @@ import MapBg from "@/public/map image.png";
 import { useRouter } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
+import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 
 export default function NaibrlyHeroSection() {
   const router = useRouter();
+  const customerZipCode = useCustomerZipCode();
 
   // Fetch services from API
   const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
@@ -50,6 +52,12 @@ export default function NaibrlyHeroSection() {
       setFilteredServices(serviceOptions);
     }
   }, [serviceOptions, filteredServices.length, searchQuery]);
+
+  useEffect(() => {
+    if (!zipCode && customerZipCode) {
+      setZipCode(customerZipCode);
+    }
+  }, [customerZipCode, zipCode]);
 
   // Filter services based on search query
   const handleServiceSearch = (value) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ChevronRight, ChevronLeft, MapPin, Clock, CheckCircle, Users, Star, 
   Check 
@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 export default function CaptainRooterFullPage() {
   // === State for CaptainRooterProfile ===
   const [profilePhotoIndex, setProfilePhotoIndex] = useState(0);
   const [selectedService, setSelectedService] = useState('');
-  const [zipCode, setZipCode] = useState('94040');
+  const customerZipCode = useCustomerZipCode();
+  const [zipCode, setZipCode] = useState('');
   const [drainProblem, setDrainProblem] = useState('');
   const [urgency, setUrgency] = useState('');
   const [numDrains, setNumDrains] = useState('');
@@ -55,6 +57,12 @@ export default function CaptainRooterFullPage() {
     }
     console.log({ selectedService, zipCode, drainProblem, urgency, numDrains });
   };
+
+  useEffect(() => {
+    if (!zipCode && customerZipCode) {
+      setZipCode(customerZipCode);
+    }
+  }, [customerZipCode, zipCode]);
 
   // === Data for Review Photos ===
   const reviewPhotos = [

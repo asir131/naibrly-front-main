@@ -10,6 +10,7 @@ import NaibrlyLanding from '@/components/User/LandingPage/Mobileapp';
 import TopProsSection from '@/components/User/FindArea/TopProsSection';
 import TestimonialsSection from '@/components/User/FindArea/TestimonialsSection';
 import { useSearchParams } from 'next/navigation';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 
 // this is for opening modal 
@@ -129,6 +130,7 @@ const BundleCard = ({ setOpen, modaData }) => {
 // Component that uses useSearchParams
 const FindAreaContent = () => {
     const searchParams = useSearchParams();
+    const customerZipCode = useCustomerZipCode();
 
     // Get search parameters from URL
     const serviceParam = searchParams.get('service');
@@ -147,6 +149,12 @@ const FindAreaContent = () => {
         if (serviceParam) setSearchQuery(serviceParam);
         if (zipParam) setZipCode(zipParam);
     }, [serviceParam, zipParam]);
+
+    useEffect(() => {
+        if (!zipParam && !zipCode && customerZipCode) {
+            setZipCode(customerZipCode);
+        }
+    }, [zipParam, zipCode, customerZipCode]);
 
     // this is for handle open function
     const handleOpen = (value) => {

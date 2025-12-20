@@ -1,19 +1,27 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import RequestEstimateModal from './RequestEstimateModal';
 import SuccessModal from './SuccessModal';
+import useCustomerZipCode from '@/hooks/useCustomerZipCode';
 
 export default function StickyForm() {
 
     const [selectedService, setSelectedService] = useState('');
-    const [zipCode, setZipCode] = useState('94040');
+    const customerZipCode = useCustomerZipCode();
+    const [zipCode, setZipCode] = useState('');
     const [drainProblem, setDrainProblem] = useState('');
     const [urgency, setUrgency] = useState('');
     const [numDrains, setNumDrains] = useState('');
+
+    useEffect(() => {
+        if (!zipCode && customerZipCode) {
+            setZipCode(customerZipCode);
+        }
+    }, [customerZipCode, zipCode]);
 
     const [showEstimateModal, setShowEstimateModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
