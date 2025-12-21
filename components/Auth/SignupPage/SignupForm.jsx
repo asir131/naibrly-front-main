@@ -8,6 +8,14 @@ import { useAuth } from '@/hooks/useAuth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+];
+
 function SignupFormContent() {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -313,18 +321,9 @@ function SignupFormContent() {
               Phone Number
             </label>
             <div className="flex gap-2">
-              <select
-                name="countryCode"
-                value={formData.countryCode}
-                onChange={handleInputChange}
-                className="w-24 px-3 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
-              >
-                <option value="+1">+1</option>
-                <option value="+44">+44</option>
-                <option value="+91">+91</option>
-                <option value="+86">+86</option>
-                <option value="+81">+81</option>
-              </select>
+              <div className="w-24 px-3 py-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 flex items-center justify-center">
+                +1
+              </div>
               <Input
                 type="tel"
                 name="phoneNumber"
@@ -357,14 +356,19 @@ function SignupFormContent() {
               <label className="text-xs font-medium text-teal-700 block mb-2">
                 State
               </label>
-              <Input
-                type="text"
+              <select
                 name="state"
-                placeholder="State"
                 value={formData.state}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
-              />
+              >
+                <option value="">State</option>
+                {US_STATES.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="text-xs font-medium text-teal-700 block mb-2">

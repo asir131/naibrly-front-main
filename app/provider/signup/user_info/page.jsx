@@ -6,6 +6,14 @@ import { useRegisterProviderMutation, useGetServicesQuery } from '@/redux/api/se
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
 
+const US_STATES = [
+    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+];
+
 export default function UserInfo() {
     // this is for navigate
     const router = useRouter()
@@ -39,7 +47,7 @@ export default function UserInfo() {
         businessAddressZipCode: '',
         experience: '',
         phone: '',
-        countryCode: '+088'
+        countryCode: '+1'
     });
 
     const handleChange = (e) => {
@@ -421,14 +429,19 @@ export default function UserInfo() {
                                 className="input_box text-[#999] text-[16px]"
                                 placeholder="City"
                             />
-                            <input
-                                type="text"
+                            <select
                                 name="businessAddressState"
                                 value={formData.businessAddressState}
                                 onChange={handleChange}
                                 className="input_box text-[#999] text-[16px]"
-                                placeholder="State"
-                            />
+                            >
+                                <option value="">State</option>
+                                {US_STATES.map((state) => (
+                                    <option key={state} value={state}>
+                                        {state}
+                                    </option>
+                                ))}
+                            </select>
                             <input
                                 type="text"
                                 name="businessAddressZipCode"
@@ -440,28 +453,19 @@ export default function UserInfo() {
                         </div>
 
                         <div className="mb-3 input_box flex relative">
-    <IoIosArrowDown className='absolute left-[55px]' />
-    <select
-        name="countryCode"
-        value={formData.countryCode}
-        onChange={handleChange}
-        className='py-[10px] w-full focus:outline-none flex-1 text-sm'
-    >
-        <option value="+1">+1</option>
-        <option value="+88">+88</option>
-        <option value="+33">+33</option>
-        <option value="+55">+55</option>
-    </select>
-    <input
-        type="tel"
-        name="phone"
-        value={formData.phone}
-        onChange={handleChange}
-        className="w-full h-full focus:outline-none text-[#999] text-[16px] flex-5"
-        placeholder="Phone Number *"
-        required
-    />
-</div>
+                            <div className="py-[10px] w-16 text-sm text-[#111] flex items-center justify-center border-r border-gray-200">
+                                +1
+                            </div>
+                            <input
+                                type="tel"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                className="w-full h-full focus:outline-none text-[#999] text-[16px] flex-5"
+                                placeholder="Phone Number *"
+                                required
+                            />
+                        </div>
 
                         <div className="mb-3">
                             <input

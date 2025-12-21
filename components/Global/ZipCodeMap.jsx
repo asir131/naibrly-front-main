@@ -22,9 +22,10 @@ function MapUpdater({ center, zoom }) {
   const map = useMap();
 
   useEffect(() => {
-    if (map && center && center[0] && center[1]) {
-      map.setView(center, zoom, { animate: true });
-    }
+    if (!map || !center || !center[0] || !center[1]) return;
+    if (!map._container || !map._mapPane) return;
+
+    map.setView(center, zoom, { animate: true });
   }, [map, center, zoom]);
 
   return null;
@@ -112,6 +113,7 @@ const ZipCodeMap = ({ zipCode, zipCodes = [], height = "300px" }) => {
     const timeoutId = setTimeout(geocodeZipCodes, 500);
     return () => clearTimeout(timeoutId);
   }, [zipCode, zipCodesKey]);
+
 
   return (
     <div
