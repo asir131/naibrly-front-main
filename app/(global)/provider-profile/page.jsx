@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import ProviderSidebar from '@/components/Global/providerprofile/ProviderSidebar';
@@ -14,7 +14,7 @@ import ContactSupport from '@/components/Global/Profile/ContactSupport';
 import DeleteAccount from '@/components/Global/Profile/DeleteAccount';
 import BundleSetup from '@/components/Global/providerprofile/BundleSetup';
 
-export default function ProviderAccountSettings() {
+function ProviderAccountSettingsContent() {
   const [activeSection, setActiveSection] = useState('Account');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchParams = useSearchParams();
@@ -79,5 +79,13 @@ export default function ProviderAccountSettings() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProviderAccountSettings() {
+  return (
+    <Suspense fallback={null}>
+      <ProviderAccountSettingsContent />
+    </Suspense>
   );
 }
