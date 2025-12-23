@@ -4,14 +4,20 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useSubmitVerifyInformationMutation } from "@/redux/api/servicesApi";
+import {
+  useSubmitVerifyInformationMutation,
+  useGetUserProfileQuery,
+} from "@/redux/api/servicesApi";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const VerifyInfo = () => {
   // this is for navigate
   const router = useRouter();
   const [submitVerifyInformation, { isLoading }] =
     useSubmitVerifyInformationMutation();
+  const { data: profileData } = useGetUserProfileQuery();
+  const { user } = useAuth();
 
   // useForm setup
   const {
@@ -81,6 +87,35 @@ const VerifyInfo = () => {
       }
       setValue("idBack", file, { shouldValidate: true });
     }
+  };
+
+  const getProviderNames = () => {
+    const profileUser = profileData?.user;
+    const profileFirst = profileUser?.firstName || "";
+    const profileLast = profileUser?.lastName || "";
+    if (profileFirst || profileLast) {
+      return { firstName: profileFirst, lastName: profileLast };
+    }
+    const authFirst = user?.firstName || "";
+    const authLast = user?.lastName || "";
+    if (authFirst || authLast) {
+      return { firstName: authFirst, lastName: authLast };
+    }
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return {
+            firstName: parsed?.firstName || "",
+            lastName: parsed?.lastName || "",
+          };
+        }
+      } catch (error) {
+        console.error("Error reading provider name:", error);
+      }
+    }
+    return { firstName: "", lastName: "" };
   };
 
   const onSubmit = async (data) => {
@@ -407,7 +442,24 @@ const VerifyInfo = () => {
               <input
                 className="verify_checkbox"
                 type="checkbox"
-                {...register("isDifferentOwner", { required: true })}
+                {...register("isDifferentOwner", {
+                  required: true,
+                  onChange: (event) => {
+                    const checked = event.target.checked;
+                    if (checked) {
+                      const { firstName, lastName } = getProviderNames();
+                      setValue("ownerFirstName", firstName, {
+                        shouldValidate: true,
+                      });
+                      setValue("ownerLastName", lastName, {
+                        shouldValidate: true,
+                      });
+                    } else {
+                      setValue("ownerFirstName", "", { shouldValidate: true });
+                      setValue("ownerLastName", "", { shouldValidate: true });
+                    }
+                  },
+                })}
               />
               {errors.isDifferentOwner && (
                 <span className="text-red-500 text-[10px]">
@@ -415,8 +467,7 @@ const VerifyInfo = () => {
                 </span>
               )}
               <p className="text-[11px] text-black">
-                Information of the Registered Owner/Operator is different than
-                you
+                I am owner/operator and authorized to represent the company
               </p>
             </div>
 

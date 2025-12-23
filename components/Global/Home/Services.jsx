@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 import { useRouter } from 'next/navigation';
+import { useGetServicesWithProvidersQuery } from '@/redux/api/servicesApi';
+import { toast } from 'react-hot-toast';
 
 // Helper function to shuffle array randomly
 const shuffleArray = (array) => {
@@ -26,6 +28,11 @@ export default function OurServicesSection() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const {
+    data: servicesData,
+    isLoading: isServicesLoading,
+    isError: isServicesError,
+  } = useGetServicesWithProvidersQuery();
 
   const getSafeImageSrc = (image) => {
     // Handle string URLs, object URLs (e.g., { url }), and fall back when empty
@@ -35,27 +42,36 @@ export default function OurServicesSection() {
   };
 
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/categories/services`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch services');
-        }
-        const data = await response.json();
-        // API returns { success: true, data: { services: [...] } }
-        const servicesArray = data?.data?.services || [];
-        // Shuffle and take 6 random services
-        const randomServices = shuffleArray(servicesArray).slice(0, 6);
-        setServices(randomServices);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    if (isServicesLoading) {
+      setLoading(true);
+      return;
+    }
+    if (isServicesError) {
+      setError('Failed to fetch services');
+      setLoading(false);
+      return;
+    }
+    const apiServices = servicesData?.services || [];
+    const withProviders = apiServices.flatMap((service) => {
+      const providers = Array.isArray(service.providers) ? service.providers : [];
+      if (providers.length === 0) {
+        return [
+          {
+            ...service,
+            providerId: null,
+          },
+        ];
       }
-    };
-
-    fetchServices();
-  }, []);
+      return providers.map((providerId) => ({
+        ...service,
+        providerId,
+      }));
+    });
+    const randomServices = shuffleArray(withProviders).slice(0, 6);
+    setServices(randomServices);
+    setError(null);
+    setLoading(false);
+  }, [isServicesLoading, isServicesError, servicesData]);
 
   return (
     <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
@@ -86,12 +102,20 @@ export default function OurServicesSection() {
               {services.map((service, index) => {
                 const handleClick = (e) => {
                   e.preventDefault();
+                  if (!service.providerId) {
+                    toast.error('No provider available for this service in your area');
+                    return;
+                  }
                   if (!isAuthenticated) {
                     setSelectedService(service);
                     setIsAuthModalOpen(true);
                   } else {
                     // Route to provider profile for authenticated users
-                    router.push('/providerprofile');
+                    router.push(
+                      `/providerprofile?id=${service.providerId}&service=${encodeURIComponent(
+                        service.name || service.title
+                      )}`
+                    );
                   }
                 };
 
@@ -105,11 +129,22 @@ export default function OurServicesSection() {
                     <div className="pt-6 px-6">
                       <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
                         <Image
-                          src={getSafeImageSrc(service.image)}
+                          src={getSafeImageSrc(service.categoryType?.image)}
                           alt={service.name || service.title || 'Service'}
                           fill
                           className="object-cover"
                         />
+                        <div className="absolute top-3 left-3">
+                          {service.providerId ? (
+                            <span className="bg-white/90 text-teal-700 px-3 py-1 rounded-full text-xs font-semibold shadow">
+                              ${service.defaultHourlyRate || 0}/hr
+                            </span>
+                          ) : (
+                            <span className="bg-white/90 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold shadow">
+                              No providers available
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 

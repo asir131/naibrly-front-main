@@ -31,6 +31,13 @@ const Account = () => {
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const profileImageUrl =
+    typeof formData.profileImage === 'string'
+      ? formData.profileImage
+      : formData.profileImage?.url;
+  const isPlaceholderImage =
+    typeof profileImageUrl === 'string' &&
+    profileImageUrl.includes('placehold.co');
 
   // Fetch profile data on component mount
   useEffect(() => {
@@ -283,14 +290,24 @@ const Account = () => {
 
           <div className="flex gap-8">
             <div className="shrink-0">
-              {formData.profileImage?.url ? (
-                <Image
-                  src={formData.profileImage.url}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover"
-                  width={96}
-                  height={96}
-                />
+              {profileImageUrl ? (
+                isPlaceholderImage ? (
+                  <img
+                    src={profileImageUrl}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full object-cover"
+                    width={96}
+                    height={96}
+                  />
+                ) : (
+                  <Image
+                    src={profileImageUrl}
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full object-cover"
+                    width={96}
+                    height={96}
+                  />
+                )
               ) : (
                 <div className="w-24 h-24 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
                   <User className="w-12 h-12 text-white" />
@@ -339,14 +356,24 @@ const Account = () => {
           <div className="flex gap-8">
             <div className="flex-shrink-0">
               <div className="relative">
-                {previewUrl || formData.profileImage?.url ? (
-                  <Image
-                    src={previewUrl || formData.profileImage.url}
-                    alt="Profile preview"
-                    width={96}
-                    height={96}
-                    className="w-24 h-24 rounded-full object-cover"
-                  />
+                {previewUrl || profileImageUrl ? (
+                  previewUrl || !isPlaceholderImage ? (
+                    <Image
+                      src={previewUrl || profileImageUrl}
+                      alt="Profile preview"
+                      width={96}
+                      height={96}
+                      className="w-24 h-24 rounded-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={profileImageUrl}
+                      alt="Profile preview"
+                      width={96}
+                      height={96}
+                      className="w-24 h-24 rounded-full object-cover"
+                    />
+                  )
                 ) : (
                   <div className="w-24 h-24 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center mb-3">
                     <User className="w-12 h-12 text-white" />

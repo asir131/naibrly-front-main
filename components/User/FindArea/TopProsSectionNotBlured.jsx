@@ -21,98 +21,6 @@ const TopProsSectionNotBlured = ({
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(5);
 
-    // User data
-    const profile = [
-        {
-            "name": "Jacob Brothers",
-            "initials": "JB",
-            "rating": 5.0,
-            "reviews": 11,
-            "location": "Street Springfield, IL 62704",
-            "description": "Plumbing Drain Repair, Plumbing Pipe Repair, Plumbing Pipe Installation or Replacement, Sink or Faucet Repair, Sink or Faucet Installation or…",
-            "price": "$100 - 120",
-            "imageUrl": "https://randomuser.me/api/portraits/men/1.jpg",
-            "active": true
-        },
-        {
-            "name": "Alice Smith",
-            "initials": "AS",
-            "rating": 4.8,
-            "reviews": 24,
-            "location": "12 Green Valley, NY 10001",
-            "description": "Electricity Repair, Installation, and Maintenance.",
-            "price": "$80 - 100",
-            "imageUrl": "https://randomuser.me/api/portraits/women/2.jpg",
-            "active": true
-        },
-        {
-            "name": "Samuel James",
-            "initials": "SJ",
-            "rating": 4.9,
-            "reviews": 18,
-            "location": "45 Oak Road, NY 11801",
-            "description": "HVAC Services, Heating Repair, Air Conditioning Installation",
-            "price": "$150 - 200",
-            "imageUrl": "https://randomuser.me/api/portraits/men/3.jpg",
-            "active": false
-        },
-        {
-            "name": "Olivia Turner",
-            "initials": "OT",
-            "rating": 4.7,
-            "reviews": 32,
-            "location": "101 Pine Street, CA 90210",
-            "description": "Carpentry, Furniture Building, Renovation Services",
-            "price": "$120 - 160",
-            "imageUrl": "https://randomuser.me/api/portraits/women/4.jpg",
-            "active": false
-        },
-        {
-            "name": "William Brown",
-            "initials": "WB",
-            "rating": 4.6,
-            "reviews": 16,
-            "location": "321 Oakwood Avenue, TX 75001",
-            "description": "General Handyman Services, Plumbing, and Electrical Repairs",
-            "price": "$90 - 130",
-            "imageUrl": "https://randomuser.me/api/portraits/men/5.jpg",
-            "active": true
-        },
-        {
-            "name": "Sophia Williams",
-            "initials": "SW",
-            "rating": 4.8,
-            "reviews": 10,
-            "location": "9 Maple Avenue, FL 33101",
-            "description": "Roofing Services, Roof Repair and Replacement",
-            "price": "$200 - 250",
-            "imageUrl": "https://randomuser.me/api/portraits/women/6.jpg",
-            "active": true
-        },
-        {
-            "name": "Ethan Davis",
-            "initials": "ED",
-            "rating": 5.0,
-            "reviews": 40,
-            "location": "58 Cedar Boulevard, WA 98001",
-            "description": "Landscaping, Lawn Care, Gardening Services",
-            "price": "$60 - 90",
-            "imageUrl": "https://randomuser.me/api/portraits/men/7.jpg",
-            "active": true
-        },
-        {
-            "name": "Mia Johnson",
-            "initials": "MJ",
-            "rating": 4.7,
-            "reviews": 15,
-            "location": "77 Birchwood, OH 44101",
-            "description": "Painting, Interior and Exterior Home Painting",
-            "price": "$100 - 150",
-            "imageUrl": "https://randomuser.me/api/portraits/women/8.jpg",
-            "active": false
-        }
-    ];
-
     // Transform API providers to display format
     const transformedProviders = useMemo(() => {
         if (!providers || providers.length === 0) return [];
@@ -136,7 +44,7 @@ const TopProsSectionNotBlured = ({
     }, [providers]);
 
     // Use API data if available, otherwise fallback to hardcoded data
-    const displayProfiles = hasSearched && transformedProviders.length > 0 ? transformedProviders : profile;
+    const displayProfiles = transformedProviders;
 
     // Render stars dynamically based on rating
     const renderStars = (rating) => {
@@ -190,8 +98,7 @@ const TopProsSectionNotBlured = ({
                 {/* No Results State */}
                 {hasSearched && !isLoading && transformedProviders.length === 0 && (
                     <div className="text-center py-12">
-                        <p className="text-gray-600 text-lg">No providers found for this service in your area.</p>
-                        <p className="text-gray-500 text-sm mt-2">Try searching with a different service or zip code.</p>
+                        <p className="text-gray-600 text-lg">No providers available in your area.</p>
                     </div>
                 )}
 

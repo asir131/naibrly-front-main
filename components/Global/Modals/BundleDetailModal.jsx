@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import ShareBundleModal from "./ShareBundleModal";
 import { useJoinBundleMutation } from "@/redux/api/servicesApi";
+import { toast } from "react-hot-toast";
 
 // Default avatar placeholder
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop';
@@ -36,7 +37,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
       if (!bundleId) {
         console.error('Bundle ID not found');
-        alert('Unable to join bundle. Please try again.');
+        toast.error('Unable to join bundle. Please try again.');
         return;
       }
 
@@ -54,7 +55,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
       // Show user-friendly error message
       const errorMessage = error?.data?.message || error?.message || 'Failed to join bundle. Please try again.';
-      alert(errorMessage);
+      toast.error(errorMessage);
     }
   };
 

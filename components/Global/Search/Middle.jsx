@@ -3,9 +3,12 @@
 import React, { useState, useMemo } from 'react';
 import { MapPin, Calendar, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import BundleDetailModal from '@/components/Global/Modals/BundleDetailModal';
+import CreateBundleModal from '@/components/Global/Modals/CreateBundleModal';
+import BundlePublishedModal from '@/components/Global/Modals/BundlePublishedModal';
+import ShareBundleModal from '@/components/Global/Modals/ShareBundleModal';
 import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 
 export default function NaibrlybundelOfferSection({
@@ -16,6 +19,7 @@ export default function NaibrlybundelOfferSection({
   hasSearched
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const serviceParam = searchParams.get('service');
   const zipParam = searchParams.get('zip');
   const { isAuthenticated } = useAuth();
@@ -23,6 +27,10 @@ export default function NaibrlybundelOfferSection({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCreateBundleOpen, setIsCreateBundleOpen] = useState(false);
+  const [isBundlePublishedOpen, setIsBundlePublishedOpen] = useState(false);
+  const [isShareBundleOpen, setIsShareBundleOpen] = useState(false);
+  const [createdBundleData, setCreatedBundleData] = useState(null);
 
   // Fallback offers for when no search has been performed
   const fallbackOffers = [
@@ -139,6 +147,42 @@ export default function NaibrlybundelOfferSection({
     setSelectedBundle(null);
   };
 
+  const handleCreateBundle = () => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setIsCreateBundleOpen(true);
+  };
+
+  const handlePublishBundle = (bundleData) => {
+    setCreatedBundleData(bundleData);
+    setIsCreateBundleOpen(false);
+    setIsBundlePublishedOpen(true);
+  };
+
+  const handleShareWithText = () => {
+    setIsBundlePublishedOpen(false);
+    const frontendShareLink = createdBundleData?.sharing?.frontendShareLink;
+    if (frontendShareLink && navigator.share) {
+      navigator.share({
+        title: createdBundleData?.bundle?.title || 'Join my Naibrly Bundle',
+        text: `I've created a bundle on Naibrly! Join me to save money on ${createdBundleData?.bundle?.title || 'services'}.`,
+        url: frontendShareLink,
+      }).catch((error) => console.log('Error sharing:', error));
+    } else if (frontendShareLink) {
+      navigator.clipboard.writeText(frontendShareLink);
+      alert('Share link copied to clipboard!');
+    } else {
+      alert('Share link not available');
+    }
+  };
+
+  const handleShareWithQR = () => {
+    setIsBundlePublishedOpen(false);
+    setIsShareBundleOpen(true);
+  };
+
   // Format time ago (for demo purposes, using creation time if available)
   const getTimeAgo = (bundle) => {
     if (!bundle.createdAt) return 'Recently';
@@ -162,6 +206,26 @@ export default function NaibrlybundelOfferSection({
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         serviceData={selectedBundle}
+      />
+
+      <CreateBundleModal
+        isOpen={isCreateBundleOpen}
+        onClose={() => setIsCreateBundleOpen(false)}
+        onPublish={handlePublishBundle}
+      />
+
+      <BundlePublishedModal
+        isOpen={isBundlePublishedOpen}
+        onClose={() => setIsBundlePublishedOpen(false)}
+        onShareText={handleShareWithText}
+        onShareQR={handleShareWithQR}
+      />
+
+      <ShareBundleModal
+        isOpen={isShareBundleOpen}
+        onClose={() => setIsShareBundleOpen(false)}
+        bundleData={createdBundleData}
+        sharingData={createdBundleData?.sharing}
       />
 
       <div className="bg-linear-to-br from-gray-50 to-blue-50 py-16 px-4 md:px-8 lg:px-16">
@@ -200,7 +264,10 @@ export default function NaibrlybundelOfferSection({
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 text-lg">No bundles found for "{serviceParam}" in {zipParam}.</p>
               <p className="text-gray-500 text-sm mt-2">Be the first to create a bundle and save with your neighbors!</p>
-              <Button className="mt-4 bg-teal-600 hover:bg-teal-700">
+              <Button
+                onClick={handleCreateBundle}
+                className="mt-4 bg-teal-600 hover:bg-teal-700"
+              >
                 Create a Bundle
               </Button>
             </div>
@@ -212,12 +279,19 @@ export default function NaibrlybundelOfferSection({
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Related Services</h3>
               <div className="flex flex-wrap gap-3">
                 {providerResults.relatedServices.map((service) => (
-                  <span
+                  <button
                     key={service._id}
-                    className="bg-white px-4 py-2 rounded-full text-sm text-gray-700 border border-gray-200 hover:border-teal-600 hover:text-teal-600 cursor-pointer transition-colors"
+                    type="button"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      if (service?.name) params.set("service", service.name);
+                      if (zipParam) params.set("zip", zipParam);
+                      router.push(`/find-area?${params.toString()}`);
+                    }}
+                    className="bg-white px-4 py-2 rounded-full text-sm text-gray-700 border border-gray-200 hover:border-teal-600 hover:text-teal-600 transition-colors"
                   >
                     {service.name}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>

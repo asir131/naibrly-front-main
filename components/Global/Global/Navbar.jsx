@@ -679,13 +679,23 @@ export default function Navbar() {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
                   {profileImage ? (
-                    <Image
-                      src={profileImage}
-                      alt="User Profile"
-                      width={40}
-                      height={40}
-                      className="rounded-full w-10 h-10 object-cover"
-                    />
+                    profileImage.includes("placehold.co") ? (
+                      <img
+                        src={profileImage}
+                        alt="User Profile"
+                        width={40}
+                        height={40}
+                        className="rounded-full w-10 h-10 object-cover"
+                      />
+                    ) : (
+                      <Image
+                        src={profileImage}
+                        alt="User Profile"
+                        width={40}
+                        height={40}
+                        className="rounded-full w-10 h-10 object-cover"
+                      />
+                    )
                   ) : (
                     <div className="w-10 h-10 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
                       <UserIcon className="w-6 h-6 text-white" />

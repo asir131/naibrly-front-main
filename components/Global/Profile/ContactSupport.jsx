@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 const ContactSupport = () => {
+  const { user } = useAuth();
   const [selectedIssue, setSelectedIssue] = useState('');
   const [emailContent, setEmailContent] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const issueOptions = [
     'General Inquiry',
@@ -21,14 +26,49 @@ const ContactSupport = () => {
     'Other'
   ];
 
-  const handleSend = () => {
-    if (selectedIssue && emailContent) {
+  const handleSend = async () => {
+    if (!selectedIssue || !emailContent.trim()) return;
+    try {
+      setIsSending(true);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("authToken")
+          : null;
+
+      const payload = {
+        name: user?.firstName || user?.lastName
+          ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+          : undefined,
+        email: user?.email || undefined,
+        category: selectedIssue,
+        subject: selectedIssue,
+        description: emailContent.trim(),
+      };
+
+      const response = await fetch(`${API_BASE_URL}/support/tickets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message || "Failed to send support request.");
+      }
+
       setIsSubmitted(true);
       setTimeout(() => {
         setIsSubmitted(false);
         setSelectedIssue('');
         setEmailContent('');
       }, 3000);
+    } catch (error) {
+      console.error("Support ticket error:", error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -120,10 +160,10 @@ const ContactSupport = () => {
         <div>
           <Button
             onClick={handleSend}
-            disabled={!selectedIssue || !emailContent}
+            disabled={!selectedIssue || !emailContent.trim() || isSending}
             className="px-8 bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Send
+            {isSending ? 'Sending...' : 'Send'}
           </Button>
         </div>
       </div>

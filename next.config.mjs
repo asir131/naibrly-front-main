@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['example.com', 'randomuser.me', 'images.unsplash.com', 'res.cloudinary.com', 'i.pravatar.cc'], // Add your image domains here
+        domains: ['example.com', 'randomuser.me', 'images.unsplash.com', 'res.cloudinary.com', 'i.pravatar.cc', 'placehold.co'], // Add your image domains here
         remotePatterns: [
             {
                 protocol: 'https',
@@ -16,6 +16,11 @@ const nextConfig = {
             {
                 protocol: 'https',
                 hostname: 'i.pravatar.cc',
+                // pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'placehold.co',
                 // pathname: '/**',
             },
         ],

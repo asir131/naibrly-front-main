@@ -76,7 +76,8 @@ export default function UserInfo() {
 
   const [formData, setFormData] = useState({
     businessName: "",
-    businessNameDBA: "",
+    firstName: "",
+    lastName: "",
     businessEmail: "",
     password: "",
     confirmPassword: "",
@@ -177,8 +178,11 @@ export default function UserInfo() {
       submitData.append("providerRole", formData.role);
 
       // Optional scalar fields
-      if (formData.businessNameDBA?.trim()) {
-        submitData.append("businessNameDBA", formData.businessNameDBA.trim());
+      if (formData.firstName?.trim()) {
+        submitData.append("firstName", formData.firstName.trim());
+      }
+      if (formData.lastName?.trim()) {
+        submitData.append("lastName", formData.lastName.trim());
       }
 
       // Business phone (separate from personal phone)
@@ -425,21 +429,33 @@ export default function UserInfo() {
               </p>
             </div>
 
-            <div className="mb-4 relative">
-              <label className="text-[#1C5941] text-[10px] font-semibold absolute left-4 -top-1.5 bg-white px-1">
-                Business Name (DBA)
-              </label>
-              <input
-                type="text"
-                name="businessNameDBA"
-                value={formData.businessNameDBA}
-                onChange={handleChange}
-                className="input_box text-[#333] text-[16px] focus:border-[#1C5941] transition-colors"
-                placeholder="Enter your doing-business-as name"
-              />
-              <p className="text-xs text-gray-500 mt-1 ml-1">
-                Optional - Name used for marketing and branding
-              </p>
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="relative">
+                <label className="text-[#1C5941] text-[10px] font-semibold absolute left-4 -top-1.5 bg-white px-1">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="input_box text-[#333] text-[16px] focus:border-[#1C5941] transition-colors"
+                  placeholder="Enter your first name"
+                />
+              </div>
+              <div className="relative">
+                <label className="text-[#1C5941] text-[10px] font-semibold absolute left-4 -top-1.5 bg-white px-1">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="input_box text-[#333] text-[16px] focus:border-[#1C5941] transition-colors"
+                  placeholder="Enter your last name"
+                />
+              </div>
             </div>
             <div className="mb-4 relative">
               <label className="text-[#1C5941] text-[10px] font-semibold absolute left-4 -top-1.5 bg-white px-1">
@@ -628,12 +644,12 @@ export default function UserInfo() {
 
             <div className="mb-3">
               <input
-                type="url"
+                type="text"
                 name="website"
                 value={formData.website}
                 onChange={handleChange}
                 className="input_box text-[#999] text-[16px]"
-                placeholder="Website website"
+                placeholder="Website"
               />
             </div>
 

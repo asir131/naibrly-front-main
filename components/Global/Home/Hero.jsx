@@ -11,10 +11,12 @@ import { useRouter } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NaibrlyHeroSection() {
   const router = useRouter();
   const customerZipCode = useCustomerZipCode();
+  const { user, userType, isAuthenticated } = useAuth();
 
   // Fetch services from API
   const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
@@ -54,10 +56,19 @@ export default function NaibrlyHeroSection() {
   }, [serviceOptions, filteredServices.length, searchQuery]);
 
   useEffect(() => {
-    if (!zipCode && customerZipCode) {
-      setZipCode(customerZipCode);
+    if (zipCode) return;
+    const authZip =
+      (isAuthenticated &&
+        (user?.address?.zipCode ||
+          user?.zipCode ||
+          user?.businessAddress?.zipCode ||
+          user?.businessAddress?.zip)) ||
+      "";
+    const resolvedZip = authZip || customerZipCode;
+    if (resolvedZip) {
+      setZipCode(resolvedZip);
     }
-  }, [customerZipCode, zipCode]);
+  }, [customerZipCode, isAuthenticated, user, userType, zipCode]);
 
   // Filter services based on search query
   const handleServiceSearch = (value) => {

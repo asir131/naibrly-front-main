@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useGetBundleByTokenQuery, useJoinBundleByTokenMutation } from '@/redux/api/servicesApi';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, Clock, MapPin, Users, DollarSign, CheckCircle2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function JoinBundlePage() {
   const params = useParams();
@@ -59,7 +60,9 @@ export default function JoinBundlePage() {
         setShowSuccessModal(true);
       } else {
         // Show error for other issues
-        alert(errorMessage || 'Failed to join bundle. Please try again.');
+        toast.error(
+          errorMessage || 'Failed to join bundle. Please try again.'
+        );
         setIsJoining(false);
       }
     }

@@ -45,46 +45,6 @@ export default function OurServicesSection({ serviceType, zipCode }) {
     }
   }, [zipCode, customerZipCode, localZipCode]);
 
-  // Fallback static services for when API fails or is loading
-  const fallbackServices = [
-    {
-      title: 'Appliance Repairs',
-      description: 'Expert repair services for all your home appliances',
-      image: "/LandingService/image (7).png",
-      hourlyRate: null,
-    },
-    {
-      title: 'House Cleaning',
-      description: 'Professional cleaning services for your home',
-      image: "/LandingService/image (7).png",
-      hourlyRate: null,
-    },
-    {
-      title: 'Window Washing',
-      description: 'Crystal clear window cleaning services',
-      image: "/LandingService/image (7).png",
-      hourlyRate: null,
-    },
-    {
-      title: 'Bathroom Remodeling',
-      description: 'Complete bathroom renovation services',
-      image: "/LandingService/image (7).png",
-      hourlyRate: null,
-    },
-    {
-      title: 'Landscaping Design',
-      description: 'Beautiful landscape design and maintenance',
-      image: "/LandingService/image (7).png",
-      hourlyRate: null,
-    },
-    {
-      title: 'TV Mounting',
-      description: 'Professional TV installation and mounting',
-      image: "/LandingService/image (7).png",
-      hourlyRate: null,
-    }
-  ];
-
   // Transform provider data from search API
   const providers = React.useMemo(() => {
     if (!serviceType || providersLoading || providersError || !providersData?.providers) {
@@ -117,7 +77,7 @@ export default function OurServicesSection({ serviceType, zipCode }) {
   // Transform API data to match component structure (fallback services)
   const services = React.useMemo(() => {
     if (isLoading || isError || !data?.services || data.services.length === 0) {
-      return fallbackServices;
+      return [];
     }
 
     return data.services
@@ -128,7 +88,7 @@ export default function OurServicesSection({ serviceType, zipCode }) {
         description: service.hourlyRate
           ? `Professional ${service.serviceName.toLowerCase()} services - $${service.hourlyRate}/hour`
           : `Professional ${service.serviceName.toLowerCase()} services`,
-        image: "/LandingService/image (7).png",
+        image: service.categoryType?.image?.url || "/LandingService/image (7).png",
         hourlyRate: service.hourlyRate,
         providerId: service.providerId,
       }));
@@ -352,7 +312,18 @@ export default function OurServicesSection({ serviceType, zipCode }) {
           )}
 
           {/* Services Grid (Fallback when no serviceType) */}
-          {!serviceType && !currentLoading && (
+          {!serviceType && !currentLoading && services.length === 0 && !currentError && (
+            <div className="text-center py-16">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No providers available
+              </h3>
+              <p className="text-gray-600">
+                There’s no provider providing any services in your area.
+              </p>
+            </div>
+          )}
+
+          {!serviceType && !currentLoading && services.length > 0 && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {services.map((service, index) => (
                 <div

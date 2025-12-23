@@ -10,17 +10,58 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from '@/hooks/useAuth';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 export default function ContactSupportSection() {
+  const { user } = useAuth();
   const [issue, setIssue] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSend = () => {
-    console.log('Issue:', issue);
-    console.log('Message:', message);
-    // Handle form submission logic here
-    setIsSubmitted(true);
+  const handleSend = async () => {
+    if (!issue) return;
+    if (!message.trim()) return;
+
+    try {
+      setIsSending(true);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("authToken")
+          : null;
+
+      const payload = {
+        name: user?.firstName || user?.lastName
+          ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+          : undefined,
+        email: user?.email || undefined,
+        category: issue,
+        subject: issue,
+        description: message.trim(),
+      };
+
+      const response = await fetch(`${API_BASE_URL}/support/tickets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message || "Failed to send support request.");
+      }
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Support ticket error:", error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -48,16 +89,16 @@ export default function ContactSupportSection() {
                         <SelectValue placeholder="Select one Issue" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">General Inquiry</SelectItem>
-                        <SelectItem value="account">Account Help</SelectItem>
-                        <SelectItem value="billing">Billing & Payments</SelectItem>
-                        <SelectItem value="technical">Technical Support (App/Website Issues)</SelectItem>
-                        <SelectItem value="verification">Service Provider Verification</SelectItem>
-                        <SelectItem value="report-provider">Report a Problem with a Service Provider</SelectItem>
-                        <SelectItem value="report-customer">Report a Problem with a Customer</SelectItem>
-                        <SelectItem value="scheduling">Scheduling or Booking Issues</SelectItem>
-                        <SelectItem value="feedback">Feedback & Suggestions</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                        <SelectItem value="Account Help">Account Help</SelectItem>
+                        <SelectItem value="Billing & Payments">Billing & Payments</SelectItem>
+                        <SelectItem value="Technical Support (App/Website Issues)">Technical Support (App/Website Issues)</SelectItem>
+                        <SelectItem value="Service Provider Verification">Service Provider Verification</SelectItem>
+                        <SelectItem value="Report a Problem with a Service Provider">Report a Problem with a Service Provider</SelectItem>
+                        <SelectItem value="Report a Problem with a Customer">Report a Problem with a Customer</SelectItem>
+                        <SelectItem value="Scheduling or Booking Issues">Scheduling or Booking Issues</SelectItem>
+                        <SelectItem value="Feedback & Suggestions">Feedback & Suggestions</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -79,9 +120,10 @@ export default function ContactSupportSection() {
                   <div className="flex justify-end">
                     <Button 
                       onClick={handleSend}
-                      className="bg-white text-teal-600 border-2 border-teal-600 hover:bg-teal-50 px-8 py-2 font-semibold rounded-md"
+                      disabled={isSending || !issue || !message.trim()}
+                      className="bg-white text-teal-600 border-2 border-teal-600 hover:bg-teal-50 px-8 py-2 font-semibold rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Send
+                      {isSending ? "Sending..." : "Send"}
                     </Button>
                   </div>
                 </div>

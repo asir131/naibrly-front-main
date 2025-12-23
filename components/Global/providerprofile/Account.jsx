@@ -1,29 +1,33 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useGetUserProfileQuery, useUpdateProviderProfileMutation } from '@/redux/api/servicesApi';
+import React, { useState, useEffect } from "react";
+import {
+  useGetUserProfileQuery,
+  useUpdateProviderProfileMutation,
+} from "@/redux/api/servicesApi";
 
 const Account = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileFile, setProfileFile] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [accountData, setAccountData] = useState({
-    firstName: 'Jacob',
-    lastName: 'Meikle',
-    role: 'Owner',
-    email: 'email@outlook.com',
-    phone: '+1 012 345 6987',
-    address: '123 Oak Street Springfield, IL 62704',
-    businessDaysFrom: 'Mon',
-    businessDaysTo: 'Fri',
-    businessHoursFrom: '09:00 AM',
-    businessHoursTo: '06:00PM',
-    joinedDate: '',
+    firstName: "Jacob",
+    lastName: "Meikle",
+    role: "Owner",
+    email: "email@outlook.com",
+    phone: "+1 012 345 6987",
+    address: "123 Oak Street Springfield, IL 62704",
+    businessDaysFrom: "Mon",
+    businessDaysTo: "Fri",
+    businessHoursFrom: "09:00 AM",
+    businessHoursTo: "06:00PM",
+    joinedDate: "",
   });
 
   const [formData, setFormData] = useState({ ...accountData });
   const { data, isLoading, isError, error, refetch } = useGetUserProfileQuery();
-  const [updateProfile, { isLoading: isSaving }] = useUpdateProviderProfileMutation();
+  const [updateProfile, { isLoading: isSaving }] =
+    useUpdateProviderProfileMutation();
   const user = data?.user;
 
   // Map API data into local state once loaded
@@ -32,30 +36,41 @@ const Account = () => {
     if (!user) return;
 
     const address = user.businessAddress
-      ? [user.businessAddress.street, user.businessAddress.city, user.businessAddress.state, user.businessAddress.zipCode]
+      ? [
+          user.businessAddress.street,
+          user.businessAddress.city,
+          user.businessAddress.state,
+          user.businessAddress.zipCode,
+        ]
           .filter(Boolean)
-          .join(', ')
-      : '';
+          .join(", ")
+      : "";
 
     const businessDaysFrom = user.businessServiceDays?.start
-      ? user.businessServiceDays.start.charAt(0).toUpperCase() + user.businessServiceDays.start.slice(1, 3)
-      : 'Mon';
+      ? user.businessServiceDays.start.charAt(0).toUpperCase() +
+        user.businessServiceDays.start.slice(1, 3)
+      : "Mon";
     const businessDaysTo = user.businessServiceDays?.end
-      ? user.businessServiceDays.end.charAt(0).toUpperCase() + user.businessServiceDays.end.slice(1, 3)
-      : 'Fri';
+      ? user.businessServiceDays.end.charAt(0).toUpperCase() +
+        user.businessServiceDays.end.slice(1, 3)
+      : "Fri";
 
-    const businessHoursFrom = user.businessHours?.start || '09:00 AM';
-    const businessHoursTo = user.businessHours?.end || '06:00PM';
+    const businessHoursFrom = user.businessHours?.start || "09:00 AM";
+    const businessHoursTo = user.businessHours?.end || "06:00PM";
     const joinedDate = user.createdAt
-      ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : '';
+      ? new Date(user.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "";
 
     const mapped = {
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      role: user.providerRole || 'Owner',
-      email: user.email || '',
-      phone: user.phone || '',
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      role: user.providerRole || "Owner",
+      email: user.email || "",
+      phone: user.phone || "",
       address,
       businessDaysFrom,
       businessDaysTo,
@@ -67,15 +82,15 @@ const Account = () => {
     setFormData(mapped);
   }, [data]);
 
-  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const generateTimeOptions = () => {
     const times = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        const period = hour >= 12 ? 'pm' : 'am';
+        const period = hour >= 12 ? "pm" : "am";
         const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-        const displayMinute = minute.toString().padStart(2, '0');
+        const displayMinute = minute.toString().padStart(2, "0");
         times.push(`${displayHour}:${displayMinute} ${period}`);
       }
     }
@@ -99,13 +114,14 @@ const Account = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       phone: formData.phone,
-      businessNameRegistered: formData.businessNameRegistered || user?.businessNameRegistered,
+      businessNameRegistered:
+        formData.businessNameRegistered || user?.businessNameRegistered,
       description: formData.description || user?.description,
       experience: formData.experience || user?.experience,
       maxBundleCapacity: formData.maxBundleCapacity || user?.maxBundleCapacity,
       businessServiceDays: {
-        start: (formData.businessDaysFrom || '').toLowerCase(),
-        end: (formData.businessDaysTo || '').toLowerCase(),
+        start: (formData.businessDaysFrom || "").toLowerCase(),
+        end: (formData.businessDaysTo || "").toLowerCase(),
       },
       businessHours: {
         start: formData.businessHoursFrom,
@@ -122,7 +138,7 @@ const Account = () => {
         setIsEditing(false);
       })
       .catch((err) => {
-        console.error('Failed to update profile:', err);
+        console.error("Failed to update profile:", err);
       });
   };
 
@@ -146,7 +162,7 @@ const Account = () => {
     return (
       <div className="flex-1 p-8">
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
-          <span>{error?.data?.message || 'Failed to load profile.'}</span>
+          <span>{error?.data?.message || "Failed to load profile."}</span>
           <button
             onClick={() => refetch()}
             className="px-3 py-1 rounded-md bg-white border border-red-200 text-red-700 hover:bg-red-100 transition"
@@ -175,14 +191,21 @@ const Account = () => {
           {/* Profile Picture */}
           <div className="flex-shrink-0">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-teal-600 flex items-center justify-center">
-              {data?.user?.profileImage?.url || data?.user?.businessLogo?.url ? (
+              {data?.user?.profileImage?.url ||
+              data?.user?.businessLogo?.url ? (
                 <img
-                  src={data.user.profileImage?.url || data.user.businessLogo?.url}
+                  src={
+                    data.user.profileImage?.url || data.user.businessLogo?.url
+                  }
                   alt={accountData.firstName}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-12 h-12 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -196,7 +219,11 @@ const Account = () => {
           {/* Account Details */}
           <div className="flex-1 space-y-4">
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -209,7 +236,11 @@ const Account = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -220,7 +251,12 @@ const Account = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -232,7 +268,12 @@ const Account = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -244,7 +285,12 @@ const Account = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -262,7 +308,12 @@ const Account = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -271,13 +322,19 @@ const Account = () => {
                 />
               </svg>
               <span className="text-gray-700">
-                {accountData.businessDaysFrom} - {accountData.businessDaysTo} &nbsp;&nbsp;
+                {accountData.businessDaysFrom} - {accountData.businessDaysTo}{" "}
+                &nbsp;&nbsp;
                 {accountData.businessHoursFrom} - {accountData.businessHoursTo}
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -285,7 +342,9 @@ const Account = () => {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-gray-700">Joined: {accountData.joinedDate || '—'}</span>
+              <span className="text-gray-700">
+                Joined: {accountData.joinedDate || "—"}
+              </span>
             </div>
           </div>
         </div>
@@ -309,14 +368,19 @@ const Account = () => {
                 alt={formData.firstName}
                 className="w-full h-full object-cover rounded-full"
               />
-            ) : data?.user?.profileImage?.url || data?.user?.businessLogo?.url ? (
+            ) : data?.user?.profileImage?.url ||
+              data?.user?.businessLogo?.url ? (
               <img
                 src={data.user.profileImage?.url || data.user.businessLogo?.url}
                 alt={formData.firstName}
                 className="w-full h-full object-cover rounded-full"
               />
             ) : (
-              <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-12 h-12 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
@@ -334,7 +398,9 @@ const Account = () => {
           />
           <button
             className="text-sm text-teal-600 hover:text-teal-700"
-            onClick={() => document.getElementById('profileImageInput')?.click()}
+            onClick={() =>
+              document.getElementById("profileImageInput")?.click()
+            }
           >
             Upload a new photo
           </button>
@@ -348,11 +414,17 @@ const Account = () => {
             />
             <button
               className="text-sm text-teal-600 hover:text-teal-700"
-              onClick={() => document.getElementById('businessLogoInput')?.click()}
+              onClick={() =>
+                document.getElementById("businessLogoInput")?.click()
+              }
             >
-              Upload business logo
+              Upload/update logo
             </button>
-            {logoFile && <p className="text-xs text-gray-500 mt-1">Selected: {logoFile.name}</p>}
+            {logoFile && (
+              <p className="text-xs text-gray-500 mt-1 w-48 truncate">
+                Selected: {logoFile.name}
+              </p>
+            )}
           </div>
         </div>
 
@@ -361,7 +433,9 @@ const Account = () => {
           {/* Name Fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                First Name
+              </label>
               <input
                 type="text"
                 name="firstName"
@@ -372,7 +446,9 @@ const Account = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Last Name
+              </label>
               <input
                 type="text"
                 name="lastName"
@@ -386,7 +462,9 @@ const Account = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -399,9 +477,14 @@ const Account = () => {
 
           {/* Phone Number */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone Number
+            </label>
             <div className="flex gap-2">
-              <select className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" defaultValue="1+">
+              <select
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                defaultValue="1+"
+              >
                 <option>1+</option>
                 <option>44+</option>
                 <option>91+</option>
@@ -419,7 +502,9 @@ const Account = () => {
 
           {/* Address */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Address
+            </label>
             <input
               type="text"
               name="address"
@@ -432,7 +517,9 @@ const Account = () => {
 
           {/* Business Service Days */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Business Service Days</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Business Service Days
+            </label>
             <div className="flex items-center gap-3">
               <select
                 name="businessDaysFrom"
@@ -464,7 +551,9 @@ const Account = () => {
 
           {/* Business Hours */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Business Hours</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Business Hours
+            </label>
             <div className="flex items-center gap-3">
               <select
                 name="businessHoursFrom"
@@ -507,7 +596,7 @@ const Account = () => {
               className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors disabled:opacity-60"
               disabled={isSaving}
             >
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </div>

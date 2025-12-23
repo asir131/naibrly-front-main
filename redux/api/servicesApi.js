@@ -282,6 +282,18 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Get services with providers for the customer's zip code
+    getServicesWithProviders: builder.query({
+      query: () => '/categories/services',
+      providesTags: ['Services'],
+      transformResponse: (response) => {
+        if (!response || !response.success || !response.data) {
+          return { services: [], zipCode: null };
+        }
+        return response.data;
+      },
+    }),
+
     // Get services by category
     getServicesByCategory: builder.query({
       query: (categoryId) => `/categories/${categoryId}/services`,
@@ -1307,6 +1319,7 @@ export const {
   useCreateWithdrawalRequestMutation,
   // Service hooks
   useGetServicesQuery,
+  useGetServicesWithProvidersQuery,
   useGetServicesByCategoryQuery,
   useGetServiceByIdQuery,
   useGetMyServiceRequestsQuery,
