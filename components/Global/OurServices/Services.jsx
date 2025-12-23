@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 import { useRouter } from 'next/navigation';
 import { useGetNearbyServicesQuery, useSearchProvidersByServiceQuery } from '@/redux/api/servicesApi';

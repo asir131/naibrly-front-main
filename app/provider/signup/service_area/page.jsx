@@ -40,7 +40,13 @@ const ServiceArea = () => {
   const handleAddZipCode = (e) => {
     const zipCode = watch("zipCode");
     if (zipCode && zipCode.trim() !== "") {
-      setZipCodes((prev) => [...prev, zipCode.trim()]);
+      setZipCodes((prev) => {
+        const normalized = zipCode.trim();
+        if (prev.includes(normalized)) {
+          return prev;
+        }
+        return [...prev, normalized];
+      });
       setValue("zipCode", ""); // Clear input after adding
     }
   };
@@ -52,16 +58,21 @@ const ServiceArea = () => {
   // this is for onsubmit function
   const onSubmit = async (data) => {
     try {
-      // The API expects { zipCode: "12345" }
-      // If you need to send the current zip code
-      const zipCode = data.zipCode || zipCodes[zipCodes.length - 1];
+      const currentZip = data.zipCode?.trim();
+      const combinedZips = [
+        ...zipCodes,
+        ...(currentZip ? [currentZip] : []),
+      ];
+      const uniqueZips = Array.from(new Set(combinedZips));
 
-      if (!zipCode) {
+      if (uniqueZips.length === 0) {
         toast.error("Please enter a zip code");
         return;
       }
 
-      await updateProviderZipCode({ zipCode }).unwrap();
+      for (const zipCode of uniqueZips) {
+        await updateProviderZipCode({ zipCode }).unwrap();
+      }
 
       toast.success("Service area updated successfully!");
       router.push("/provider/signup/confirm_info");
@@ -79,24 +90,6 @@ const ServiceArea = () => {
       <div className="verify_info_form md:px-[126px] md:py-[80px]">
         <div className="lg:w-[526px] w-full">
           <h2 className="user_info_heading flex items-center lg:gap-[145px] pb-5 w-full">
-            <span onClick={handleBack} className="cursor-pointer">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M9.07 6L3 12.07L9.07 18.14M20.0019 12.0703H3.17188"
-                  stroke="#111111"
-                  strokeWidth="1.5"
-                  strokeMiterlimit="10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
             <span className="whitespace-nowrap">Your Information</span>
           </h2>
           <form onSubmit={handleSubmit(onSubmit)} className="w-full">

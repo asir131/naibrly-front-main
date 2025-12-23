@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { X, Copy } from 'lucide-react';
 import { useState } from 'react';
-import Image from 'next/image';
 
 export default function ShareBundleModal({ isOpen, onClose, bundleData, sharingData }) {
   const [copied, setCopied] = useState(false);
@@ -19,8 +18,16 @@ export default function ShareBundleModal({ isOpen, onClose, bundleData, sharingD
 
   const bundleTitle = bundleData?.title || bundleData?.bundle?.title || bundleData?.service || 'Bundle';
 
-  // Use backend QR code if available
-  const qrCodeSrc = sharingData?.qrCode || '/QR Code.png';
+  const backendQrMatchesShareUrl =
+    Boolean(sharingData?.qrCode) &&
+    (!sharingData?.frontendShareLink ||
+      !sharingData?.shareLink ||
+      sharingData?.frontendShareLink === sharingData?.shareLink);
+
+  const qrCodeFallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}`;
+  const qrCodeSrc = backendQrMatchesShareUrl
+    ? sharingData?.qrCode
+    : qrCodeFallbackUrl;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -70,23 +77,11 @@ export default function ShareBundleModal({ isOpen, onClose, bundleData, sharingD
           {/* QR Code */}
           <div className="flex justify-center mb-6">
             <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
-              {qrCodeSrc.startsWith('data:image') ? (
-                // If QR code is base64 from backend, use img tag
-                <img
-                  src={qrCodeSrc}
-                  alt="QR Code"
-                  className="w-48 h-48 object-contain"
-                />
-              ) : (
-                // Otherwise use Next.js Image component for static images
-                <Image
-                  src={qrCodeSrc}
-                  alt="QR Code"
-                  width={200}
-                  height={200}
-                  className="w-48 h-48 object-contain"
-                />
-              )}
+              <img
+                src={qrCodeSrc}
+                alt="QR Code"
+                className="w-48 h-48 object-contain"
+              />
             </div>
           </div>
 

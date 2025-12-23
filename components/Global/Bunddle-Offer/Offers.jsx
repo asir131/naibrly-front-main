@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import BundleDetailModal from "@/components/Global/Modals/BundleDetailModal";
 import CreateBundleModal from "@/components/Global/Modals/CreateBundleModal";
 import BundlePublishedModal from "@/components/Global/Modals/BundlePublishedModal";

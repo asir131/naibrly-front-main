@@ -2,13 +2,14 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { IoIosArrowDown } from "react-icons/io";
-import { useSubmitPayoutInformationMutation } from '@/redux/api/servicesApi';
-import { toast } from 'react-hot-toast';
+import { useSubmitPayoutInformationMutation } from "@/redux/api/servicesApi";
+import { toast } from "react-hot-toast";
 
 export default function PayoutInfo() {
   // this is for navigate
   const router = useRouter();
-  const [submitPayoutInformation, { isLoading }] = useSubmitPayoutInformationMutation();
+  const [submitPayoutInformation, { isLoading }] =
+    useSubmitPayoutInformationMutation();
 
   // this is for handle back
   const handleBack = () => {
@@ -25,22 +26,25 @@ export default function PayoutInfo() {
   const onSubmit = async (data) => {
     try {
       // Check if user is authenticated
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("authToken")
+          : null;
       if (!token) {
-        toast.error('Please log in to continue');
+        toast.error("Please log in to continue");
         return;
       }
 
       // Map bank codes to full bank names
       const bankNameMap = {
-        'BOFA': 'Bank of America',
-        'CHASE': 'Chase Bank',
-        'WELLS': 'Wells Fargo',
-        'CITI': 'Citibank',
-        'USB': 'US Bank',
-        'PNC': 'PNC Bank',
-        'TD': 'TD Bank',
-        'COF': 'Capital One'
+        BOFA: "Bank of America",
+        CHASE: "Chase Bank",
+        WELLS: "Wells Fargo",
+        CITI: "Citibank",
+        USB: "US Bank",
+        PNC: "PNC Bank",
+        TD: "TD Bank",
+        COF: "Capital One",
       };
 
       // Prepare the payload according to the API requirements
@@ -50,41 +54,49 @@ export default function PayoutInfo() {
         bankCode: data.bank_name,
         accountNumber: data.bank_account,
         routingNumber: data.routing_number,
-        accountType: data.account_type || "checking"
+        accountType: data.account_type || "checking",
       };
 
       // Log what we're sending
-      console.log('Submitting payout information:', payoutData);
+      console.log("Submitting payout information:", payoutData);
 
       await submitPayoutInformation(payoutData).unwrap();
 
-      toast.success('Payout information saved successfully!');
-      router.push("/provider/signup/analytics");
+      toast.success("Payout information saved successfully!");
+      router.push("/");
     } catch (error) {
-      console.error('Payout submission error:', error);
+      console.error("Payout submission error:", error);
 
       // Enhanced error logging
       if (error?.data) {
-        console.error('Backend error details:', error.data);
+        console.error("Backend error details:", error.data);
         if (error.data.errors) {
-          console.error('Validation errors:', error.data.errors);
+          console.error("Validation errors:", error.data.errors);
         }
       }
 
-      let errorMessage = 'Failed to submit payout information. Please try again.';
+      let errorMessage =
+        "Failed to submit payout information. Please try again.";
 
       // Handle different error scenarios
       if (error?.data?.message) {
         errorMessage = error.data.message;
-      } else if (error?.status === 'UNKNOWN_ERROR' || error?.originalStatus === undefined) {
-        errorMessage = 'Network error: Unable to connect to the server. Please check your internet connection.';
+      } else if (
+        error?.status === "UNKNOWN_ERROR" ||
+        error?.originalStatus === undefined
+      ) {
+        errorMessage =
+          "Network error: Unable to connect to the server. Please check your internet connection.";
       } else if (error?.status === 401) {
-        errorMessage = 'Authentication required. Please log in again.';
+        errorMessage = "Authentication required. Please log in again.";
       } else if (error?.status === 403) {
-        errorMessage = 'You do not have permission to perform this action.';
+        errorMessage = "You do not have permission to perform this action.";
       } else if (error?.data?.errors && Array.isArray(error.data.errors)) {
         if (error.data.errors.length > 0) {
-          errorMessage = error.data.errors[0].msg || error.data.errors[0].message || errorMessage;
+          errorMessage =
+            error.data.errors[0].msg ||
+            error.data.errors[0].message ||
+            errorMessage;
         }
       } else if (error?.message) {
         errorMessage = error.message;
@@ -97,25 +109,7 @@ export default function PayoutInfo() {
     <div className="user_info_layout md:px-[126px] md:py-[80px] max-sm:my-6 max-sm:mx-6">
       <div className="confirm_info_layout md:px-[200px] md:py-[100px] flex  justify-center items-center">
         <form onSubmit={handleSubmit(onSubmit)} className="lg:w-[353px] w-full">
-          <div className="user_info_heading flex items-center gap-[98px] pb-5">
-            <span className="cursor-pointer" onClick={handleBack}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M9.07 6L3 12.07L9.07 18.14M20.0019 12.0703H3.17188"
-                  stroke="#111111"
-                  strokeWidth="1.5"
-                  strokeMiterlimit="10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
+          <div className="user_info_heading flex items-center md:ml-6 gap-[98px] pb-5">
             <span>Payout Information</span>
           </div>
           <div className="flex flex-col justify-center items-center">
@@ -155,7 +149,9 @@ export default function PayoutInfo() {
                     className="input_box text-[#999] text-[16px]"
                     {...register("bank_name", { required: true })}
                   >
-                    <option value="" disabled>Choose your bank</option>
+                    <option value="" disabled>
+                      Choose your bank
+                    </option>
                     <option value="BOFA">Bank of America (BOFA)</option>
                     <option value="CHASE">Chase Bank (CHASE)</option>
                     <option value="WELLS">Wells Fargo (WELLS)</option>
@@ -180,13 +176,16 @@ export default function PayoutInfo() {
                   className="input_box text-[16px] w-full"
                   type="text"
                   placeholder="1234567890"
-                  {...register("bank_account", { required: true, pattern: /^[0-9]+$/ })}
+                  {...register("bank_account", {
+                    required: true,
+                    pattern: /^[0-9]+$/,
+                  })}
                 />
                 {errors.bank_account && (
                   <span className="text-red-500 text-[10px]">
-                    {errors.bank_account.type === 'pattern'
-                      ? 'Please enter a valid account number (digits only)'
-                      : 'This field is required'}
+                    {errors.bank_account.type === "pattern"
+                      ? "Please enter a valid account number (digits only)"
+                      : "This field is required"}
                   </span>
                 )}
               </div>
@@ -203,14 +202,16 @@ export default function PayoutInfo() {
                     required: true,
                     pattern: /^[0-9]{9}$/,
                     minLength: 9,
-                    maxLength: 9
+                    maxLength: 9,
                   })}
                 />
                 {errors.routing_number && (
                   <span className="text-red-500 text-[10px]">
-                    {errors.routing_number.type === 'pattern' || errors.routing_number.type === 'minLength' || errors.routing_number.type === 'maxLength'
-                      ? 'Routing number must be exactly 9 digits'
-                      : 'This field is required'}
+                    {errors.routing_number.type === "pattern" ||
+                    errors.routing_number.type === "minLength" ||
+                    errors.routing_number.type === "maxLength"
+                      ? "Routing number must be exactly 9 digits"
+                      : "This field is required"}
                   </span>
                 )}
               </div>
@@ -277,14 +278,30 @@ export default function PayoutInfo() {
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     <span>Saving...</span>
                   </>
                 ) : (
-                  'Confirm'
+                  "Confirm"
                 )}
               </button>
             </div>

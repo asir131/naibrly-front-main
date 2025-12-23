@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import BundleDetailModal from '@/components/Global/Modals/BundleDetailModal';
 import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
 

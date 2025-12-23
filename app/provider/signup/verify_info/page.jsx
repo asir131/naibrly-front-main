@@ -4,13 +4,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useSubmitVerifyInformationMutation } from '@/redux/api/servicesApi';
-import { toast } from 'react-hot-toast';
+import { useSubmitVerifyInformationMutation } from "@/redux/api/servicesApi";
+import { toast } from "react-hot-toast";
 
 const VerifyInfo = () => {
   // this is for navigate
   const router = useRouter();
-  const [submitVerifyInformation, { isLoading }] = useSubmitVerifyInformationMutation();
+  const [submitVerifyInformation, { isLoading }] =
+    useSubmitVerifyInformationMutation();
 
   // useForm setup
   const {
@@ -34,8 +35,10 @@ const VerifyInfo = () => {
     if (file) {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size too large. Please upload a file smaller than 10MB.');
-        e.target.value = '';
+        toast.error(
+          "File size too large. Please upload a file smaller than 10MB."
+        );
+        e.target.value = "";
         return;
       }
       setValue("insuranceFile", file, { shouldValidate: true });
@@ -55,8 +58,10 @@ const VerifyInfo = () => {
     if (file) {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size too large. Please upload a file smaller than 10MB.');
-        e.target.value = '';
+        toast.error(
+          "File size too large. Please upload a file smaller than 10MB."
+        );
+        e.target.value = "";
         return;
       }
       setValue("idFront", file, { shouldValidate: true });
@@ -68,8 +73,10 @@ const VerifyInfo = () => {
     if (file) {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size too large. Please upload a file smaller than 10MB.');
-        e.target.value = '';
+        toast.error(
+          "File size too large. Please upload a file smaller than 10MB."
+        );
+        e.target.value = "";
         return;
       }
       setValue("idBack", file, { shouldValidate: true });
@@ -79,26 +86,31 @@ const VerifyInfo = () => {
   const onSubmit = async (data) => {
     try {
       // Check if user is authenticated
-      const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("authToken")
+          : null;
       if (!token) {
-        toast.error('Please log in to continue. You need to be authenticated to submit verification information.');
-        console.error('No auth token found. User needs to log in.');
+        toast.error(
+          "Please log in to continue. You need to be authenticated to submit verification information."
+        );
+        console.error("No auth token found. User needs to log in.");
         return;
       }
 
       // Validate required fields
       if (!data.insuranceFile) {
-        toast.error('Insurance document is required');
+        toast.error("Insurance document is required");
         return;
       }
 
       if (!data.idFront) {
-        toast.error('ID front side is required');
+        toast.error("ID front side is required");
         return;
       }
 
       if (!data.idBack) {
-        toast.error('ID back side is required');
+        toast.error("ID back side is required");
         return;
       }
 
@@ -106,61 +118,73 @@ const VerifyInfo = () => {
       const submitData = new FormData();
 
       // Required fields from backend: einNumber, firstName, lastName, businessRegisteredCountry, insuranceDocument, idFront, idBack
-      submitData.append('einNumber', data.einNumber.trim());
-      submitData.append('firstName', data.ownerFirstName.trim());
-      submitData.append('lastName', data.ownerLastName.trim());
-      submitData.append('businessRegisteredCountry', data.businessRegisteredCountry);
+      submitData.append("einNumber", data.einNumber.trim());
+      submitData.append("firstName", data.ownerFirstName.trim());
+      submitData.append("lastName", data.ownerLastName.trim());
+      submitData.append(
+        "businessRegisteredCountry",
+        data.businessRegisteredCountry
+      );
 
       // All document files are REQUIRED
-      submitData.append('insuranceDocument', data.insuranceFile);
-      submitData.append('idCardFront', data.idFront);
-      submitData.append('idCardBack', data.idBack);
+      submitData.append("insuranceDocument", data.insuranceFile);
+      submitData.append("idCardFront", data.idFront);
+      submitData.append("idCardBack", data.idBack);
 
       // Log what we're sending
-      console.log('Submitting verify information:');
+      console.log("Submitting verify information:");
       for (let pair of submitData.entries()) {
-        console.log(pair[0] + ':', pair[1]);
+        console.log(pair[0] + ":", pair[1]);
       }
 
       await submitVerifyInformation(submitData).unwrap();
 
-      toast.success('Verification information submitted successfully!');
+      toast.success("Verification information submitted successfully!");
       router.push("/provider/signup/service_area");
     } catch (error) {
-      console.error('Verification submission error:', error);
+      console.error("Verification submission error:", error);
 
       // Enhanced error logging
       if (error?.data) {
-        console.error('Backend error details:', error.data);
+        console.error("Backend error details:", error.data);
         if (error.data.errors) {
-          console.error('Validation errors:', error.data.errors);
+          console.error("Validation errors:", error.data.errors);
         }
       }
 
       // Log the full error structure to help debug
-      console.error('Full error object:', {
+      console.error("Full error object:", {
         status: error?.status,
         data: error?.data,
         message: error?.message,
         originalStatus: error?.originalStatus,
       });
 
-      let errorMessage = 'Failed to submit verification information. Please try again.';
+      let errorMessage =
+        "Failed to submit verification information. Please try again.";
 
       // Handle different error scenarios - check data.message first since that's what backend returns
       if (error?.data?.message) {
         errorMessage = error.data.message;
-      } else if (error?.status === 'UNKNOWN_ERROR' || error?.originalStatus === undefined) {
-        errorMessage = 'Network error: Unable to connect to the server. Please check your internet connection.';
+      } else if (
+        error?.status === "UNKNOWN_ERROR" ||
+        error?.originalStatus === undefined
+      ) {
+        errorMessage =
+          "Network error: Unable to connect to the server. Please check your internet connection.";
       } else if (error?.status === 401) {
-        errorMessage = 'Authentication required. Please log in again.';
+        errorMessage = "Authentication required. Please log in again.";
       } else if (error?.status === 403) {
-        errorMessage = 'You do not have permission to perform this action.';
+        errorMessage = "You do not have permission to perform this action.";
       } else if (error?.status === 413) {
-        errorMessage = 'File size too large. Please upload smaller files (max 10MB).';
+        errorMessage =
+          "File size too large. Please upload smaller files (max 10MB).";
       } else if (error?.data?.errors && Array.isArray(error.data.errors)) {
         if (error.data.errors.length > 0) {
-          errorMessage = error.data.errors[0].msg || error.data.errors[0].message || errorMessage;
+          errorMessage =
+            error.data.errors[0].msg ||
+            error.data.errors[0].message ||
+            errorMessage;
         }
       } else if (error?.message) {
         errorMessage = error.message;
@@ -172,34 +196,27 @@ const VerifyInfo = () => {
 
   return (
     <div className="verify_info_layout max-sm:my-6 max-sm:mx-6 md:px-[126px] md:py-[80px]">
-      <form onSubmit={handleSubmit(onSubmit)} className="verify_info_form max-sm:w-full  md:px-[200px] md:py-[100px]">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="verify_info_form max-sm:w-full  md:px-[200px] md:py-[100px]"
+      >
         <div className="flex flex-col items-start w-full md:w-[353px]">
           <h2 className="user_info_heading flex items-center gap-[18px] pb-5">
-            <span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M9.07 6L3 12.07L9.07 18.14M20.0019 12.0703H3.17188"
-                  stroke="#111111"
-                  strokeWidth="1.5"
-                  strokeMiterlimit="10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
             <span>Verify Your Information</span>
           </h2>
           <div className="w-full">
             <div className="flex flex-col gap-2 pb-4">
               <label className="text-[#1C5941] text-sm font-bold flex items-center gap-1">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 EIN Number *
               </label>
@@ -208,30 +225,60 @@ const VerifyInfo = () => {
                 type="text"
                 placeholder="12-3456789"
                 maxLength="10"
-                {...register("einNumber", { required: true, pattern: /^\d{2}-?\d{7}$/ })}
+                {...register("einNumber", {
+                  required: true,
+                  pattern: /^\d{2}-?\d{7}$/,
+                })}
               />
               {errors.einNumber && (
                 <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span>Valid EIN required (9 digits)</span>
                 </div>
               )}
               <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-2">
                 <p className="text-blue-700 text-xs flex items-start gap-2">
-                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4 mt-0.5 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
                   </svg>
-                  <span>An Employer Identification Number (EIN) is a federal tax ID for businesses</span>
+                  <span>
+                    An Employer Identification Number (EIN) is a federal tax ID
+                    for businesses
+                  </span>
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2 pb-4">
               <label className="text-[#1C5941] text-sm font-bold flex items-center gap-1">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Business Registered Country *
               </label>
@@ -244,8 +291,16 @@ const VerifyInfo = () => {
               </select>
               {errors.businessRegisteredCountry && (
                 <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span>Please select a country</span>
                 </div>
@@ -254,8 +309,16 @@ const VerifyInfo = () => {
 
             <div className="flex flex-col gap-2 mb-4">
               <label className="text-[#1C5941] text-sm font-bold flex items-center gap-1">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Insurance Document *
               </label>
@@ -266,20 +329,42 @@ const VerifyInfo = () => {
                 {watchedFile && watchedFile.name ? (
                   <div className="flex items-center justify-center gap-3">
                     <div className="p-3 bg-green-100 rounded-full">
-                      <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <svg
+                        className="w-6 h-6 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-green-700">{watchedFile.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">Click to replace</p>
+                      <p className="text-sm font-semibold text-green-700">
+                        {watchedFile.name}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Click to replace
+                      </p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
                     <div className="p-4 bg-gray-100 rounded-full group-hover:bg-green-100 transition-colors">
-                      <svg className="w-8 h-8 text-gray-400 group-hover:text-[#1C5941]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      <svg
+                        className="w-8 h-8 text-gray-400 group-hover:text-[#1C5941]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
                       </svg>
                     </div>
                     <div className="text-center">
@@ -302,8 +387,16 @@ const VerifyInfo = () => {
               </div>
               {errors.insuranceFile && (
                 <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span>Insurance document is required</span>
                 </div>
@@ -362,8 +455,16 @@ const VerifyInfo = () => {
               </div>
               <div className="flex flex-col gap-4 w-full">
                 <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                  <svg className="w-6 h-6 text-[#1C5941]" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  <svg
+                    className="w-6 h-6 text-[#1C5941]"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <h1 className="text-base text-[#1C5941] font-bold">
                     Owner Operator ID Verification *
@@ -382,22 +483,48 @@ const VerifyInfo = () => {
                       {watch("idFront") ? (
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-green-100 rounded">
-                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            <svg
+                              className="w-5 h-5 text-green-600"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-green-700">{watch("idFront")?.name}</p>
-                            <p className="text-xs text-gray-500">Click to replace</p>
+                            <p className="text-sm font-medium text-green-700">
+                              {watch("idFront")?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Click to replace
+                            </p>
                           </div>
                         </div>
                       ) : (
                         <div className="relative">
-                          <Image className="w-full opacity-70 group-hover:opacity-100 transition-opacity" src={Images.owner_id_check} alt="Upload ID front" />
+                          <Image
+                            className="w-full opacity-70 group-hover:opacity-100 transition-opacity"
+                            src={Images.owner_id_check}
+                            alt="Upload ID front"
+                          />
                           <div className="absolute inset-0 flex items-center justify-center bg-transparent group-hover:bg-transparent transition-all">
                             <div className="bg-white rounded-full p-3 shadow-lg transform scale-0 group-hover:scale-100 transition-transform">
-                              <svg className="w-6 h-6 text-[#1C5941]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                              <svg
+                                className="w-6 h-6 text-[#1C5941]"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M12 4v16m8-8H4"
+                                />
                               </svg>
                             </div>
                           </div>
@@ -413,8 +540,16 @@ const VerifyInfo = () => {
                     </div>
                     {errors.idFront && (
                       <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         <span>ID front side is required</span>
                       </div>
@@ -432,22 +567,48 @@ const VerifyInfo = () => {
                       {watch("idBack") ? (
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-green-100 rounded">
-                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            <svg
+                              className="w-5 h-5 text-green-600"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-green-700">{watch("idBack")?.name}</p>
-                            <p className="text-xs text-gray-500">Click to replace</p>
+                            <p className="text-sm font-medium text-green-700">
+                              {watch("idBack")?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Click to replace
+                            </p>
                           </div>
                         </div>
                       ) : (
                         <div className="relative">
-                          <Image className="w-full opacity-70 group-hover:opacity-100 transition-opacity" src={Images.owner_id_check} alt="Upload ID back" />
+                          <Image
+                            className="w-full opacity-70 group-hover:opacity-100 transition-opacity"
+                            src={Images.owner_id_check}
+                            alt="Upload ID back"
+                          />
                           <div className="absolute inset-0 flex items-center justify-center bg-transparent group-hover:bg-transparent transition-all">
                             <div className="bg-white rounded-full p-3 shadow-lg transform scale-0 group-hover:scale-100 transition-transform">
-                              <svg className="w-6 h-6 text-[#1C5941]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                              <svg
+                                className="w-6 h-6 text-[#1C5941]"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M12 4v16m8-8H4"
+                                />
                               </svg>
                             </div>
                           </div>
@@ -463,8 +624,16 @@ const VerifyInfo = () => {
                     </div>
                     {errors.idBack && (
                       <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         <span>ID back side is required</span>
                       </div>
@@ -481,17 +650,42 @@ const VerifyInfo = () => {
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   <span>Verifying...</span>
                 </>
               ) : (
                 <>
                   <span>Continue to Service Area</span>
-                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </>
               )}

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import ProviderSidebar from '@/components/Global/providerprofile/ProviderSidebar';
 import Account from '@/components/Global/providerprofile/Account';
 import Services from '@/components/Global/providerprofile/Services';
@@ -16,6 +17,14 @@ import BundleSetup from '@/components/Global/providerprofile/BundleSetup';
 export default function ProviderAccountSettings() {
   const [activeSection, setActiveSection] = useState('Account');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section) {
+      setActiveSection(section);
+    }
+  }, [searchParams]);
 
   const renderContent = () => {
     switch (activeSection) {
