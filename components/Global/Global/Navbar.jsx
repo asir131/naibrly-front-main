@@ -105,7 +105,7 @@ export default function Navbar() {
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!isAuthenticated || !token) return;
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+      const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
       try {
         const res = await fetch(`${apiBase}/api/notifications/me`, {
           headers: { Authorization: `Bearer ${token}` },
