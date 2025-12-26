@@ -121,7 +121,7 @@ export default function OurServicesSection() {
 
                 return (
                   <div
-                    key={service._id || index}
+                    key={`${service._id || "service"}-${index}`}
                     onClick={handleClick}
                     className="bg-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer"
                   >

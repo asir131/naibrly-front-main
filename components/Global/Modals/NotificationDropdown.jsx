@@ -21,7 +21,7 @@ export default function NotificationDropdown({ isOpen, onClose, notifications = 
         ) : (
           notifications.map((notification) => (
             <button
-              key={notification.id}
+              key={notification.id || notification._id || notification.createdAt}
               className={`w-full px-4 py-3 text-left transition ${
                 notification.isRead ? 'bg-white' : 'bg-blue-50'
               }`}
