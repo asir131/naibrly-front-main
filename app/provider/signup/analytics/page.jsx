@@ -4,6 +4,7 @@ import BundleRequestCard from '@/components/BundleRequestCard'
 import ReviewsList from '@/components/ReviewsList'
 import Link from 'next/link'
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import CancelOrderConfirmModal from '@/components/CancelOrderConfirmModal'
 import { useGetProviderAnalyticsQuery, useGetProviderNearbyBundlesQuery, useGetProviderReviewsQuery, useGetProviderServiceRequestsQuery, useUpdateServiceRequestStatusMutation, useUpdateBundleStatusMutation } from '@/redux/api/servicesApi'
@@ -13,6 +14,8 @@ const Analytics = () => {
     const [open, setOpen] = useState(false)
     const [selectedRequest, setSelectedRequest] = useState(null)
     const [selectedBundle, setSelectedBundle] = useState(null)
+    const [hiddenRequestIds, setHiddenRequestIds] = useState([])
+    const [hiddenBundleIds, setHiddenBundleIds] = useState([])
 
     const { data: analytics, isLoading, isError, error } = useGetProviderAnalyticsQuery()
     const { data: requestsData, isLoading: requestsLoading, refetch: refetchRequests } = useGetProviderServiceRequestsQuery()
@@ -51,6 +54,7 @@ const Analytics = () => {
             await Promise.all([refetchRequests(), refetchNearbyBundles()])
             // Navigate to orders page where accepted items are shown
             router.push('/provider/signup/order')
+            toast.success(type === 'service' ? 'Service request accepted' : 'Bundle accepted')
         } catch (error) {
             console.error('Failed to accept:', error)
         }
@@ -67,8 +71,8 @@ const Analytics = () => {
             if (selectedRequest) {
                 await updateServiceRequestStatus({
                     requestId: selectedRequest._id,
-                    status: 'declined',
-                    note: note || 'Service declined by provider'
+                    status: 'cancelled',
+                    note: note || 'Service cancelled by provider'
                 }).unwrap()
             } else if (selectedBundle) {
                 await updateBundleStatus({
@@ -77,7 +81,15 @@ const Analytics = () => {
                     note: note || 'Bundle declined by provider'
                 }).unwrap()
             }
+            await Promise.all([refetchRequests(), refetchNearbyBundles()])
+            toast.success(selectedRequest ? 'Service request cancelled' : 'Bundle declined')
             setOpen(false)
+            if (selectedRequest?._id) {
+                setHiddenRequestIds((prev) => prev.includes(selectedRequest._id) ? prev : [...prev, selectedRequest._id])
+            }
+            if (selectedBundle?._id) {
+                setHiddenBundleIds((prev) => prev.includes(selectedBundle._id) ? prev : [...prev, selectedBundle._id])
+            }
             setSelectedRequest(null)
             setSelectedBundle(null)
         } catch (error) {
@@ -164,8 +176,8 @@ const Analytics = () => {
                     <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
                         <p className="text-center text-[#666]">Loading active requests...</p>
                     </div>
-                ) : requestsData?.serviceRequests?.items?.filter(req => req.status === 'pending').length > 0 ? (
-                    requestsData.serviceRequests.items.filter(req => req.status === 'pending').map((request) => {
+                ) : requestsData?.serviceRequests?.items?.filter(req => req.status === 'pending' && !hiddenRequestIds.includes(req._id)).length > 0 ? (
+                    requestsData.serviceRequests.items.filter(req => req.status === 'pending' && !hiddenRequestIds.includes(req._id)).map((request) => {
                         const scheduledDate = new Date(request.scheduledDate);
                         const formattedDate = scheduledDate.toLocaleDateString('en-US', {
                             day: 'numeric',
@@ -304,9 +316,9 @@ const Analytics = () => {
                             Retry
                         </button>
                     </div>
-                ) : (nearbyBundlesData?.bundles || []).length > 0 ? (
+                ) : (nearbyBundlesData?.bundles || []).filter(bundle => !hiddenBundleIds.includes(bundle._id)).length > 0 ? (
                     <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
-                        {nearbyBundlesData.bundles.map((bundle) => (
+                        {nearbyBundlesData.bundles.filter(bundle => !hiddenBundleIds.includes(bundle._id)).map((bundle) => (
                             <div key={bundle._id} className='w-full'>
                                 <BundleRequestCard
                                     bundle={bundle}

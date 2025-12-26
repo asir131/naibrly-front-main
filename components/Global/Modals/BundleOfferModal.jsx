@@ -1,71 +1,75 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { X, ChevronRight, Check, Calendar, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState } from "react";
+import { X, ChevronRight, Check, Calendar, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import Image from 'next/image';
-import Link from 'next/link';
+} from "@/components/ui/select";
+import Image from "next/image";
+import Link from "next/link";
 
 // Step 1: Bundle List Component
 function BundleListStep({ onSelectBundle, onClose }) {
   const [bundles, setBundles] = useState([
     {
       id: 1,
-      serviceName: 'Window Washing',
-      bundleType: '3-Person Bundle (2 Joined, 1 Spot Open)',
-      originalPrice: '$48/hr',
-      discountedPrice: '$55/hr',
-      savings: '-$13',
+      serviceName: "Window Washing",
+      bundleType: "3-Person Bundle (2 Joined, 1 Spot Open)",
+      originalPrice: "$48/hr",
+      discountedPrice: "$55/hr",
+      savings: "-$13",
       participants: [
-        { id: 1, image: '/logo.png' },
-        { id: 2, image: '/logo.png' },
-      ]
+        { id: 1, image: "/logo.png" },
+        { id: 2, image: "/logo.png" },
+      ],
     },
     {
       id: 2,
-      serviceName: 'Window Washing',
-      bundleType: '3-Person Bundle (2 Joined, 1 Spot Open)',
-      originalPrice: '$48/hr',
-      discountedPrice: '$55/hr',
-      savings: '-$13',
+      serviceName: "Window Washing",
+      bundleType: "3-Person Bundle (2 Joined, 1 Spot Open)",
+      originalPrice: "$48/hr",
+      discountedPrice: "$55/hr",
+      savings: "-$13",
       participants: [
-        { id: 1, image: '/logo.png' },
-        { id: 2, image: '/logo.png' },
-      ]
+        { id: 1, image: "/logo.png" },
+        { id: 2, image: "/logo.png" },
+      ],
     },
     {
       id: 3,
-      serviceName: 'Window Washing',
-      bundleType: '3-Person Bundle (2 Joined, 1 Spot Open)',
-      originalPrice: '$48/hr',
-      discountedPrice: '$55/hr',
-      savings: '-$13',
+      serviceName: "Window Washing",
+      bundleType: "3-Person Bundle (2 Joined, 1 Spot Open)",
+      originalPrice: "$48/hr",
+      discountedPrice: "$55/hr",
+      savings: "-$13",
       participants: [
-        { id: 1, image: '/logo.png' },
-        { id: 2, image: '/logo.png' },
-      ]
-    }
+        { id: 1, image: "/logo.png" },
+        { id: 2, image: "/logo.png" },
+      ],
+    },
   ]);
 
   return (
     <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
       {/* Header */}
       <div className="bg-white px-6 py-5 border-b border-gray-100">
-        <h2 className="text-center text-xl font-semibold text-gray-900">Naibrly Bundel Offer</h2>
+        <h2 className="text-center text-xl font-semibold text-gray-900">
+          Naibrly Bundle Offer
+        </h2>
       </div>
 
       {/* Description */}
       <div className="px-6 py-4 bg-gray-50">
         <p className="text-xs text-gray-600 text-center leading-relaxed">
-          "This is a great offer for you. If more than one of you use the app together to place an order, you will get up to 7% discount. Anyone within a 10 km radius can join."
+          "This is a great offer for you. If more than one of you use the app
+          together to place an order, you will get up to 7% discount. Anyone
+          within a 10 km radius can join."
         </p>
       </div>
 
@@ -80,7 +84,9 @@ function BundleListStep({ onSelectBundle, onClose }) {
               {/* Service Name and Arrow */}
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 text-base mb-1">{bundle.serviceName}</h3>
+                  <h3 className="font-semibold text-gray-900 text-base mb-1">
+                    {bundle.serviceName}
+                  </h3>
                   <p className="text-xs text-gray-500">{bundle.bundleType}</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
@@ -117,7 +123,9 @@ function BundleListStep({ onSelectBundle, onClose }) {
                         {bundle.discountedPrice}
                       </span>
                     </div>
-                    <span className="text-xs text-green-600 font-medium">{bundle.savings}</span>
+                    <span className="text-xs text-green-600 font-medium">
+                      {bundle.savings}
+                    </span>
                   </div>
                   <Link href="/request">
                     <Button
@@ -150,13 +158,13 @@ function BundleListStep({ onSelectBundle, onClose }) {
 // Step 2: Create Bundle Form Component
 function CreateBundleStep({ onBack, onSubmit, onClose }) {
   const [formData, setFormData] = useState({
-    category1: '',
-    category2: '',
-    category3: '',
-    fromDate: '',
-    toDate: '',
-    fromTime: '',
-    toTime: ''
+    category1: "",
+    category2: "",
+    category3: "",
+    fromDate: "",
+    toDate: "",
+    fromTime: "",
+    toTime: "",
   });
 
   const handleSubmit = (e) => {
@@ -168,13 +176,17 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
       {/* Header */}
       <div className="bg-white px-6 py-5 border-b border-gray-100">
-        <h2 className="text-center text-xl font-semibold text-gray-900">Naibrly Bundel Offer</h2>
+        <h2 className="text-center text-xl font-semibold text-gray-900">
+          Naibrly Bundle Offer
+        </h2>
       </div>
 
       {/* Description */}
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
         <p className="text-xs text-gray-600 text-center leading-relaxed">
-          "This is a great offer for you. If more than one of you use the app together to place an order, you will get up to 7% discount. Anyone within a 10 km radius can join."
+          "This is a great offer for you. If more than one of you use the app
+          together to place an order, you will get up to 7% discount. Anyone
+          within a 10 km radius can join."
         </p>
       </div>
 
@@ -183,7 +195,9 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
         {/* Create Bundle Heading */}
         <div className="text-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Create Bundle</h3>
-          <p className="text-xs text-gray-500 mt-1">Bundle Target: 3 Users (within 10 miles)</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Bundle Target: 3 Users (within 10 miles)
+          </p>
         </div>
 
         {/* Category Selects */}
@@ -192,7 +206,12 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Select Category*
             </label>
-            <Select value={formData.category1} onValueChange={(value) => setFormData({ ...formData, category1: value })}>
+            <Select
+              value={formData.category1}
+              onValueChange={(value) =>
+                setFormData({ ...formData, category1: value })
+              }
+            >
               <SelectTrigger className="w-full h-11 text-sm">
                 <SelectValue placeholder="Interior" />
               </SelectTrigger>
@@ -205,7 +224,12 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
           </div>
 
           <div>
-            <Select value={formData.category2} onValueChange={(value) => setFormData({ ...formData, category2: value })}>
+            <Select
+              value={formData.category2}
+              onValueChange={(value) =>
+                setFormData({ ...formData, category2: value })
+              }
+            >
               <SelectTrigger className="w-full h-11 text-sm">
                 <SelectValue placeholder="Door & window..." />
               </SelectTrigger>
@@ -218,7 +242,12 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
           </div>
 
           <div>
-            <Select value={formData.category3} onValueChange={(value) => setFormData({ ...formData, category3: value })}>
+            <Select
+              value={formData.category3}
+              onValueChange={(value) =>
+                setFormData({ ...formData, category3: value })
+              }
+            >
               <SelectTrigger className="w-full h-11 text-sm">
                 <SelectValue placeholder="Select one" />
               </SelectTrigger>
@@ -241,7 +270,9 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
               <Input
                 type="date"
                 value={formData.fromDate}
-                onChange={(e) => setFormData({ ...formData, fromDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fromDate: e.target.value })
+                }
                 className="w-full h-11 text-sm pr-10"
                 placeholder="Select date"
               />
@@ -256,7 +287,9 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
               <Input
                 type="date"
                 value={formData.toDate}
-                onChange={(e) => setFormData({ ...formData, toDate: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, toDate: e.target.value })
+                }
                 className="w-full h-11 text-sm pr-10"
                 placeholder="Select date"
               />
@@ -275,7 +308,9 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
               <Input
                 type="time"
                 value={formData.fromTime}
-                onChange={(e) => setFormData({ ...formData, fromTime: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fromTime: e.target.value })
+                }
                 className="w-full h-11 text-sm pr-10"
                 placeholder="00:00"
               />
@@ -290,7 +325,9 @@ function CreateBundleStep({ onBack, onSubmit, onClose }) {
               <Input
                 type="time"
                 value={formData.toTime}
-                onChange={(e) => setFormData({ ...formData, toTime: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, toTime: e.target.value })
+                }
                 className="w-full h-11 text-sm pr-10"
                 placeholder="00:00"
               />
@@ -317,13 +354,17 @@ function SuccessStep({ onClose, onShare }) {
     <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
       {/* Header */}
       <div className="bg-white px-6 py-5 border-b border-gray-100">
-        <h2 className="text-center text-xl font-semibold text-gray-900">Naibrly Bundel Offer</h2>
+        <h2 className="text-center text-xl font-semibold text-gray-900">
+          Naibrly Bundle Offer
+        </h2>
       </div>
 
       {/* Description */}
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
         <p className="text-xs text-gray-600 text-center leading-relaxed">
-          "This is a great offer for you. If more than one of you use the app together to place an order, you will get up to 7% discount. Anyone within a 10 km radius can join."
+          "This is a great offer for you. If more than one of you use the app
+          together to place an order, you will get up to 7% discount. Anyone
+          within a 10 km radius can join."
         </p>
       </div>
 
@@ -347,13 +388,13 @@ function SuccessStep({ onClose, onShare }) {
         {/* Share Buttons */}
         <div className="space-y-3">
           <Button
-            onClick={() => onShare('text')}
+            onClick={() => onShare("text")}
             className="w-full bg-white text-teal-600 border-2 border-teal-600 hover:bg-teal-50 py-3.5 rounded-lg font-semibold text-base shadow-sm"
           >
             Share with text/email
           </Button>
           <Button
-            onClick={() => onShare('qr')}
+            onClick={() => onShare("qr")}
             className="w-full bg-white text-teal-600 border-2 border-teal-600 hover:bg-teal-50 py-3.5 rounded-lg font-semibold text-base shadow-sm"
           >
             Share with QR
@@ -383,12 +424,12 @@ export default function BundleOfferModal({ isOpen, onClose }) {
   };
 
   const handleCreateBundle = (formData) => {
-    console.log('Bundle created:', formData);
+    console.log("Bundle created:", formData);
     setStep(3);
   };
 
   const handleShare = (method) => {
-    console.log('Sharing via:', method);
+    console.log("Sharing via:", method);
     // Implement sharing logic here
   };
 
@@ -422,10 +463,7 @@ export default function BundleOfferModal({ isOpen, onClose }) {
           />
         )}
         {step === 3 && (
-          <SuccessStep
-            onClose={handleClose}
-            onShare={handleShare}
-          />
+          <SuccessStep onClose={handleClose} onShare={handleShare} />
         )}
       </div>
     </div>
