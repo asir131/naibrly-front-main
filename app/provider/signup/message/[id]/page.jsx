@@ -86,10 +86,10 @@ const ProviderMessagePage = () => {
     if (!slug) return {};
     const parts = slug.split("-");
     if (parts.length === 2) {
-      return { requestId: parts[0], customerId: parts[1] };
+      return { requestId: parts[0], bundleId: parts[0], customerId: parts[1] };
     }
     // fallback: treat entire slug as id (no customer id)
-    return { requestId: slug };
+    return { requestId: slug, bundleId: slug };
   }, [slug]);
 
   // Locate the matching request/bundle
@@ -97,7 +97,13 @@ const ProviderMessagePage = () => {
     const services = data?.serviceRequests?.items || [];
     const bundles = data?.bundles?.items || [];
     const foundService = services.find((r) => r._id === requestId);
-    const foundBundle = bundles.find((b) => b._id === requestId || b._id === bundleId);
+    const foundBundle = bundles.find((b) => {
+      if (b._id !== requestId && b._id !== bundleId) return false;
+      if (!customerId) return true;
+      const bundleCustomerId =
+        b.participantCustomer?._id || b.participant?.customer?._id || b.customer?._id;
+      return bundleCustomerId ? bundleCustomerId.toString() === customerId : false;
+    });
     if (foundService) return { activeItem: foundService, itemType: "service" };
     if (foundBundle) return { activeItem: foundBundle, itemType: "bundle" };
     return { activeItem: null, itemType: null };

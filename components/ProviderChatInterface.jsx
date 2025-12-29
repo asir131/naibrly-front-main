@@ -384,6 +384,7 @@ export default function ProviderChatInterface({
                 const params = new URLSearchParams();
                 if (requestId) params.append('serviceRequestId', requestId);
                 if (bundleId) params.append('bundleId', bundleId);
+                if (bundleId && customerId) params.append('customerId', customerId);
                 const res = await fetch(`${apiBase}/money-requests/provider?${params.toString()}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
