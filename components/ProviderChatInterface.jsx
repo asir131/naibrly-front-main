@@ -6,7 +6,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { Plus, X } from 'lucide-react';
 import { useSocket } from '@/hooks/useSocket';
 import { useLazyGetQuickChatsQuery, useCreateQuickChatMutation, useUpdateQuickChatMutation, useDeleteQuickChatMutation } from '@/redux/api/quickChatApi';
-import { useGetUserProfileQuery, useUpdateBundleStatusMutation, useUpdateServiceRequestStatusMutation, useCreateMoneyRequestMutation } from '@/redux/api/servicesApi';
+import { useGetUserProfileQuery, useUpdateBundleParticipantStatusMutation, useUpdateServiceRequestStatusMutation, useCreateMoneyRequestMutation } from '@/redux/api/servicesApi';
 import TaskCompletedModal from './TaskCompletedModal';
 import AddQuickChatModal from './AddQuickChatModal';
 import EditQuickChatModal from './EditQuickChatModal';
@@ -337,7 +337,7 @@ export default function ProviderChatInterface({
     const currentUser = profileData?.user;
 
     // Mutations for marking complete
-    const [updateBundleStatus, { isLoading: isCompletingBundle }] = useUpdateBundleStatusMutation();
+    const [updateBundleParticipantStatus, { isLoading: isCompletingParticipant }] = useUpdateBundleParticipantStatusMutation();
     const [updateServiceRequestStatus, { isLoading: isCompletingRequest }] = useUpdateServiceRequestStatusMutation();
     const [createMoneyRequest, { isLoading: isCreatingMoneyRequest }] = useCreateMoneyRequestMutation();
 
@@ -674,10 +674,14 @@ export default function ProviderChatInterface({
 
             // Provider can mark either a service request or a bundle as completed
             if (bundleId) {
-                await updateBundleStatus({
+                if (!customerId) {
+                    alert('Missing customerId for bundle participant completion.');
+                    return;
+                }
+                await updateBundleParticipantStatus({
                     bundleId,
+                    customerId,
                     status: 'completed',
-                    message: 'Marked complete by provider',
                 }).unwrap();
             } else if (requestId) {
                 await updateServiceRequestStatus({
@@ -693,6 +697,7 @@ export default function ProviderChatInterface({
             await createMoneyRequest({
                 bundleId: bundleId || undefined,
                 serviceRequestId: requestId || undefined,
+                customerId: bundleId ? customerId : undefined,
                 amount: numericAmount,
             }).unwrap();
 
@@ -735,7 +740,11 @@ export default function ProviderChatInterface({
                 order={localOrderData}
                 onTaskDone={handleTaskDoneFlow}
                 isConnected={isConnected}
-                taskDoneDisabled={isCompletingBundle || isCompletingRequest || isCreatingMoneyRequest}
+                taskDoneDisabled={
+                    isCompletingParticipant ||
+                    isCompletingRequest ||
+                    isCreatingMoneyRequest
+                }
                 taskDoneHidden={(localOrderData?.statusLabel || '').toLowerCase() === 'completed'}
                 amount={amount}
                 setAmount={setAmount}

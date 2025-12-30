@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useGetMyServiceRequestsQuery } from '@/redux/api/servicesApi';
+import { useAuth } from '@/hooks/useAuth';
 import PendingConfirmationModal from '@/components/Global/Modals/PendingConfirmationModal';
 import QuickChatMessaging from '@/components/Global/Modals/QuickChatMessaging';
 import CancelRequestModal from '@/components/Global/Modals/CancelRequestModal';
@@ -14,6 +15,7 @@ import TaskCompletedModal from '@/components/Global/Modals/TaskCompletedModal';
 
 export default function RequestPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('open');
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [selectedAcceptedRequest, setSelectedAcceptedRequest] = useState(null);
@@ -84,6 +86,7 @@ export default function RequestPage() {
     if (!data) {
       return { openRequests: [], closedRequests: [] };
     }
+    const currentUserId = user?._id || user?.id;
 
     const transformRequest = (request) => {
       // Map status to UI format
@@ -126,6 +129,28 @@ export default function RequestPage() {
     };
 
     const transformBundle = (bundle) => {
+      const participantEntry = currentUserId
+        ? bundle.participants?.find((participant) => {
+            const participantId =
+              typeof participant.customer === 'string'
+                ? participant.customer
+                : participant.customer?._id || participant.customer?.id;
+            return participantId === currentUserId;
+          })
+        : null;
+      const participantCompleted = participantEntry?.completionStatus === 'completed';
+
+      let statusKey = bundle.status;
+      if (bundle.status === 'cancelled') {
+        statusKey = 'cancelled';
+      } else if (participantCompleted || bundle.status === 'completed') {
+        statusKey = 'completed';
+      } else if (['accepted', 'in_progress', 'full'].includes(bundle.status)) {
+        statusKey = 'accepted';
+      } else {
+        statusKey = 'pending';
+      }
+
       // Map bundle status to UI format
       const statusMap = {
         pending: { label: 'Pending', color: 'text-orange-600', bg: 'bg-orange-50' },
@@ -134,7 +159,7 @@ export default function RequestPage() {
         cancelled: { label: 'Cancel', color: 'text-red-600', bg: 'bg-red-50' },
       };
 
-      const statusInfo = statusMap[bundle.status] || statusMap.pending;
+      const statusInfo = statusMap[statusKey] || statusMap.pending;
 
       // Format date
       const date = new Date(bundle.serviceDate);
@@ -190,7 +215,7 @@ export default function RequestPage() {
     );
 
     return { openRequests: open, closedRequests: closed };
-  }, [data]);
+  }, [data, user]);
 
   const handlePendingClick = () => {
     setShowPendingModal(true);

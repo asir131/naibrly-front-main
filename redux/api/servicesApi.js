@@ -398,6 +398,21 @@ export const servicesApi = createApi({
         { type: 'ServiceRequests', id: 'LIST' },
       ],
     }),
+    // Update bundle participant status (provider marks participant completed)
+    updateBundleParticipantStatus: builder.mutation({
+      query: ({ bundleId, customerId, ...body }) => ({
+        url: `/bundles/${bundleId}/participants/${customerId}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { bundleId }) => [
+        { type: 'Bundles', id: bundleId },
+        { type: 'Bundles', id: 'LIST' },
+        'Provider',
+        'ServiceRequests',
+        { type: 'ServiceRequests', id: 'LIST' },
+      ],
+    }),
 
     // Create money request (provider -> customer) for service request or bundle
     createMoneyRequest: builder.mutation({
@@ -1328,6 +1343,7 @@ export const {
   useCancelServiceRequestMutation,
   useCreateBundleMutation,
   useUpdateBundleStatusMutation,
+  useUpdateBundleParticipantStatusMutation,
   useCreateMoneyRequestMutation,
   useGetCustomerMoneyRequestsQuery,
   useAcceptMoneyRequestMutation,
