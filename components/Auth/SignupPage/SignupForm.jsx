@@ -350,8 +350,51 @@ function SignupFormContent() {
             />
           </div>
 
-          {/* State & Zip Code */}
+          {/* Apt/Suite & City */}
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-teal-700 block mb-2">
+                Apt / Suite
+              </label>
+              <Input
+                type="text"
+                name="aptSuite"
+                placeholder="Apt / Suite"
+                value={formData.aptSuite}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-teal-700 block mb-2">
+                City
+              </label>
+              <Input
+                type="text"
+                name="city"
+                placeholder="City"
+                value={formData.city}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
+              />
+            </div>
+          </div>
+
+          {/* Zip Code & State */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-teal-700 block mb-2">
+                Zip Code
+              </label>
+              <Input
+                type="text"
+                name="zipCode"
+                placeholder="Zip Code"
+                value={formData.zipCode}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
+              />
+            </div>
             <div>
               <label className="text-xs font-medium text-teal-700 block mb-2">
                 State
@@ -369,49 +412,6 @@ function SignupFormContent() {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-teal-700 block mb-2">
-                Zip Code
-              </label>
-              <Input
-                type="text"
-                name="zipCode"
-                placeholder="Zip Code"
-                value={formData.zipCode}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
-              />
-            </div>
-          </div>
-
-          {/* City & Apt/Suite */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-medium text-teal-700 block mb-2">
-                City
-              </label>
-              <Input
-                type="text"
-                name="city"
-                placeholder="City"
-                value={formData.city}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-teal-700 block mb-2">
-                Apt / Suite
-              </label>
-              <Input
-                type="text"
-                name="aptSuite"
-                placeholder="Apt / Suite"
-                value={formData.aptSuite}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
-              />
             </div>
           </div>
 

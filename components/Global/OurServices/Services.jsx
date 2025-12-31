@@ -17,6 +17,8 @@ export default function OurServicesSection({ serviceType, zipCode }) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [localZipCode, setLocalZipCode] = useState(zipCode || '');
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   // Fetch providers by service type if serviceType is provided
   const {
@@ -31,7 +33,7 @@ export default function OurServicesSection({ serviceType, zipCode }) {
 
   // Fetch nearby services from API (fallback when no specific service is selected)
   const { data, isLoading, isError } = useGetNearbyServicesQuery(
-    { limit: 15 },
+    { page, limit: pageSize },
     { skip: !!serviceType } // Skip if serviceType is provided
   );
 
@@ -44,6 +46,12 @@ export default function OurServicesSection({ serviceType, zipCode }) {
       setLocalZipCode(customerZipCode);
     }
   }, [zipCode, customerZipCode, localZipCode]);
+
+  useEffect(() => {
+    if (!serviceType && data?.pagination?.pages && page > data.pagination.pages) {
+      setPage(1);
+    }
+  }, [data, page, serviceType]);
 
   // Transform provider data from search API
   const providers = React.useMemo(() => {
@@ -93,6 +101,9 @@ export default function OurServicesSection({ serviceType, zipCode }) {
         providerId: service.providerId,
       }));
   }, [data, isLoading, isError]);
+
+  const showServicesPagination =
+    !serviceType && (data?.pagination?.total || 0) > pageSize;
 
   // Determine loading state
   const currentLoading = serviceType ? providersLoading : isLoading;
@@ -324,7 +335,7 @@ export default function OurServicesSection({ serviceType, zipCode }) {
           )}
 
           {!serviceType && !currentLoading && services.length > 0 && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {services.map((service, index) => (
                 <div
                   key={index}
@@ -364,6 +375,35 @@ export default function OurServicesSection({ serviceType, zipCode }) {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!serviceType && !currentLoading && services.length > 0 && showServicesPagination && (
+            <div className="flex items-center justify-center gap-3 mb-12">
+              <Button
+                onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                disabled={page <= 1}
+                className="bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
+                variant="outline"
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-gray-600">
+                Page {data?.pagination?.current || page} of {data?.pagination?.pages || 1}
+              </span>
+              <Button
+                onClick={() =>
+                  setPage((prev) =>
+                    data?.pagination?.pages
+                      ? Math.min(prev + 1, data.pagination.pages)
+                      : prev + 1
+                  )
+                }
+                disabled={data?.pagination?.pages ? page >= data.pagination.pages : false}
+                className="bg-teal-600 text-white hover:bg-teal-700"
+              >
+                Next
+              </Button>
             </div>
           )}
         </div>

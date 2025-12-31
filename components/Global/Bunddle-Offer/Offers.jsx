@@ -17,6 +17,8 @@ export default function NaibrlybundelOfferSection() {
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [offers, setOffers] = useState([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   // Create Bundle Modal Flow States
   const [isCreateBundleOpen, setIsCreateBundleOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function NaibrlybundelOfferSection() {
     isError,
     error,
   } = useGetNearbyBundlesQuery(
-    { limit: 12 },
+    { page, limit: pageSize },
     { skip: !isAuthenticated } // Skip the query if user is not authenticated
   );
 
@@ -52,9 +54,20 @@ export default function NaibrlybundelOfferSection() {
     }
   }, [bundlesData]);
 
+  React.useEffect(() => {
+    if (bundlesData?.pagination?.pages && page > bundlesData.pagination.pages) {
+      setPage(1);
+    }
+  }, [bundlesData, page]);
+
   // Helper function to format bundle data for display
   const formatBundleForDisplay = (bundle) => {
-    // Get participant images (use profile images or fallback to placeholder)
+    const getImageUrl = (image) => {
+      if (!image) return null;
+      if (typeof image === "string") return image;
+      return image.url || null;
+    };
+
     const participantImages =
       bundle.participants
         ?.slice(0, 3)
@@ -64,12 +77,17 @@ export default function NaibrlybundelOfferSection() {
             `https://i.pravatar.cc/100?img=${idx + 1}`
         ) || [];
 
-    // Fill remaining spots with placeholder images
     while (participantImages.length < 3) {
       participantImages.push(
         `https://i.pravatar.cc/100?img=${participantImages.length + 10}`
       );
     }
+
+    const customerImage = getImageUrl(bundle.creator?.profileImage);
+    const providerImage = getImageUrl(
+      bundle.provider?.profileImage || bundle.provider?.businessLogo
+    );
+    const cardImages = [customerImage, providerImage].filter(Boolean);
 
     // Format service date
     const serviceDate = bundle.serviceDate
@@ -121,6 +139,7 @@ export default function NaibrlybundelOfferSection() {
       originalPrice: `$${bundle.totalPrice || 0}`,
       discountedPrice: `${bundle.bundleDiscount || 0}% off`,
       images: participantImages,
+      cardImages,
       timeAgo,
     };
   };
@@ -247,6 +266,8 @@ export default function NaibrlybundelOfferSection() {
     setIsShareBundleOpen(true);
   };
 
+  const showBundlesPagination = (bundlesData?.pagination?.total || 0) > pageSize;
+
   return (
     <div className="bg-linear-to-br from-teal-50 to-gray-50 py-16 px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
@@ -332,16 +353,18 @@ export default function NaibrlybundelOfferSection() {
                       Published {offer.timeAgo}
                     </p>
                   </div>
-                  <div className="flex -space-x-2 ml-3">
-                    {offer.images.map((img, idx) => (
-                      <img
-                        key={idx}
-                        src={img}
-                        alt={`Person ${idx + 1}`}
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
-                      />
-                    ))}
-                  </div>
+                  {offer.cardImages.length > 0 && (
+                    <div className="flex -space-x-2 ml-3">
+                      {offer.cardImages.map((img, idx) => (
+                        <img
+                          key={idx}
+                          src={img}
+                          alt={`Person ${idx + 1}`}
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Bundle Info */}
@@ -382,6 +405,34 @@ export default function NaibrlybundelOfferSection() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {!isLoading && !isError && offers.length > 0 && showBundlesPagination && (
+          <div className="flex items-center justify-center gap-3 mb-12">
+            <Button
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page <= 1}
+              className="bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-gray-600">
+              Page {bundlesData?.pagination?.current || page} of {bundlesData?.pagination?.pages || 1}
+            </span>
+            <Button
+              onClick={() =>
+                setPage((prev) =>
+                  bundlesData?.pagination?.pages
+                    ? Math.min(prev + 1, bundlesData.pagination.pages)
+                    : prev + 1
+                )
+              }
+              disabled={bundlesData?.pagination?.pages ? page >= bundlesData.pagination.pages : false}
+              className="bg-teal-600 text-white hover:bg-teal-700"
+            >
+              Next
+            </Button>
           </div>
         )}
       </div>

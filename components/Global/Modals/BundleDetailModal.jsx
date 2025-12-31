@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Share2, MapPin, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -14,6 +15,7 @@ const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf37
 export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [joinBundle, { isLoading: isJoining }] = useJoinBundleMutation();
+  const router = useRouter();
 
   if (!isOpen || !bundleData) return null;
 
@@ -48,8 +50,10 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
       console.log('Successfully joined bundle:', result);
 
-      // Show the share modal after successful join
-      setIsShareModalOpen(true);
+      if (typeof onClose === "function") {
+        onClose();
+      }
+      router.push("/request");
     } catch (error) {
       console.error('Failed to join bundle:', error);
 
