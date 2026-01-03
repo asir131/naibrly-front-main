@@ -50,10 +50,6 @@ const formatServiceDate = (dateString) => {
   return `Service Date: ${date.toLocaleDateString("en-US", options)}`;
 };
 
-// Default avatar placeholder
-const DEFAULT_AVATAR =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop";
-
 export default function NaibrlybundelOfferSection() {
   const { isAuthenticated } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -105,7 +101,7 @@ export default function NaibrlybundelOfferSection() {
         name: p.customer
           ? `${p.customer.firstName} ${p.customer.lastName}`
           : "Participant",
-        image: p.customer?.profileImage?.url || DEFAULT_AVATAR,
+        image: p.customer?.profileImage?.url || p.customer?.profileImage || null,
         location: p.address ? `${p.address.city}, ${p.address.state}` : "",
       })) || [];
 
@@ -113,6 +109,17 @@ export default function NaibrlybundelOfferSection() {
     const location = bundle.address
       ? `${bundle.address.street}, ${bundle.address.city}, ${bundle.address.state}`
       : "Location not specified";
+
+    const getServiceCategoryImage = (b) => {
+      const firstService = Array.isArray(b?.services) ? b.services[0] : null;
+      return (
+        firstService?.categoryType?.image?.url ||
+        firstService?.categoryType?.image ||
+        firstService?.category?.image?.url ||
+        firstService?.category?.image ||
+        null
+      );
+    };
 
     // Pass the full bundle data to the modal
     const bundleWithModalData = {
@@ -125,7 +132,10 @@ export default function NaibrlybundelOfferSection() {
       }% off`,
       participants: mappedParticipants,
       modalImage:
-        "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
+        getServiceCategoryImage(bundle) ||
+        bundle.images?.[0] ||
+        bundle.coverImage ||
+        null,
     };
     setSelectedBundle(bundleWithModalData);
     setIsModalOpen(true);
@@ -168,9 +178,9 @@ export default function NaibrlybundelOfferSection() {
 
               // Get participant images
               const participantImages =
-                bundle.participants?.map(
-                  (p) => p.customer?.profileImage?.url || DEFAULT_AVATAR
-                ) || [];
+                bundle.participants
+                  ?.map((p) => p.customer?.profileImage?.url || null)
+                  .filter(Boolean) || [];
 
               // Format location
               const location = bundle.address

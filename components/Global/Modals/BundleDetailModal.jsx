@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Share2, MapPin, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,9 @@ import Image from "next/image";
 import ShareBundleModal from "./ShareBundleModal";
 import { useJoinBundleMutation } from "@/redux/api/servicesApi";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/hooks/useAuth";
 
-// Default avatar placeholder
-const DEFAULT_AVATAR =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop";
+
 const SERVICE_CATEGORY_MAP = {
   Electrical: "Home Repairs & Maintenance",
   Plumbing: "Home Repairs & Maintenance",
@@ -38,20 +37,85 @@ const CATEGORY_TYPE_IMAGES = {
 export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [joinBundle, { isLoading: isJoining }] = useJoinBundleMutation();
+  const [participation, setParticipation] = useState(null);
+  const [participationLoading, setParticipationLoading] = useState(false);
+  const { user } = useAuth();
   const router = useRouter();
+  const currentUserId = user?._id || user?.id || user?.userId || null;
 
-  if (!isOpen || !bundleData) return null;
+
+  // Treat known placeholder URLs as "no image"
+  const isValidImageUrl = (val) =>
+    typeof val === "string" && val.trim().length > 0;
+
+  const isPlaceholderImage = (url) => {
+    if (!isValidImageUrl(url)) return false;
+    const lowered = url.toLowerCase();
+    return (
+      lowered.includes("i.pravatar.cc") ||
+      lowered.includes("placehold") ||
+      lowered.includes("placeholder") ||
+      lowered.includes("photo-1535713875002-d1d0cf377fde") || // old default avatar
+      lowered.includes("photo-1527515637462-cff94eecc1ac") // old modal hero
+    );
+  };
+
+  const resolveImage = (participant) => {
+    const candidate =
+      participant?.profileImage?.url ||
+      participant?.image?.url ||
+      participant?.image ||
+      null;
+    if (!isValidImageUrl(candidate) || isPlaceholderImage(candidate)) return null;
+    return candidate;
+  };
 
   // Filter out "Open Spot" participants and ensure valid image/name
-  const activeParticipants = (
-    bundleData.participants?.filter(
-      (participant) => participant.name !== "Open Spot"
-    ) || []
-  ).map((p) => ({
-    ...p,
-    image: p.image || DEFAULT_AVATAR,
-    name: p.name || "Participant",
-  }));
+  const participantsList = Array.isArray(bundleData?.participants)
+    ? bundleData.participants
+    : [];
+
+  const activeParticipants = useMemo(
+    () =>
+      participantsList
+        .filter((participant) => participant.name !== "Open Spot")
+        .map((p) => ({
+          ...p,
+          image: resolveImage(p),
+          name: p.name || "Participant",
+        })),
+    [participantsList]
+  );
+
+  const isCreator = useMemo(() => {
+    if (participation?.isCreator) return true;
+    const creatorId =
+      bundleData?.creator?._id ||
+      bundleData?.creator?.id ||
+      bundleData?.creator ||
+      null;
+    return (
+      creatorId &&
+      currentUserId &&
+      creatorId.toString() === currentUserId.toString()
+    );
+  }, [bundleData, currentUserId]);
+
+  const isAlreadyParticipant = useMemo(() => {
+    if (participation?.isParticipant) return true;
+    if (isCreator) return true;
+    const matchesCurrentUser = participantsList.some((p) => {
+      const pid =
+        p?.customerId ||
+        p?._id ||
+        p?.id ||
+        p?.customer?._id ||
+        p?.customer?.id;
+      if (!pid || !currentUserId) return false;
+      return pid.toString() === currentUserId.toString();
+    });
+    return matchesCurrentUser;
+  }, [participation?.isParticipant, isCreator, participantsList, currentUserId]);
 
   const handleShare = () => {
     setIsShareModalOpen(true);
@@ -59,6 +123,9 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
   const handleJoinBundle = async () => {
     try {
+      if (isAlreadyParticipant) {
+        return;
+      }
       // Use the bundle _id or id from bundleData
       const bundleId = bundleData._id || bundleData.id;
 
@@ -74,19 +141,32 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
       const result = await joinBundle(bundleId).unwrap();
 
       console.log("Successfully joined bundle:", result);
+      setParticipation({ isParticipant: true, isCreator });
 
       if (typeof onClose === "function") {
         onClose();
       }
       router.push("/request");
     } catch (error) {
-      console.error("Failed to join bundle:", error);
-
-      // Show user-friendly error message
-      const errorMessage =
+      // Log a concise error for debugging without noisy empty objects
+      const rawMessage =
         error?.data?.message ||
+        error?.error ||
         error?.message ||
-        "Failed to join bundle. Please try again.";
+        (typeof error === "string" ? error : "");
+      const errorMessage = rawMessage || "Failed to join bundle. Please try again.";
+
+      if (
+        typeof errorMessage === "string" &&
+        errorMessage.toLowerCase().includes("already part of this bundle")
+      ) {
+        setParticipation({ isParticipant: true, isCreator });
+        console.info("Bundle already joined for this user");
+        toast.success("Bundle Joined!");
+        return;
+      }
+
+      console.error("Failed to join bundle:", errorMessage);
       toast.error(errorMessage);
     }
   };
@@ -102,10 +182,64 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
     if (categoryType && CATEGORY_TYPE_IMAGES[categoryType]) {
       return CATEGORY_TYPE_IMAGES[categoryType];
     }
-    return bundle?.modalImage || bundle?.images?.[0] || DEFAULT_AVATAR;
+    const candidate =
+      bundle?.coverImage ||
+      bundle?.modalImage ||
+      bundle?.heroImage ||
+      bundle?.images?.[0] ||
+      null;
+    if (!candidate || isPlaceholderImage(candidate)) return null;
+    return candidate;
   };
 
   const heroImage = getCategoryImage(bundleData);
+
+  // Check participation via API when modal opens
+  useEffect(() => {
+    const checkParticipation = async () => {
+      const bundleId = bundleData?._id || bundleData?.id;
+      if (!bundleId || !isOpen) return;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("authToken")
+          : null;
+      if (!token) return;
+      setParticipationLoading(true);
+      try {
+        const apiBase =
+          process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
+        const res = await fetch(`${apiBase}/bundles/${bundleId}/participation`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (res.ok && data?.success) {
+          setParticipation({
+            isParticipant: !!data.data?.isParticipant,
+            isCreator: !!data.data?.isCreator,
+          });
+        } else {
+          setParticipation(null);
+        }
+      } catch (err) {
+        setParticipation(null);
+      } finally {
+        setParticipationLoading(false);
+      }
+    };
+    setParticipation(null);
+    checkParticipation();
+  }, [isOpen, bundleData?._id, bundleData?.id]);
+
+  if (!isOpen || !bundleData) return null;
+
+  const serviceDateDisplay = bundleData.serviceDate
+    ? new Date(bundleData.serviceDate).toISOString().split("T")[0]
+    : null;
+
+  // Show only ZIP code for location
+  const locationDisplay = bundleData.zipCode || bundleData.address?.zipCode || "ZIP not provided";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -120,13 +254,19 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
         <div className="flex flex-col md:flex-row">
           {/* Left side - Image */}
           <div className="md:w-2/5 relative h-64 md:h-auto">
-            <Image
-              src={heroImage}
-              alt={bundleData.service}
-              width={400}
-              height={600}
-              className="w-full h-full object-cover"
-            />
+            {heroImage ? (
+              <Image
+                src={bundleData.coverImage}
+                alt={bundleData.service}
+                width={400}
+                height={600}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-teal-50 flex items-center justify-center">
+                <User className="w-16 h-16 text-teal-600" />
+              </div>
+            )}
           </div>
 
           {/* Right side - Content */}
@@ -140,9 +280,17 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
                 <p className="text-base text-gray-700 font-medium mb-1">
                   {bundleData.bundle}
                 </p>
-                <p className="text-sm text-gray-600">
-                  Service Date: {bundleData.serviceDate || "jun 10, 2025"}
-                </p>
+                {(serviceDateDisplay || bundleData.serviceTimeStart || bundleData.serviceTimeEnd) && (
+                  <p className="text-sm text-gray-600">
+                    Service Date: {serviceDateDisplay || "TBD"}
+                    {(bundleData.serviceTimeStart || bundleData.serviceTimeEnd) && (
+                      <>
+                        {" "}
+                        | Time: {bundleData.serviceTimeStart || "—"} {bundleData.serviceTimeEnd ? `- ${bundleData.serviceTimeEnd}` : ""}
+                      </>
+                    )}
+                  </p>
+                )}
               </div>
               <button
                 onClick={handleShare}
@@ -156,14 +304,24 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
             <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
               {activeParticipants.map((participant, index) => (
                 <div key={index} className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-linear-to-br from-pink-100 to-pink-200">
-                    <Image
-                      src={participant.image}
-                      alt={participant.name}
-                      width={48}
-                      height={48}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
+                    {/* Fallback teal avatar (always rendered behind) */}
+                    <div className="absolute inset-0 bg-teal-500 flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    {isValidImageUrl(participant.image) && (
+                      <Image
+                        src={participant.image}
+                        alt={participant.name}
+                        width={48}
+                        height={48}
+                        className="relative z-10 w-full h-full object-cover"
+                        onError={(e) => {
+                          // Hide broken images so fallback shows
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    )}
                   </div>
                   <div className="flex-1">
                     <h4 className="text-base font-semibold text-gray-900 mb-1">
@@ -171,7 +329,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
                     </h4>
                     <div className="flex items-center gap-1.5 text-sm text-gray-600">
                       <MapPin className="w-4 h-4 text-teal-600 shrink-0" />
-                      <span>{participant.location || bundleData.location}</span>
+                      <span>{locationDisplay}</span>
                     </div>
                   </div>
                 </div>
@@ -205,7 +363,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
             {/* Join Button */}
             <Button
               onClick={handleJoinBundle}
-              disabled={isJoining}
+              disabled={isJoining || isAlreadyParticipant || participationLoading}
               className="w-full bg-teal-600 hover:bg-teal-700 text-white py-4 rounded-xl font-semibold text-lg shadow-md mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isJoining ? (
@@ -214,7 +372,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
                   <span>Joining...</span>
                 </div>
               ) : (
-                "Join Bundle"
+                isAlreadyParticipant ? "Bundle Joined!" : "Join Bundle"
               )}
             </Button>
           </div>

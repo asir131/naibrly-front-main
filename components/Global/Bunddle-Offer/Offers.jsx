@@ -71,17 +71,8 @@ export default function NaibrlybundelOfferSection() {
     const participantImages =
       bundle.participants
         ?.slice(0, 3)
-        .map(
-          (participant, idx) =>
-            participant.customer?.profileImage?.url ||
-            `https://i.pravatar.cc/100?img=${idx + 1}`
-        ) || [];
-
-    while (participantImages.length < 3) {
-      participantImages.push(
-        `https://i.pravatar.cc/100?img=${participantImages.length + 10}`
-      );
-    }
+        .map((participant) => participant.customer?.profileImage?.url || null)
+        .filter(Boolean) || [];
 
     const customerImage = getImageUrl(bundle.creator?.profileImage);
     const providerImage = getImageUrl(
@@ -172,8 +163,7 @@ export default function NaibrlybundelOfferSection() {
     if (!isAuthenticated) {
       const serviceData = {
         title: bundle.service || bundle.title,
-        image:
-          "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
+        image: bundle.images?.[0] || bundle.coverImage || null,
       };
       setSelectedBundle(serviceData);
       setIsAuthModalOpen(true);
@@ -188,8 +178,8 @@ export default function NaibrlybundelOfferSection() {
           : `Participant ${idx + 1}`,
         image:
           p.customer?.profileImage?.url ||
-          bundle.images?.[idx] ||
-          `https://i.pravatar.cc/100?img=${idx + 1}`,
+          p.customer?.profileImage ||
+          null,
         location: bundle.location,
       })) || [];
 
@@ -198,9 +188,7 @@ export default function NaibrlybundelOfferSection() {
     for (let i = 0; i < spotsOpen && participantsForModal.length < 3; i++) {
       participantsForModal.push({
         name: "Open Spot",
-        image:
-          bundle.images?.[participantsForModal.length] ||
-          `https://i.pravatar.cc/100?img=${participantsForModal.length + 10}`,
+        image: null,
         location: bundle.location,
       });
     }
@@ -208,8 +196,7 @@ export default function NaibrlybundelOfferSection() {
     const bundleWithParticipants = {
       ...bundle,
       participants: participantsForModal,
-      modalImage:
-        "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop",
+      modalImage: bundle.images?.[0] || bundle.coverImage || null,
     };
     setSelectedBundle(bundleWithParticipants);
     setIsModalOpen(true);
@@ -286,16 +273,7 @@ export default function NaibrlybundelOfferSection() {
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-gray-600 text-lg">
-              "This is a great offer for you. If more than one of you use the
-              app together to place an order,
-            </p>
-            <p className="text-gray-600 text-lg">
-              you will get up to 7% discount. Anyone within a 10 km radius can
-              join."
-            </p>
-          </div>
+          
         </div>
 
         {/* Offers Grid */}

@@ -48,23 +48,28 @@ const customFetchBaseQuery = async (args, api, extraOptions) => {
       typeof result.error === 'object' &&
       result.error !== null &&
       Object.keys(result.error).length === 0;
+    const hasDetails =
+      result.error?.status !== undefined ||
+      result.error?.error ||
+      result.error?.data;
 
-    // Normalize empty errors so we at least have a message
+    // Normalize empty errors so we at least have a message, but avoid noisy {} logs
     if (isEmptyError) {
-      result.error = {
-        status: 'FETCH_ERROR',
-        error: 'Unknown fetch error (empty error object). Possible network/CORS/timeout.',
+      console.warn('[RTK Query] Base query error: empty error object (possible network/CORS/timeout)', {
+        endpoint: api?.endpoint,
+        url: typeof args === 'string' ? args : args?.url,
+      });
+    } else if (hasDetails) {
+      console.error('[RTK Query] Base query error', {
+        endpoint: api?.endpoint,
+        url: typeof args === 'string' ? args : args?.url,
+        error: result.error,
         meta: result.meta,
-      };
+        raw: result,
+      });
+    } else {
+      // No usable details; skip noisy log
     }
-
-    console.error('[RTK Query] Base query error', {
-      endpoint: api?.endpoint,
-      url: typeof args === 'string' ? args : args?.url,
-      error: result.error,
-      meta: result.meta,
-      raw: result,
-    });
   }
 
   // Auto-logout on 401 Unauthorized
