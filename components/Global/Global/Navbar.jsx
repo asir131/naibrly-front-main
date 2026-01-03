@@ -678,24 +678,14 @@ export default function Navbar() {
                   className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
-                  {profileImage ? (
-                    profileImage.includes("placehold.co") ? (
-                      <img
-                        src={profileImage}
-                        alt="User Profile"
-                        width={40}
-                        height={40}
-                        className="rounded-full w-10 h-10 object-cover"
-                      />
-                    ) : (
-                      <Image
-                        src={profileImage}
-                        alt="User Profile"
-                        width={40}
-                        height={40}
-                        className="rounded-full w-10 h-10 object-cover"
-                      />
-                    )
+                  {profileImage && !profileImage.includes("placehold.co") ? (
+                    <Image
+                      src={profileImage}
+                      alt="User Profile"
+                      width={40}
+                      height={40}
+                      className="rounded-full w-10 h-10 object-cover"
+                    />
                   ) : (
                     <div className="w-10 h-10 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
                       <UserIcon className="w-6 h-6 text-white" />

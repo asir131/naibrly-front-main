@@ -27,6 +27,7 @@ const Account = () => {
     zipCode: '',
     aptSuite: '',
     profileImage: null,
+    authProvider: '',
     createdAt: ''
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -101,6 +102,7 @@ const Account = () => {
           zipCode: userData.address?.zipCode || '',
           aptSuite: userData.address?.aptSuite || '',
           profileImage: userData.profileImage || null,
+          authProvider: userData.authProvider || '',
           createdAt: userData.createdAt || ''
         });
 
@@ -210,6 +212,7 @@ const Account = () => {
           zipCode: updatedUser.address?.zipCode || formData.zipCode,
           aptSuite: updatedUser.address?.aptSuite || formData.aptSuite,
           profileImage: updatedUser.profileImage || formData.profileImage,
+          authProvider: updatedUser.authProvider || formData.authProvider,
           createdAt: updatedUser.createdAt || formData.createdAt
         };
         setFormData(newFormData);
@@ -222,6 +225,7 @@ const Account = () => {
           phone: updatedUser.phone,
           profileImage: updatedUser.profileImage,
           address: updatedUser.address,
+          authProvider: updatedUser.authProvider,
         }));
       }
 
@@ -259,8 +263,23 @@ const Account = () => {
     );
   }
 
+  const missingFields = [];
+  if (formData.authProvider === 'google') {
+    if (!formData.phone?.trim()) missingFields.push('phone number');
+    if (!formData.street?.trim()) missingFields.push('street address');
+    if (!formData.city?.trim()) missingFields.push('city');
+    if (!formData.state?.trim()) missingFields.push('state');
+    if (!formData.zipCode?.trim()) missingFields.push('zip code');
+  }
+
   return (
     <div className="flex-1 p-8">
+      {formData.authProvider === 'google' && missingFields.length > 0 && (
+        <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
+          Please complete your profile: {missingFields.join(', ')}.
+        </div>
+      )}
+
       {/* Success Message */}
       {successMessage && (
         <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">

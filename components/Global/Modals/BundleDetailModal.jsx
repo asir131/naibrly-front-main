@@ -10,7 +10,30 @@ import { useJoinBundleMutation } from "@/redux/api/servicesApi";
 import { toast } from "react-hot-toast";
 
 // Default avatar placeholder
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop';
+const DEFAULT_AVATAR =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop";
+const SERVICE_CATEGORY_MAP = {
+  Electrical: "Home Repairs & Maintenance",
+  Plumbing: "Home Repairs & Maintenance",
+  "Door, Cabinet, & Furniture Repair": "Home Repairs & Maintenance",
+  "Furniture Assembly": "Installation & Assembly",
+  "IKEA Assembly": "Installation & Assembly",
+  "TV Mounting": "Installation & Assembly",
+  Cleaning: "Cleaning & Organization",
+  "Bathroom Remodeling": "Renovations & Upgrades",
+  Carpenters: "Renovations & Upgrades",
+  Moving: "Moving",
+};
+
+const CATEGORY_TYPE_IMAGES = {
+  "Home Repairs & Maintenance": "/topServices/image (1).png",
+  "Cleaning & Organization": "/clean.png",
+  "Renovations & Upgrades": "/provider/Paint.png",
+  "Exterior Home Care": "/provider/Sessor.png",
+  "Landscaping & Outdoor Services": "/provider/Hammer.png",
+  Moving: "/provider/design  (1).png",
+  "Installation & Assembly": "/provider/design  (2).png",
+};
 
 export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -20,12 +43,14 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   if (!isOpen || !bundleData) return null;
 
   // Filter out "Open Spot" participants and ensure valid image/name
-  const activeParticipants = (bundleData.participants?.filter(
-    participant => participant.name !== "Open Spot"
-  ) || []).map(p => ({
+  const activeParticipants = (
+    bundleData.participants?.filter(
+      (participant) => participant.name !== "Open Spot"
+    ) || []
+  ).map((p) => ({
     ...p,
     image: p.image || DEFAULT_AVATAR,
-    name: p.name || 'Participant'
+    name: p.name || "Participant",
   }));
 
   const handleShare = () => {
@@ -38,30 +63,49 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
       const bundleId = bundleData._id || bundleData.id;
 
       if (!bundleId) {
-        console.error('Bundle ID not found');
-        toast.error('Unable to join bundle. Please try again.');
+        console.error("Bundle ID not found");
+        toast.error("Unable to join bundle. Please try again.");
         return;
       }
 
-      console.log('Joining bundle:', bundleId);
+      console.log("Joining bundle:", bundleId);
 
       // Call the join bundle API
       const result = await joinBundle(bundleId).unwrap();
 
-      console.log('Successfully joined bundle:', result);
+      console.log("Successfully joined bundle:", result);
 
       if (typeof onClose === "function") {
         onClose();
       }
       router.push("/request");
     } catch (error) {
-      console.error('Failed to join bundle:', error);
+      console.error("Failed to join bundle:", error);
 
       // Show user-friendly error message
-      const errorMessage = error?.data?.message || error?.message || 'Failed to join bundle. Please try again.';
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to join bundle. Please try again.";
       toast.error(errorMessage);
     }
   };
+
+  const getCategoryTypeName = (bundle) => {
+    if (bundle?.categoryTypeName) return bundle.categoryTypeName;
+    const firstServiceName = bundle?.services?.[0]?.name;
+    return SERVICE_CATEGORY_MAP[firstServiceName] || null;
+  };
+
+  const getCategoryImage = (bundle) => {
+    const categoryType = getCategoryTypeName(bundle);
+    if (categoryType && CATEGORY_TYPE_IMAGES[categoryType]) {
+      return CATEGORY_TYPE_IMAGES[categoryType];
+    }
+    return bundle?.modalImage || bundle?.images?.[0] || DEFAULT_AVATAR;
+  };
+
+  const heroImage = getCategoryImage(bundleData);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -77,7 +121,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
           {/* Left side - Image */}
           <div className="md:w-2/5 relative h-64 md:h-auto">
             <Image
-              src={bundleData.modalImage || bundleData.images[0]}
+              src={heroImage}
               alt={bundleData.service}
               width={400}
               height={600}
@@ -138,15 +182,21 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Standard rates est.</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Standard rates est.
+                  </p>
                   <p className="text-lg font-semibold text-gray-900">
                     {bundleData.originalPrice}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-600 mb-1">Standard rates est.</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Standard rates est.
+                  </p>
                   <p className="text-lg font-semibold text-teal-600">
-                    {bundleData.savings ? bundleData.savings.replace('-', '') + ' off' : bundleData.discountedPrice || 'N/A'}
+                    {bundleData.savings
+                      ? bundleData.savings.replace("-", "") + " off"
+                      : bundleData.discountedPrice || "N/A"}
                   </p>
                 </div>
               </div>
@@ -164,7 +214,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
                   <span>Joining...</span>
                 </div>
               ) : (
-                'Join Bundle'
+                "Join Bundle"
               )}
             </Button>
           </div>
