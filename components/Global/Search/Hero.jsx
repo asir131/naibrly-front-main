@@ -12,13 +12,19 @@ import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 
-export default function NaibrlyHeroSection({ onSearch, isSearching }) {
+export default function NaibrlyHeroSection({
+  onSearch,
+  isSearching,
+  providerResults,
+  hasSearched,
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const customerZipCode = useCustomerZipCode();
 
   // Fetch services from API
-  const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
+  const { data: servicesData, isLoading: servicesLoading } =
+    useGetServicesQuery();
 
   // Extract all service names from the API data
   const serviceOptions = useMemo(() => {
@@ -49,7 +55,11 @@ export default function NaibrlyHeroSection({ onSearch, isSearching }) {
 
   // Initialize filtered services when data loads
   useEffect(() => {
-    if (serviceOptions.length > 0 && filteredServices.length === 0 && !searchQuery) {
+    if (
+      serviceOptions.length > 0 &&
+      filteredServices.length === 0 &&
+      !searchQuery
+    ) {
       setFilteredServices(serviceOptions);
     }
   }, [serviceOptions, filteredServices.length, searchQuery]);
@@ -72,9 +82,7 @@ export default function NaibrlyHeroSection({ onSearch, isSearching }) {
   // Filter zip codes based on input
   const handleZipSearch = (value) => {
     setZipCode(value);
-    const filtered = zipCodeOptions.filter((zip) =>
-      zip.includes(value)
-    );
+    const filtered = zipCodeOptions.filter((zip) => zip.includes(value));
     setFilteredZipCodes(filtered);
     setZipOpen(true);
   };
@@ -110,43 +118,57 @@ export default function NaibrlyHeroSection({ onSearch, isSearching }) {
     };
   }, []);
 
+  const topProvider = providerResults?.providers?.[0] || null;
+  const showNaibrlyNow = hasSearched && !isSearching && !!topProvider;
+  const providerName =
+    topProvider?.provider?.businessName || "Service Provider";
+  const providerId = topProvider?.provider?.id;
+  const serviceName = topProvider?.service?.name || searchQuery.trim();
+  const hourlyRate = topProvider?.service?.hourlyRate;
+  const rating = topProvider?.provider?.rating || 0;
+  const reviewCount = topProvider?.provider?.totalReviews || 0;
+  const providerImage =
+    topProvider?.provider?.businessLogo?.url ||
+    topProvider?.provider?.profileImage?.url ||
+    "https://randomuser.me/api/portraits/men/1.jpg";
+
   return (
     <div className="bg-linear-to-br from-gray-50 to-teal-50 min-h-8 relative p-2 lg:p-10 overflow-hidden">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
-              <style jsx>{`
-                @keyframes moveMap {
-                  0% {
-                    transform: translateX(0);
-                  }
-                  100% {
-                    transform: translateX(-50%);
-                  }
-                }
-                .animate-map {
-                  animation: moveMap 60s linear infinite;
-                }
-              `}</style>
-              <div className="flex w-[200%] h-full animate-map">
-                <div className="relative w-1/2 h-full shrink-0">
-                  <Image
-                    src={MapBg}
-                    alt="Map background"
-                    fill
-                    className="object-cover opacity-100"
-                    priority
-                  />
-                </div>
-                <div className="relative w-1/2 h-full shrink-0">
-                  <Image
-                    src={MapBg}
-                    alt="Map background"
-                    fill
-                    className="object-cover opacity-100"
-                  />
-                </div>
-              </div>
-            </div>
+        <style jsx>{`
+          @keyframes moveMap {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+          .animate-map {
+            animation: moveMap 60s linear infinite;
+          }
+        `}</style>
+        <div className="flex w-[200%] h-full animate-map">
+          <div className="relative w-1/2 h-full shrink-0">
+            <Image
+              src={MapBg}
+              alt="Map background"
+              fill
+              className="object-cover opacity-100"
+              priority
+            />
+          </div>
+          <div className="relative w-1/2 h-full shrink-0">
+            <Image
+              src={MapBg}
+              alt="Map background"
+              fill
+              className="object-cover opacity-100"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto relative z-10">
@@ -173,7 +195,10 @@ export default function NaibrlyHeroSection({ onSearch, isSearching }) {
               {/* Search Bar Container */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center shadow-lg rounded-[20px] bg-[#F4F7FE] border border-[#EBEBEB] min-h-[70px]">
                 {/* Service Search Input */}
-                <div ref={searchRef} className="flex-1 h-full relative min-h-[60px] sm:min-h-0">
+                <div
+                  ref={searchRef}
+                  className="flex-1 h-full relative min-h-[60px] sm:min-h-0"
+                >
                   <input
                     type="text"
                     value={searchQuery}
@@ -286,10 +311,69 @@ export default function NaibrlyHeroSection({ onSearch, isSearching }) {
                 ) : (
                   <>
                     <Search className="w-5 h-5" />
-                    Find your area
+                    Find in your area
                   </>
                 )}
               </Button>
+
+              {showNaibrlyNow && (
+                <div className="mt-4 rounded-2xl border border-gray-200 bg-white/90 p-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                      <img
+                        src={providerImage}
+                        alt={providerName}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-base font-semibold text-gray-900">
+                            {serviceName || "Service"}
+                          </h3>
+                          <div className="mt-1 text-sm text-teal-600 font-semibold">
+                            {rating.toFixed(1)}{" "}
+                            <span className="text-amber-500">★</span>
+                            <span className="text-gray-500">
+                              {" "}
+                              ({reviewCount})
+                            </span>
+                          </div>
+                          <div className="mt-1 text-sm text-gray-600">
+                            {providerName}
+                          </div>
+                        </div>
+                        {typeof hourlyRate === "number" && (
+                          <div className="text-right">
+                            <div className="text-base font-semibold text-gray-900">
+                              ${hourlyRate}/hr
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Hourly Rate
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-3">
+                        <Button
+                          onClick={() => {
+                            if (!providerId || !serviceName) return;
+                            router.push(
+                              `/providerprofile?id=${providerId}&service=${encodeURIComponent(
+                                serviceName
+                              )}`
+                            );
+                          }}
+                          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-5 py-2 rounded-lg"
+                        >
+                          Naibrly Now
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

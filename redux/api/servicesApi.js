@@ -369,7 +369,7 @@ export const servicesApi = createApi({
     cancelServiceRequest: builder.mutation({
       query: ({ requestId, ...body }) => ({
         url: `/service-requests/${requestId}/cancel`,
-        method: 'POST',
+        method: 'PATCH',
         body,
       }),
       invalidatesTags: (result, error, { requestId }) => [
@@ -415,6 +415,19 @@ export const servicesApi = createApi({
         { type: 'Bundles', id: 'LIST' },
         'Provider',
         'ServiceRequests',
+        { type: 'ServiceRequests', id: 'LIST' },
+      ],
+    }),
+    // Customer cancels their bundle participation
+    cancelBundleParticipation: builder.mutation({
+      query: ({ bundleId, ...body }) => ({
+        url: `/bundles/${bundleId}/participants/me/cancel`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { bundleId }) => [
+        { type: 'Bundles', id: bundleId },
+        { type: 'Bundles', id: 'LIST' },
         { type: 'ServiceRequests', id: 'LIST' },
       ],
     }),
@@ -1349,6 +1362,7 @@ export const {
   useCreateBundleMutation,
   useUpdateBundleStatusMutation,
   useUpdateBundleParticipantStatusMutation,
+  useCancelBundleParticipationMutation,
   useCreateMoneyRequestMutation,
   useGetCustomerMoneyRequestsQuery,
   useAcceptMoneyRequestMutation,

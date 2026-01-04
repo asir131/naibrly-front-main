@@ -6,6 +6,18 @@ import { X } from 'lucide-react';
 export default function NotificationDropdown({ isOpen, onClose, notifications = [], onSelect }) {
   if (!isOpen) return null;
 
+  const normalizeBody = (body) => {
+    if (!body) return body;
+    const text = String(body);
+    if (text.includes('__TASK_COMPLETED__SERVICE') || text.includes('__TASK_COMPLETED__')) {
+      return 'Service task completed';
+    }
+    if (text.includes('__TASK_COMPLETED__BUNDLE')) {
+      return 'Bundle task completed';
+    }
+    return text;
+  };
+
   return (
     <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
       <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
@@ -37,7 +49,7 @@ export default function NotificationDropdown({ isOpen, onClose, notifications = 
                   </div>
                   {notification.body && (
                     <p className="mt-1 text-sm text-gray-600 leading-5 line-clamp-2">
-                      {notification.body}
+                      {normalizeBody(notification.body)}
                     </p>
                   )}
                 </div>

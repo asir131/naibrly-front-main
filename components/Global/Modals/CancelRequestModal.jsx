@@ -5,7 +5,17 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
-export default function CancelRequestModal({ isOpen, onClose, onConfirm }) {
+export default function CancelRequestModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = 'Are you sure!',
+  description = 'you want to cancel this order?',
+  label = 'Note why*',
+  placeholder = 'Type here',
+  submitLabel = 'Cancelled',
+  isSubmitting = false,
+}) {
   const [note, setNote] = useState('');
 
   const handleCancel = () => {
@@ -26,23 +36,23 @@ export default function CancelRequestModal({ isOpen, onClose, onConfirm }) {
 
           {/* Title */}
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Are you sure!
+            {title}
           </h2>
 
           {/* Description */}
           <p className="text-sm text-gray-600 mb-6">
-            you want to cancel this order?
+            {description}
           </p>
 
           {/* Input Field */}
           <div className="w-full mb-6">
             <label className="block text-left text-sm font-medium text-gray-700 mb-2">
-              Note why*
+              {label}
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Type here"
+              placeholder={placeholder}
               rows={4}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
             />
@@ -51,9 +61,10 @@ export default function CancelRequestModal({ isOpen, onClose, onConfirm }) {
           {/* Button */}
           <Button
             onClick={handleCancel}
+            disabled={isSubmitting}
             className="w-full bg-red-500 hover:bg-red-600 text-white h-12 rounded-lg font-medium"
           >
-            Cancelled
+            {submitLabel}
           </Button>
         </div>
       </DialogContent>

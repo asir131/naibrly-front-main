@@ -4,6 +4,18 @@ const initialState = {
   items: [],
 };
 
+const normalizeNotificationBody = (body) => {
+  if (!body) return body;
+  const text = String(body);
+  if (text.includes('__TASK_COMPLETED__SERVICE') || text.includes('__TASK_COMPLETED__')) {
+    return 'Service task completed';
+  }
+  if (text.includes('__TASK_COMPLETED__BUNDLE')) {
+    return 'Bundle task completed';
+  }
+  return text;
+};
+
 const notificationsSlice = createSlice({
   name: 'notifications',
   initialState,
@@ -20,11 +32,11 @@ const notificationsSlice = createSlice({
           payload: {
             id: notification.id || nanoid(),
             title: notification.title || 'New message',
-            body: notification.body || '',
             link: notification.link || '/',
             createdAt: notification.createdAt || new Date().toISOString(),
             isRead: false,
             ...notification,
+            body: normalizeNotificationBody(notification.body || ''),
           },
         };
       },
@@ -42,7 +54,10 @@ const notificationsSlice = createSlice({
       state.items = [];
     },
     setNotifications(state, action) {
-      state.items = action.payload || [];
+      state.items = (action.payload || []).map((notification) => ({
+        ...notification,
+        body: normalizeNotificationBody(notification.body || ''),
+      }));
     },
   },
 });

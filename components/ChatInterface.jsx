@@ -159,12 +159,14 @@ export default function ChatInterface({
   useEffect(() => {
     setLocalStatus(status);
   }, [status]);
+  const statusLower = (localStatus || '').toLowerCase();
+  const isCancelled = statusLower === 'cancelled';
+  const canUseQuickChats = ['accepted', 'completed'].includes(statusLower);
 
   // Listen for direct money-request events from socket
   useEffect(() => {
     const handleMoneyReqCreated = (event) => {
       const payload = event?.detail;
-      setMoneySignal(true);
       if (payload) {
         setOptimisticMoneyRequests((prev) => {
           if (payload.moneyRequestId && prev.some((p) => p._id === payload.moneyRequestId)) {
@@ -279,6 +281,10 @@ export default function ChatInterface({
 
   // Handle quick chat click
   const handleQuickChatClick = (quickChat) => {
+    if (isCancelled) {
+      console.warn('Cannot send quick chat - request is cancelled');
+      return;
+    }
     if (!isConnected) {
       console.warn('⚠️ Cannot send message - not connected');
       return;
@@ -518,7 +524,7 @@ export default function ChatInterface({
                 </span>
               )}
             </div>
-            {localStatus === 'accepted' && onCancel && (
+            {['pending', 'accepted'].includes((localStatus || '').toLowerCase()) && onCancel && (
               <Button
                 onClick={onCancel}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 h-8 text-sm rounded-md"
@@ -541,13 +547,6 @@ export default function ChatInterface({
               </span>
               <span className="text-gray-700">{request.avgPrice}</span>
             </div>
-            {request.rating > 0 && (
-              <div className="flex items-center gap-1">
-                <span className="text-yellow-400">★</span>
-                <span className="font-medium text-gray-900">{request.rating}</span>
-                <span className="text-gray-500">({request.reviews.toLocaleString()} reviews)</span>
-              </div>
-            )}
           </div>
 
           {/* Date */}
@@ -712,13 +711,6 @@ export default function ChatInterface({
                       <span className="font-semibold text-gray-900">
                         Avg. price: <span className="text-emerald-600">{request.avgPrice}</span>
                       </span>
-                      {request.rating > 0 && (
-                        <span className="flex items-center gap-1">
-                          <span className="text-yellow-400">★</span>
-                          <span className="font-medium text-gray-900">{request.rating}</span>
-                          <span className="text-gray-500">({request.reviews.toLocaleString()} reviews)</span>
-                        </span>
-                      )}
                       <span className="text-gray-500">Date : {request.date}</span>
                     </div>
                   </div>
@@ -784,8 +776,8 @@ export default function ChatInterface({
         </div>
       )}
 
-      {/* Quick Chats - Only show for accepted status */}
-      {localStatus === 'accepted' && (
+      {/* Quick Chats - disabled only when cancelled */}
+      {canUseQuickChats && !isCancelled && (
         <div className="p-4 bg-white rounded-2xl space-y-3 ">
           <div className="flex items-center justify-between">
             

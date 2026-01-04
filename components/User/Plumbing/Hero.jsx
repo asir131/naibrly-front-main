@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { Link as LinkIcon, MapPin } from 'lucide-react';
-import Link from 'next/link'; // Make sure to import Next.js Link
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useEffect, useState } from 'react';
-import React from 'react';
-import useCustomerZipCode from '@/hooks/useCustomerZipCode';
+import { Link as LinkIcon, MapPin } from "lucide-react";
+import Link from "next/link"; // Make sure to import Next.js Link
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import React from "react";
+import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 
 export default function PlumberFinder() {
   const customerZipCode = useCustomerZipCode();
-  const [zipCode, setZipCode] = useState('');
+  const [zipCode, setZipCode] = useState("");
 
   useEffect(() => {
     if (!zipCode && customerZipCode) {
@@ -46,10 +46,8 @@ export default function PlumberFinder() {
                 />
               </div>
               <Link href="/Plumber-list">
-                <Button
-                  className="w-full h-12 bg-[#0E7A60] hover:bg-[#076650] text-white text-lg font-medium rounded-lg transition-colors"
-                >
-                  Find your area
+                <Button className="w-full h-12 bg-[#0E7A60] hover:bg-[#076650] text-white text-lg font-medium rounded-lg transition-colors">
+                  Find in your area
                 </Button>
               </Link>
             </div>

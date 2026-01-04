@@ -1,22 +1,26 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, X } from 'lucide-react';
-import { useGetServicesQuery, useCreateBundleMutation } from '@/redux/api/servicesApi';
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, X } from "lucide-react";
+import {
+  useGetServicesQuery,
+  useCreateBundleMutation,
+} from "@/redux/api/servicesApi";
 
 export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
-  const [selectedMainCategory, setSelectedMainCategory] = useState('');
-  const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  const [selectedMainCategory, setSelectedMainCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
-  const [serviceDate, setServiceDate] = useState('');
-  const [fromTime, setFromTime] = useState('');
-  const [toTime, setToTime] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [serviceDate, setServiceDate] = useState("");
+  const [fromTime, setFromTime] = useState("");
+  const [toTime, setToTime] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
-  const [showMainCategoryDropdown, setShowMainCategoryDropdown] = useState(false);
+  const [showMainCategoryDropdown, setShowMainCategoryDropdown] =
+    useState(false);
   const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false);
   const [showServiceDropdown, setShowServiceDropdown] = useState(false);
 
@@ -26,7 +30,8 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
   const serviceRef = useRef(null);
 
   // Fetch services from API
-  const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery();
+  const { data: servicesData, isLoading: servicesLoading } =
+    useGetServicesQuery();
 
   // Create bundle mutation
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation();
@@ -39,24 +44,44 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
 
   // Get category types for selected main category
   const categoryTypes = useMemo(() => {
-    if (!selectedMainCategory || !servicesData?.organized?.[selectedMainCategory]) return [];
-    return Object.keys(servicesData.organized[selectedMainCategory].categoryTypes);
+    if (
+      !selectedMainCategory ||
+      !servicesData?.organized?.[selectedMainCategory]
+    )
+      return [];
+    return Object.keys(
+      servicesData.organized[selectedMainCategory].categoryTypes
+    );
   }, [selectedMainCategory, servicesData]);
 
   // Get services for selected category type
   const availableServices = useMemo(() => {
-    if (!selectedMainCategory || !selectedSubCategory || !servicesData?.organized) return [];
-    const categoryType = servicesData.organized[selectedMainCategory]?.categoryTypes?.[selectedSubCategory];
+    if (
+      !selectedMainCategory ||
+      !selectedSubCategory ||
+      !servicesData?.organized
+    )
+      return [];
+    const categoryType =
+      servicesData.organized[selectedMainCategory]?.categoryTypes?.[
+        selectedSubCategory
+      ];
     return categoryType?.services || [];
   }, [selectedMainCategory, selectedSubCategory, servicesData]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (mainCategoryRef.current && !mainCategoryRef.current.contains(event.target)) {
+      if (
+        mainCategoryRef.current &&
+        !mainCategoryRef.current.contains(event.target)
+      ) {
         setShowMainCategoryDropdown(false);
       }
-      if (subCategoryRef.current && !subCategoryRef.current.contains(event.target)) {
+      if (
+        subCategoryRef.current &&
+        !subCategoryRef.current.contains(event.target)
+      ) {
         setShowSubCategoryDropdown(false);
       }
       if (serviceRef.current && !serviceRef.current.contains(event.target)) {
@@ -64,23 +89,28 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
       }
     };
 
-    if (showMainCategoryDropdown || showSubCategoryDropdown || showServiceDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+    if (
+      showMainCategoryDropdown ||
+      showSubCategoryDropdown ||
+      showServiceDropdown
+    ) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showMainCategoryDropdown, showSubCategoryDropdown, showServiceDropdown]);
 
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setSelectedMainCategory('');
-      setSelectedSubCategory('');
+      setSelectedMainCategory("");
+      setSelectedSubCategory("");
       setSelectedServices([]);
-      setServiceDate('');
-      setFromTime('');
-      setToTime('');
-      setTitle('');
-      setDescription('');
+      setServiceDate("");
+      setFromTime("");
+      setToTime("");
+      setTitle("");
+      setDescription("");
     }
   }, [isOpen]);
 
@@ -97,8 +127,15 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
   const handlePublish = async () => {
     try {
       // Basic validation
-      if (!selectedMainCategory || !selectedSubCategory || selectedServices.length === 0 || !serviceDate || !fromTime || !toTime) {
-        console.error('Missing required fields for creating bundle');
+      if (
+        !selectedMainCategory ||
+        !selectedSubCategory ||
+        selectedServices.length === 0 ||
+        !serviceDate ||
+        !fromTime ||
+        !toTime
+      ) {
+        console.error("Missing required fields for creating bundle");
         return;
       }
 
@@ -111,13 +148,18 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
         serviceTimeStart: fromTime,
         serviceTimeEnd: toTime,
         title: title || `${selectedSubCategory} Bundle`,
-        description: description || `Bundle for ${selectedServices.map((s) => s.name).join(', ')}`,
+        description:
+          description ||
+          `Bundle for ${selectedServices.map((s) => s.name).join(", ")}`,
       };
 
-      console.log('Bundle data being sent to the backend:', JSON.parse(JSON.stringify(bundleData)));
+      console.log(
+        "Bundle data being sent to the backend:",
+        JSON.parse(JSON.stringify(bundleData))
+      );
 
       const response = await createBundle(bundleData).unwrap();
-      console.log('Bundle created successfully:', response);
+      console.log("Bundle created successfully:", response);
 
       // Generate the frontend share link
       const shareToken = response.data?.sharing?.shareToken;
@@ -140,19 +182,19 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
       onClose();
     } catch (error) {
       // RTK Query returns different shapes for errors depending on network/server
-      console.error('Failed to create bundle. Full error object:', error);
+      console.error("Failed to create bundle. Full error object:", error);
 
       // If server returned a JSON error body, log it specifically
       if (error?.data) {
-        console.error('Server response (data):', error.data);
+        console.error("Server response (data):", error.data);
       }
       if (error?.status) {
-        console.error('HTTP status:', error.status);
+        console.error("HTTP status:", error.status);
       }
 
       // If fetchBaseQuery returned a serialized error message
       if (error?.error) {
-        console.error('Error message:', error.error);
+        console.error("Error message:", error.error);
       }
 
       // You might want to show an error toast here to notify the user
@@ -216,14 +258,22 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                   }}
                   className="w-full px-4 py-3 bg-gray-100 rounded-lg text-left text-sm text-gray-900 flex items-center justify-between hover:bg-gray-200 transition-colors"
                 >
-                  <span className="truncate">{selectedMainCategory || 'Select Category'}</span>
-                  <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showMainCategoryDropdown ? 'rotate-180' : ''}`} />
+                  <span className="truncate">
+                    {selectedMainCategory || "Select Category"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${
+                      showMainCategoryDropdown ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
                 {showMainCategoryDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
                     {servicesLoading ? (
-                      <div className="px-4 py-3 text-sm text-gray-500 text-center">Loading...</div>
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                        Loading...
+                      </div>
                     ) : mainCategories.length > 0 ? (
                       mainCategories.map((category) => (
                         <button
@@ -231,7 +281,7 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                           key={category.name}
                           onClick={() => {
                             setSelectedMainCategory(category.name);
-                            setSelectedSubCategory('');
+                            setSelectedSubCategory("");
                             setSelectedServices([]);
                             setShowMainCategoryDropdown(false);
                           }}
@@ -241,7 +291,9 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                         </button>
                       ))
                     ) : (
-                      <div className="px-4 py-3 text-sm text-gray-500 text-center">No categories</div>
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                        No categories
+                      </div>
                     )}
                   </div>
                 )}
@@ -260,11 +312,19 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                   }}
                   disabled={!selectedMainCategory}
                   className={`w-full px-4 py-3 bg-gray-100 rounded-lg text-left text-sm text-gray-900 flex items-center justify-between transition-colors ${
-                    selectedMainCategory ? 'hover:bg-gray-200 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                    selectedMainCategory
+                      ? "hover:bg-gray-200 cursor-pointer"
+                      : "opacity-50 cursor-not-allowed"
                   }`}
                 >
-                  <span className="truncate">{selectedSubCategory || 'Category Type'}</span>
-                  <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showSubCategoryDropdown ? 'rotate-180' : ''}`} />
+                  <span className="truncate">
+                    {selectedSubCategory || "Category Type"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${
+                      showSubCategoryDropdown ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
                 {showSubCategoryDropdown && selectedMainCategory && (
@@ -285,7 +345,9 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                         </button>
                       ))
                     ) : (
-                      <div className="px-4 py-3 text-sm text-gray-500 text-center">No types</div>
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                        No types
+                      </div>
                     )}
                   </div>
                 )}
@@ -331,13 +393,27 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
               }}
               disabled={!selectedSubCategory}
               className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-left text-sm flex items-center justify-between transition-colors ${
-                selectedSubCategory ? 'hover:border-gray-400 cursor-pointer' : 'opacity-50 cursor-not-allowed'
+                selectedSubCategory
+                  ? "hover:border-gray-400 cursor-pointer"
+                  : "opacity-50 cursor-not-allowed"
               }`}
             >
-              <span className={`truncate ${selectedServices.length > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                {selectedServices.length > 0 ? `${selectedServices.length} selected` : 'Select services'}
+              <span
+                className={`truncate ${
+                  selectedServices.length > 0
+                    ? "text-gray-900"
+                    : "text-gray-400"
+                }`}
+              >
+                {selectedServices.length > 0
+                  ? `${selectedServices.length} selected`
+                  : "Select services"}
               </span>
-              <ChevronDown className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${showServiceDropdown ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${
+                  showServiceDropdown ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {showServiceDropdown && selectedSubCategory && (
@@ -349,7 +425,9 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                       key={service.id}
                       onClick={() => handleServiceToggle(service)}
                       className={`w-full text-left px-4 py-3 hover:bg-gray-50 text-sm transition-colors first:rounded-t-lg last:rounded-b-lg flex items-center justify-between ${
-                        selectedServices.some((s) => s.id === service.id) ? 'bg-teal-50 text-teal-900' : 'text-gray-900'
+                        selectedServices.some((s) => s.id === service.id)
+                          ? "bg-teal-50 text-teal-900"
+                          : "text-gray-900"
                       }`}
                     >
                       <span>{service.name}</span>
@@ -359,7 +437,9 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                     </button>
                   ))
                 ) : (
-                  <div className="px-4 py-3 text-sm text-gray-500 text-center">No services</div>
+                  <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                    No services
+                  </div>
                 )}
               </div>
             )}
@@ -374,7 +454,7 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
               type="date"
               value={serviceDate}
               onChange={(e) => setServiceDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
+              min={new Date().toISOString().split("T")[0]}
               className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
@@ -383,7 +463,7 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-semibold text-gray-900 mb-3 block">
-                From*
+                Service Window
               </label>
               <input
                 type="time"
@@ -420,7 +500,7 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
             }
             className="w-full bg-orange-500 hover:bg-orange-600 text-white h-12 rounded-lg font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isCreating ? 'Publishing...' : 'Publish'}
+            {isCreating ? "Publishing..." : "Publish"}
           </Button>
         </div>
       </DialogContent>

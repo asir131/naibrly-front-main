@@ -47,7 +47,12 @@ function SearchPageContent() {
     return (
         <div>
             <Suspense fallback={<div className="min-h-8 p-2 lg:p-10">Loading...</div>}>
-                <Hero onSearch={handleSearch} isSearching={isLoading} />
+                <Hero
+                    onSearch={handleSearch}
+                    isSearching={isLoading}
+                    providerResults={providerResults}
+                    hasSearched={hasSearched}
+                />
             </Suspense>
             <Suspense fallback={<div className="py-16 px-8">Loading offers...</div>}>
                 <Middle

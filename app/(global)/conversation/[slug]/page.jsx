@@ -4,7 +4,15 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import ChatInterface from '@/components/ChatInterface';
-import { useGetMyServiceRequestsQuery } from '@/redux/api/servicesApi';
+import {
+  useGetMyServiceRequestsQuery,
+  useCancelServiceRequestMutation,
+  useCancelBundleParticipationMutation,
+} from '@/redux/api/servicesApi';
+import toast from 'react-hot-toast';
+import CancelRequestModal from '@/components/Global/Modals/CancelRequestModal';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export default function ConversationPage() {
   const params = useParams();
@@ -13,6 +21,13 @@ export default function ConversationPage() {
 
   const [requestType, setRequestType] = useState(null); // 'service' or 'bundle'
   const [itemId, setItemId] = useState(null);
+  const [overrideStatus, setOverrideStatus] = useState(null);
+  const [overrideCancellation, setOverrideCancellation] = useState({
+    reason: null,
+    by: null,
+  });
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showCancelReason, setShowCancelReason] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -27,6 +42,16 @@ export default function ConversationPage() {
   }, [slug]);
 
   const { data: myRequestsData, isLoading, error } = useGetMyServiceRequestsQuery();
+  const [cancelServiceRequest, { isLoading: isCancellingService }] = useCancelServiceRequestMutation();
+  const [cancelBundleParticipation, { isLoading: isCancellingBundle }] = useCancelBundleParticipationMutation();
+  const isCancelling = isCancellingService || isCancellingBundle;
+
+  useEffect(() => {
+    setOverrideStatus(null);
+    setOverrideCancellation({ reason: null, by: null });
+    setShowCancelConfirm(false);
+    setShowCancelReason(false);
+  }, [itemId]);
 
   const requestObject = useMemo(() => {
     if (!itemId) return null;
@@ -97,9 +122,49 @@ export default function ConversationPage() {
     return null;
   }, [itemId, requestType, myRequestsData]);
 
-  const handleCancel = () => {
-    // TODO: Implement cancel functionality
-    console.log('Cancel conversation');
+  const handleCancelClick = () => {
+    if (!requestObject || isCancelling) return;
+    setShowCancelConfirm(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelConfirm(false);
+    setShowCancelReason(true);
+  };
+
+  const handleSubmitCancelReason = async (note) => {
+    try {
+      if (requestType === 'service') {
+        const res = await cancelServiceRequest({
+          requestId: requestObject.id,
+          ...(note ? { cancellationReason: note } : {}),
+        }).unwrap();
+        const reason =
+          res?.data?.cancellationReason ||
+          res?.cancellationReason ||
+          note ||
+          'Cancelled by customer.';
+        setOverrideStatus('cancelled');
+        setOverrideCancellation({ reason, by: 'user' });
+        toast.success('Request cancelled.');
+      } else if (requestType === 'bundle') {
+        await cancelBundleParticipation({
+          bundleId: requestObject.id,
+          ...(note ? { cancellationReason: note } : {}),
+        }).unwrap();
+        const reason = note || 'Cancelled by customer.';
+        setOverrideStatus('cancelled');
+        setOverrideCancellation({ reason, by: 'user' });
+        toast.success('Bundle participation cancelled.');
+      } else {
+        toast.error('Unsupported request type.');
+        return;
+      }
+      router.push('/request');
+    } catch (err) {
+      console.error('Failed to cancel request:', err);
+      toast.error(err?.data?.message || 'Failed to cancel request.');
+    }
   };
 
   if (isLoading) {
@@ -144,12 +209,49 @@ export default function ConversationPage() {
         {/* Chat Interface */}
         <ChatInterface
           request={requestObject}
-          onCancel={handleCancel}
-          status={requestObject.status}
-          cancellationReason={requestObject.cancellationReason}
-          cancelledBy={requestObject.cancelledBy}
+          onCancel={handleCancelClick}
+          status={overrideStatus || requestObject.status}
+          cancellationReason={overrideCancellation.reason || requestObject.cancellationReason}
+          cancelledBy={overrideCancellation.by || requestObject.cancelledBy}
         />
       </div>
+
+      {/* Cancel confirmation modal */}
+      <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+        <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {requestType === 'bundle' ? 'Cancel this bundle?' : 'Cancel this request?'}
+            </DialogTitle>
+            <DialogDescription>
+              {requestType === 'bundle'
+                ? 'This will cancel your participation in the bundle. You can add a reason on the next step.'
+                : 'This will cancel the service request. You can add a reason on the next step.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex-row justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowCancelConfirm(false)}>
+              Keep request
+            </Button>
+            <Button className="bg-red-500 hover:bg-red-600 text-white" onClick={handleConfirmCancel}>
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel reason modal */}
+      <CancelRequestModal
+        isOpen={showCancelReason}
+        onClose={() => setShowCancelReason(false)}
+        onConfirm={handleSubmitCancelReason}
+        title="Cancellation reason"
+        description="Please share a quick reason so we can improve."
+        label="Reason (optional)"
+        submitLabel={isCancelling ? 'Cancelling...' : 'Submit and cancel'}
+        placeholder="Type here"
+        isSubmitting={isCancelling}
+      />
     </div>
   );
 }

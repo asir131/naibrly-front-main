@@ -834,7 +834,9 @@ export default function UserInfo() {
                           }
                           className="text-teal-700 hover:text-teal-900"
                           aria-label={`Remove ${svc.name}`}
-                        ></button>
+                        >
+                          ✕
+                        </button>
                       </span>
                     ))}
                   </div>
