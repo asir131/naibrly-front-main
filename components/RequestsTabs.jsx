@@ -1,7 +1,7 @@
 "use client"
-import Image from "next/image";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
+import { User as UserIcon } from "lucide-react";
 
 const StatusPill = ({ status }) => {
   const statusLower = status?.toLowerCase();
@@ -88,13 +88,19 @@ const RequestRow = ({ item, type }) => {
       </div>
 
       <div className="flex gap-4">
-        <img
-          src={customerImage || "https://i.pravatar.cc/140?img=1"}
-          alt={customerName}
-          width={140}
-          height={146.5}
-          className="rounded-xl object-cover w-[140px] h-[146.5px]"
-        />
+        {customerImage ? (
+          <img
+            src={customerImage}
+            alt={customerName}
+            width={140}
+            height={146.5}
+            className="rounded-xl object-cover w-[140px] h-[146.5px]"
+          />
+        ) : (
+          <div className="rounded-xl w-[140px] h-[146.5px] bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+            <UserIcon className="w-10 h-10 text-white" />
+          </div>
+        )}
 
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">

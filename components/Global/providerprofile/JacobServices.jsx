@@ -76,7 +76,7 @@ export default function JacobsOtherServices({ otherServices, providerName, provi
                 {/* Service Image */}
                 <div className="relative w-28 h-28 rounded-xl overflow-hidden shrink-0">
                   <Image
-                    src={clean}
+                    src={service?.image?.url || clean}
                     alt={service.name}
                     fill
                     className="object-cover"

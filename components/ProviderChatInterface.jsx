@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { Plus, X } from "lucide-react";
+import { Plus, X, User as UserIcon } from "lucide-react";
 import { useSocket } from "@/hooks/useSocket";
 import {
   useLazyGetQuickChatsQuery,
@@ -67,11 +67,17 @@ const OrderHeader = ({
           </p>
 
           <div className="mt-4 flex items-center gap-3">
-            <img
-              src={order.client?.avatar || "https://i.pravatar.cc/80?img=5"}
-              alt={order.client?.name || "Client"}
-              className="h-[44px] w-[44px] rounded-full object-cover"
-            />
+            {order.client?.avatar ? (
+              <img
+                src={order.client.avatar}
+                alt={order.client?.name || "Client"}
+                className="h-[44px] w-[44px] rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-[44px] w-[44px] rounded-full bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+                <UserIcon className="h-5 w-5 text-white" />
+              </div>
+            )}
             <div className="flex flex-col">
               <span className="text-[16px] font-semibold text-[#111]">
                 {order.client?.name || "Client"}
@@ -349,7 +355,7 @@ export default function ProviderChatInterface({
     price: 0,
     client: {
       name: "Customer",
-      avatar: "https://i.pravatar.cc/80?img=5",
+      avatar: null,
     },
     rating: 5.0,
     reviews: 0,

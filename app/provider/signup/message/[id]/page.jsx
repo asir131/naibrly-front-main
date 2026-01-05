@@ -25,8 +25,7 @@ const buildOrderData = (item, type) => {
       client: {
         name: `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "Customer",
         avatar:
-          customer.profileImage?.url ||
-          "https://i.pravatar.cc/80?img=5",
+          customer.profileImage?.url || null,
       },
       rating: item.provider?.rating || 0,
       reviews: item.review?.rating || 0,
@@ -56,8 +55,7 @@ const buildOrderData = (item, type) => {
       client: {
         name: `${customer.firstName || ""} ${customer.lastName || ""}`.trim() || "Customer",
         avatar:
-          customer.profileImage?.url ||
-          "https://i.pravatar.cc/80?img=5",
+          customer.profileImage?.url || null,
       },
       rating: item.provider?.rating || 0,
       reviews: Array.isArray(item.reviews) ? item.reviews.length : 0,

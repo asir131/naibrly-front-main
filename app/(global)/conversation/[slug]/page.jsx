@@ -66,7 +66,7 @@ export default function ConversationPage() {
         title: request.serviceType || request.service?.name || 'Service Request',
         description: request.problem || request.note || request.description || 'No description provided',
         image:
-          request.service?.image?.url ||
+          request.coverImage ||
           request.provider?.profileImage?.url ||
           'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
         avgPrice: request.price
@@ -97,7 +97,7 @@ export default function ConversationPage() {
         title: bundle.title || bundle.name || 'Bundle Request',
         description: bundle.description || 'No description provided',
         image:
-          bundle.image?.url ||
+          bundle.coverImage ||
           bundle.provider?.businessLogo?.url ||
           'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
         avgPrice: bundle.pricing?.finalPrice

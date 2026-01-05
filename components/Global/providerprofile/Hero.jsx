@@ -66,7 +66,7 @@ export default function ServiceCard({ providerData, selectedService, isLoading, 
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-shrink-0">
                 <img
-                  src={clean.src}
+                  src={selectedService?.image?.url || clean.src}
                   alt={selectedService.name}
                   className="w-32 h-32 object-cover rounded-md"
                 />

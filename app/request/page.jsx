@@ -68,6 +68,9 @@ export default function RequestPage() {
   };
 
   const getCategoryImage = (request) => {
+    if (request?.coverImage) {
+      return request.coverImage;
+    }
     const categoryType = getCategoryTypeName(request);
     if (categoryType && CATEGORY_TYPE_IMAGES[categoryType]) {
       return CATEGORY_TYPE_IMAGES[categoryType];
@@ -211,6 +214,7 @@ export default function RequestPage() {
         statusColor: statusInfo.color,
         statusBg: statusInfo.bg,
         image:
+          bundle.coverImage ||
           CATEGORY_TYPE_IMAGES[bundle.categoryTypeName] ||
           bundle.provider?.businessLogo?.url ||
           "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop",

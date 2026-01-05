@@ -1,13 +1,19 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useGetUserProfileQuery, useGetVerifyInfoStatusQuery, useGetProviderZipQuery } from "@/redux/api/servicesApi";
+import {
+  useGetUserProfileQuery,
+  useGetVerifyInfoStatusQuery,
+  useGetProviderZipQuery,
+} from "@/redux/api/servicesApi";
 
 export default function ConfirmInfo() {
   const router = useRouter();
 
   // Fetch all required data
-  const { data: profileData, isLoading: profileLoading } = useGetUserProfileQuery();
-  const { data: verifyData, isLoading: verifyLoading } = useGetVerifyInfoStatusQuery();
+  const { data: profileData, isLoading: profileLoading } =
+    useGetUserProfileQuery();
+  const { data: verifyData, isLoading: verifyLoading } =
+    useGetVerifyInfoStatusQuery();
   const { data: zipData, isLoading: zipLoading } = useGetProviderZipQuery();
 
   const isLoading = profileLoading || verifyLoading || zipLoading;
@@ -56,7 +62,9 @@ export default function ConfirmInfo() {
       return `${hour12}:${minute}${ampm}`;
     };
 
-    return `${startDay} - ${endDay} (${formatTime(hours.start)} to ${formatTime(hours.end)})`;
+    return `${startDay} - ${endDay} (${formatTime(hours.start)} to ${formatTime(
+      hours.end
+    )})`;
   };
 
   // Format business address
@@ -64,14 +72,19 @@ export default function ConfirmInfo() {
     const addr = user?.businessAddress;
     if (!addr) return "Not provided";
 
-    const parts = [addr.street, addr.city, addr.state, addr.zipCode].filter(Boolean);
+    const parts = [addr.street, addr.city, addr.state, addr.zipCode].filter(
+      Boolean
+    );
     return parts.length > 0 ? parts.join(", ") : "Not provided";
   };
 
   // Format full name
   const getFullName = () => {
     if (user?.firstName || user?.lastName) {
-      return `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Not provided";
+      return (
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+        "Not provided"
+      );
     }
     return "Not provided";
   };
@@ -125,28 +138,10 @@ export default function ConfirmInfo() {
       <div className="confirm_info_layout md:px-[200px] md:py-[100px] flex justify-center items-center">
         <div className="lg:w-[400px] w-full">
           <div className="user_info_heading flex items-center gap-[98px] pb-5">
-            <span onClick={handleBack} className="cursor-pointer">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M9.07 6L3 12.07L9.07 18.14M20.0019 12.0703H3.17188"
-                  stroke="#111111"
-                  strokeWidth="1.5"
-                  strokeMiterlimit="10"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
             <span>Overview</span>
           </div>
           <div className="flex flex-col justify-center items-center">
-            <h1 className="text-[28px] text-black pb-[28px]">
+            <h1 className="text-[28px] items-start text-black pb-[28px]">
               Confirm your info
             </h1>
             <p className="text-[14px] text-gray-600">
@@ -166,19 +161,27 @@ export default function ConfirmInfo() {
               {/* Email */}
               <div className="flex flex-col gap-2">
                 <h2 className="confirm_info_heading">EMAIL:</h2>
-                <p className="confirm_info_text">{user?.email || "Not provided"}</p>
+                <p className="confirm_info_text">
+                  {user?.email || "Not provided"}
+                </p>
               </div>
 
               {/* Your Role */}
               <div className="flex flex-col gap-2">
                 <h2 className="confirm_info_heading">YOUR ROLE:</h2>
-                <p className="confirm_info_text">{formatRole(user?.providerRole)}</p>
+                <p className="confirm_info_text">
+                  {formatRole(user?.providerRole)}
+                </p>
               </div>
 
               {/* Business Name */}
               <div className="flex flex-col gap-2">
-                <h2 className="confirm_info_heading">BUSINESS NAME (REGISTERED):</h2>
-                <p className="confirm_info_text">{user?.businessNameRegistered || "Not provided"}</p>
+                <h2 className="confirm_info_heading">
+                  BUSINESS NAME (REGISTERED):
+                </h2>
+                <p className="confirm_info_text">
+                  {user?.businessNameRegistered || "Not provided"}
+                </p>
               </div>
 
               {/* DBA Name */}
@@ -198,20 +201,26 @@ export default function ConfirmInfo() {
               {/* Phone Number */}
               <div className="flex flex-col gap-2">
                 <h2 className="confirm_info_heading">PHONE NUMBER:</h2>
-                <p className="confirm_info_text">{user?.phone || "Not provided"}</p>
+                <p className="confirm_info_text">
+                  {user?.phone || "Not provided"}
+                </p>
               </div>
 
               {/* Website */}
               {user?.website && (
                 <div className="flex flex-col gap-2">
                   <h2 className="confirm_info_heading">WEBSITE:</h2>
-                  <p className="confirm_info_text text-blue-600 break-all">{user.website}</p>
+                  <p className="confirm_info_text text-blue-600 break-all">
+                    {user.website}
+                  </p>
                 </div>
               )}
 
               {/* Business Service Days & Hours */}
               <div className="flex flex-col gap-2">
-                <h2 className="confirm_info_heading">BUSINESS SERVICE DAYS & HOURS:</h2>
+                <h2 className="confirm_info_heading">
+                  BUSINESS SERVICE DAYS & HOURS:
+                </h2>
                 <p className="confirm_info_text">{formatBusinessHours()}</p>
               </div>
 
@@ -219,7 +228,9 @@ export default function ConfirmInfo() {
               {verificationInfo?.einNumber && (
                 <div className="flex flex-col gap-2">
                   <h2 className="confirm_info_heading">EIN NUMBER:</h2>
-                  <p className="confirm_info_text">{verificationInfo.einNumber}</p>
+                  <p className="confirm_info_text">
+                    {verificationInfo.einNumber}
+                  </p>
                 </div>
               )}
 
@@ -277,16 +288,24 @@ export default function ConfirmInfo() {
               <div className="flex flex-col gap-2 w-full">
                 <h2 className="confirm_info_heading">SERVICES PROVIDED:</h2>
                 <div className="flex flex-col gap-[10px]">
-                  {user?.servicesProvided && user.servicesProvided.length > 0 ? (
+                  {user?.servicesProvided &&
+                  user.servicesProvided.length > 0 ? (
                     user.servicesProvided.map((service, index) => {
                       const name =
-                        typeof service === "string" ? service : service?.name || "Service";
+                        typeof service === "string"
+                          ? service
+                          : service?.name || "Service";
                       const rate =
-                        service && typeof service === "object" && service.hourlyRate
+                        service &&
+                        typeof service === "object" &&
+                        service.hourlyRate
                           ? ` - $${service.hourlyRate}/hr`
                           : "";
                       return (
-                        <p key={index} className="home_status inline-flex items-center">
+                        <p
+                          key={index}
+                          className="home_status inline-flex items-center"
+                        >
                           <span>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -301,12 +320,17 @@ export default function ConfirmInfo() {
                               />
                             </svg>
                           </span>
-                          <span>{name}{rate}</span>
+                          <span>
+                            {name}
+                            {rate}
+                          </span>
                         </p>
                       );
                     })
                   ) : (
-                    <p className="text-gray-500 text-sm">No services added yet</p>
+                    <p className="text-gray-500 text-sm">
+                      No services added yet
+                    </p>
                   )}
                 </div>
               </div>
@@ -314,7 +338,11 @@ export default function ConfirmInfo() {
               {/* Verification Status */}
               <div className="flex flex-col gap-2">
                 <h2 className="confirm_info_heading">VERIFICATION STATUS:</h2>
-                <p className={`confirm_info_text ${user?.isVerified ? "text-green-600" : "text-yellow-600"}`}>
+                <p
+                  className={`confirm_info_text ${
+                    user?.isVerified ? "text-green-600" : "text-yellow-600"
+                  }`}
+                >
                   {user?.isVerified ? "Verified" : "Pending Verification"}
                 </p>
               </div>
@@ -322,7 +350,11 @@ export default function ConfirmInfo() {
               {/* Account Status */}
               <div className="flex flex-col gap-2">
                 <h2 className="confirm_info_heading">ACCOUNT STATUS:</h2>
-                <p className={`confirm_info_text ${user?.isApproved ? "text-green-600" : "text-yellow-600"}`}>
+                <p
+                  className={`confirm_info_text ${
+                    user?.isApproved ? "text-green-600" : "text-yellow-600"
+                  }`}
+                >
                   {user?.isApproved ? "Approved" : "Pending Approval"}
                 </p>
               </div>
@@ -341,7 +373,8 @@ export default function ConfirmInfo() {
                   />
                 </svg>
                 <span className="text-sm text-[#0E7A60]">
-                  Once you confirm, you will be taken to a secure identity check. This will only take a few minutes.
+                  Once you confirm, you will be taken to a secure identity
+                  check. This will only take a few minutes.
                 </span>
               </div>
 
