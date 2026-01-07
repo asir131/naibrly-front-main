@@ -105,10 +105,8 @@ export default function NaibrlybundelOfferSection() {
         location: p.address ? `${p.address.city}, ${p.address.state}` : "",
       })) || [];
 
-    // Format location
-    const location = bundle.address
-      ? `${bundle.address.street}, ${bundle.address.city}, ${bundle.address.state}`
-      : "Location not specified";
+    // Format location (zip only)
+    const location = bundle.zipCode || bundle.address?.zipCode || "ZIP not specified";
 
     const getServiceCategoryImage = (b) => {
       const firstService = Array.isArray(b?.services) ? b.services[0] : null;
@@ -182,12 +180,8 @@ export default function NaibrlybundelOfferSection() {
                   ?.map((p) => p.customer?.profileImage?.url || null)
                   .filter(Boolean) || [];
 
-              // Format location
-              const location = bundle.address
-                ? `${bundle.address.street}, ${bundle.address.city}, ${
-                    bundle.address.state
-                  } ${bundle.zipCode || ""}`
-                : "Location not specified";
+              // Format location (zip only)
+              const location = bundle.zipCode || bundle.address?.zipCode || "ZIP not specified";
 
               return (
                 <div

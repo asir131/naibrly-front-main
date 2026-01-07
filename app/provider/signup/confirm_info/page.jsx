@@ -381,12 +381,6 @@ export default function ConfirmInfo() {
               {/* Action Buttons */}
               <div className="flex justify-between items-center gap-[10px] text-[16px] font-medium text-[#333] mt-4">
                 <button
-                  onClick={handleEdit}
-                  className="edit_button w-full cursor-pointer"
-                >
-                  Edit
-                </button>
-                <button
                   onClick={handleConfirm}
                   className="next_button w-full text-white cursor-pointer"
                 >

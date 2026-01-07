@@ -100,7 +100,7 @@ export default function NaibrlybundelOfferSection({
         service: bundle.title,
         description: bundle.description,
         bundle: `${bundle.maxParticipants}-Person Bundle (${bundle.currentParticipants} Joined, ${bundle.availableSpots} Spot${bundle.availableSpots !== 1 ? 's' : ''} Open)`,
-        location: `${bundle.address?.street || ''}, ${bundle.address?.city || ''}, ${bundle.address?.state || ''} ${bundle.zipCode || ''}`.trim(),
+        location: bundle.zipCode || bundle.address?.zipCode || 'ZIP not provided',
         originalPrice: `$${bundle.pricing?.originalPrice || 0}`,
         discountedPrice: `$${bundle.pricing?.finalPrice || 0}`,
         discountPercent: `${bundle.pricing?.discountPercent || 0}% off`,

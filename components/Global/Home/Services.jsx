@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
-import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal';
-import { useRouter } from 'next/navigation';
-import { useGetServicesWithProvidersQuery } from '@/redux/api/servicesApi';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
+import { useRouter } from "next/navigation";
+import { useGetServicesWithProvidersQuery } from "@/redux/api/servicesApi";
+import { toast } from "react-hot-toast";
 
 // Helper function to shuffle array randomly
 const shuffleArray = (array) => {
@@ -36,9 +36,10 @@ export default function OurServicesSection() {
 
   const getSafeImageSrc = (image) => {
     // Handle string URLs, object URLs (e.g., { url }), and fall back when empty
-    if (typeof image === 'string' && image.trim()) return image.trim();
-    if (image && typeof image.url === 'string' && image.url.trim()) return image.url.trim();
-    return '/LandingService/image (7).png';
+    if (typeof image === "string" && image.trim()) return image.trim();
+    if (image && typeof image.url === "string" && image.url.trim())
+      return image.url.trim();
+    return "/LandingService/image (7).png";
   };
 
   useEffect(() => {
@@ -47,13 +48,15 @@ export default function OurServicesSection() {
       return;
     }
     if (isServicesError) {
-      setError('Failed to fetch services');
+      setError("Failed to fetch services");
       setLoading(false);
       return;
     }
     const apiServices = servicesData?.services || [];
     const withProviders = apiServices.flatMap((service) => {
-      const providers = Array.isArray(service.providers) ? service.providers : [];
+      const providers = Array.isArray(service.providers)
+        ? service.providers
+        : [];
       if (providers.length === 0) {
         return [
           {
@@ -84,7 +87,8 @@ export default function OurServicesSection() {
               Our Services
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              You have problems with leaking pipes, broken tiles, lost keys or want to tidy up the trees around you, of course you need our help!
+              You have problems with leaking pipes, broken tiles, lost keys or
+              want to tidy up the trees around you, of course you need our help!
             </p>
           </div>
 
@@ -94,16 +98,16 @@ export default function OurServicesSection() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-red-500">
-              {error}
-            </div>
+            <div className="text-center py-12 text-red-500">{error}</div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {services.map((service, index) => {
                 const handleClick = (e) => {
                   e.preventDefault();
                   if (!service.providerId) {
-                    toast.error('No provider available for this service in your area');
+                    toast.error(
+                      "No provider available for this service in your area"
+                    );
                     return;
                   }
                   if (!isAuthenticated) {
@@ -112,7 +116,9 @@ export default function OurServicesSection() {
                   } else {
                     // Route to provider profile for authenticated users
                     router.push(
-                      `/providerprofile?id=${service.providerId}&service=${encodeURIComponent(
+                      `/providerprofile?id=${
+                        service.providerId
+                      }&service=${encodeURIComponent(
                         service.name || service.title
                       )}`
                     );
@@ -130,7 +136,7 @@ export default function OurServicesSection() {
                       <div className="relative w-full h-48 rounded-2xl hover:scale-105 transition-all duration-300 overflow-hidden">
                         <Image
                           src={getSafeImageSrc(service.categoryType?.image)}
-                          alt={service.name || service.title || 'Service'}
+                          alt={service.name || service.title || "Service"}
                           fill
                           className="object-cover"
                         />
@@ -157,7 +163,8 @@ export default function OurServicesSection() {
 
                       {/* Description */}
                       <p className="text-gray-600 text-base leading-relaxed">
-                        {service.description || 'Professional service available for your needs'}
+                        {service.description ||
+                          "Professional service available for your needs"}
                       </p>
                     </div>
                   </div>

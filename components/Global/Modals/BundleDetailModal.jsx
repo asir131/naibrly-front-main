@@ -70,10 +70,45 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
     return candidate;
   };
 
+  const getCreatorName = () => {
+    const creator = bundleData?.creator || null;
+    const first = creator?.firstName || creator?.first_name || "";
+    const last = creator?.lastName || creator?.last_name || "";
+    const full = `${first} ${last}`.trim();
+    return full || null;
+  };
+
+  const resolveParticipantName = (participant, creatorName) => {
+    if (participant?.name) {
+      const trimmed = String(participant.name).trim();
+      if (trimmed && trimmed.toLowerCase() !== "undefined undefined") {
+        return trimmed;
+      }
+    }
+    const customer = participant?.customer || participant?.user || null;
+    const first =
+      customer?.firstName ||
+      customer?.first_name ||
+      participant?.firstName ||
+      participant?.first_name ||
+      "";
+    const last =
+      customer?.lastName ||
+      customer?.last_name ||
+      participant?.lastName ||
+      participant?.last_name ||
+      "";
+    const full = `${first} ${last}`.trim();
+    if (full) return full;
+    if (creatorName) return creatorName;
+    return "Participant";
+  };
+
   // Filter out "Open Spot" participants and ensure valid image/name
   const participantsList = Array.isArray(bundleData?.participants)
     ? bundleData.participants
     : [];
+  const creatorName = getCreatorName();
 
   const activeParticipants = useMemo(
     () =>
@@ -82,9 +117,9 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
         .map((p) => ({
           ...p,
           image: resolveImage(p),
-          name: p.name || "Participant",
+          name: resolveParticipantName(p, creatorName),
         })),
-    [participantsList]
+    [participantsList, creatorName]
   );
 
   const isCreator = useMemo(() => {

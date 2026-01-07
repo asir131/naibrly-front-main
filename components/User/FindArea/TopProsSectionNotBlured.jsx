@@ -33,7 +33,7 @@ const TopProsSectionNotBlured = ({
             location: `${item.provider.serviceArea?.city || ''}, ${item.provider.serviceArea?.state || ''} ${item.provider.serviceArea?.zipCode || ''}`.trim(),
             description: item.provider.description || `${item.service.name} services`,
             price: `$${item.service.hourlyRate}/hr`,
-            imageUrl: item.provider.businessLogo?.url || item.provider.profileImage?.url || 'https://randomuser.me/api/portraits/men/1.jpg',
+            imageUrl: item.provider.businessLogo?.url || 'https://randomuser.me/api/portraits/men/1.jpg',
             active: item.provider.serviceArea?.isActive || false,
             experience: item.provider.experience,
             phone: item.provider.phone,

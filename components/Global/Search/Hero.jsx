@@ -9,7 +9,7 @@ import Rectangle3 from "@/public/Home/Rectangle c.png";
 import MapBg from "@/public/map image.png";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
-import { useGetServicesQuery } from "@/redux/api/servicesApi";
+import { useGetServicesQuery, useGetProviderServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 
 export default function NaibrlyHeroSection({
@@ -127,7 +127,35 @@ export default function NaibrlyHeroSection({
   const hourlyRate = topProvider?.service?.hourlyRate;
   const rating = topProvider?.provider?.rating || 0;
   const reviewCount = topProvider?.provider?.totalReviews || 0;
+
+  const matchedService = useMemo(() => {
+    if (!servicesData?.services) return null;
+    const targetName = (serviceName || searchQuery || "").trim();
+    if (!targetName) return null;
+    return (
+      servicesData.services.find(
+        (service) => service?.name?.toLowerCase() === targetName.toLowerCase()
+      ) || null
+    );
+  }, [servicesData, serviceName, searchQuery]);
+
+  const matchedServiceImage = matchedService?.image?.url || null;
+
+  const shouldFetchProviderService =
+    Boolean(providerId) && Boolean(serviceName?.trim());
+  const { data: providerServiceData } = useGetProviderServicesQuery(
+    shouldFetchProviderService
+      ? { providerId, serviceName: serviceName.trim() }
+      : { providerId: null, serviceName: "" },
+    { skip: !shouldFetchProviderService }
+  );
+  const selectedServiceImage =
+    providerServiceData?.selectedService?.image?.url || null;
+
   const providerImage =
+    selectedServiceImage ||
+    matchedServiceImage ||
+    topProvider?.service?.image?.url ||
     topProvider?.provider?.businessLogo?.url ||
     topProvider?.provider?.profileImage?.url ||
     "https://randomuser.me/api/portraits/men/1.jpg";

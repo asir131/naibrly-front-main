@@ -117,10 +117,9 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
   const handleServiceToggle = (service) => {
     setSelectedServices((prev) => {
       if (prev.some((s) => s.id === service.id)) {
-        return prev.filter((s) => s.id !== service.id);
-      } else {
-        return [...prev, service];
+        return [];
       }
+      return [service];
     });
   };
 
@@ -358,7 +357,7 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
           {/* Select Services (Multiple) */}
           <div className="relative" ref={serviceRef}>
             <label className="text-sm font-semibold text-gray-900 mb-3 block">
-              Select Services* (Multiple)
+              Select Service*
             </label>
 
             {/* Selected Services Display */}
@@ -406,8 +405,8 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
                 }`}
               >
                 {selectedServices.length > 0
-                  ? `${selectedServices.length} selected`
-                  : "Select services"}
+                  ? selectedServices[0].name
+                  : "Select service"}
               </span>
               <ChevronDown
                 className={`w-4 h-4 text-gray-600 shrink-0 ml-2 transition-transform ${
