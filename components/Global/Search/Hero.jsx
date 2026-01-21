@@ -11,6 +11,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery, useGetProviderServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
+import { useAuth } from "@/hooks/useAuth";
+import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
 
 export default function NaibrlyHeroSection({
   onSearch,
@@ -21,6 +23,8 @@ export default function NaibrlyHeroSection({
   const router = useRouter();
   const searchParams = useSearchParams();
   const customerZipCode = useCustomerZipCode();
+  const { isAuthenticated } = useAuth();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   // Fetch services from API
   const { data: servicesData, isLoading: servicesLoading } =
@@ -387,6 +391,10 @@ export default function NaibrlyHeroSection({
                         <Button
                           onClick={() => {
                             if (!providerId || !serviceName) return;
+                            if (!isAuthenticated) {
+                              setShowAuthPrompt(true);
+                              return;
+                            }
                             router.push(
                               `/providerprofile?id=${providerId}&service=${encodeURIComponent(
                                 serviceName
@@ -482,6 +490,11 @@ export default function NaibrlyHeroSection({
           </div>
         </div>
       </div>
+      <AuthPromptModal
+        isOpen={showAuthPrompt}
+        onClose={() => setShowAuthPrompt(false)}
+        serviceData={{ title: serviceName || "Service" }}
+      />
     </div>
   );
 }

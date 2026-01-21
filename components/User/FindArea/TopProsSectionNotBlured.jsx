@@ -5,6 +5,7 @@ import React, { useState, useMemo } from 'react'
 import PaginationControls from './PaginationControls'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
+import AuthPromptModal from '@/components/Global/Modals/AuthPromptModal'
 
 const TopProsSectionNotBlured = ({
     showPagination = false,
@@ -16,6 +17,7 @@ const TopProsSectionNotBlured = ({
 }) => {
     const { isAuthenticated } = useAuth();
     const router = useRouter();
+    const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -102,7 +104,7 @@ const TopProsSectionNotBlured = ({
                     </div>
                 )}
 
-                <div className={`mt-[28px] flex flex-col gap-[18px] ${!isAuthenticated ? 'filter blur-sm pointer-events-none' : ''} ${isLoading ? 'hidden' : ''}`}>
+                <div className={`mt-[28px] flex flex-col gap-[18px] ${isLoading ? 'hidden' : ''}`}>
                     {/* Price Range Bar */}
                     <div className='user_card flex justify-center items-center'>
                         <div className='flex flex-col gap-2'>
@@ -165,7 +167,13 @@ const TopProsSectionNotBlured = ({
                                     </div>
                                     <div className='mt-auto'>
                                         <button
-                                            onClick={() => router.push(`/providerprofile?id=${user.id}&service=${encodeURIComponent(user.serviceName)}`)}
+                                            onClick={() => {
+                                                if (!isAuthenticated) {
+                                                    setShowAuthPrompt(true);
+                                                    return;
+                                                }
+                                                router.push(`/providerprofile?id=${user.id}&service=${encodeURIComponent(user.serviceName)}`);
+                                            }}
                                             className='view_button text-[18px] font-medium text-[#FFFFFF] bg-teal-600 hover:bg-teal-700 px-6 py-3 rounded-lg transition-colors duration-200 cursor-pointer shadow-md hover:shadow-lg'
                                         >
                                             View Profile
@@ -188,6 +196,11 @@ const TopProsSectionNotBlured = ({
                     />
                 )}
             </div>
+            <AuthPromptModal
+                isOpen={showAuthPrompt}
+                onClose={() => setShowAuthPrompt(false)}
+                serviceData={{ title: searchCriteria?.serviceName || 'Service' }}
+            />
         </div>
     )
 }

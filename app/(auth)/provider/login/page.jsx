@@ -36,7 +36,7 @@ export default function ProviderLoginPage() {
             password,
             userType: "provider",
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -85,7 +85,7 @@ export default function ProviderLoginPage() {
             </label>
             <Input
               type="email"
-              placeholder="provider@gmail.com"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
@@ -101,7 +101,7 @@ export default function ProviderLoginPage() {
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="AbcD@7281"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900 pr-12"

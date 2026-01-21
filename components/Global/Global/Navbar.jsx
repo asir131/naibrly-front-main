@@ -21,10 +21,16 @@ import NotificationDropdown from "@/components/Global/Modals/NotificationDropdow
 import NaibrlyNowModal from "@/components/Global/Modals/NaibrlyNowModal";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { useGetServicesQuery, useGetUserProfileQuery } from "@/redux/api/servicesApi";
-import { useSelector, useDispatch } from 'react-redux';
+import {
+  useGetServicesQuery,
+  useGetUserProfileQuery,
+} from "@/redux/api/servicesApi";
+import { useSelector, useDispatch } from "react-redux";
 import { useNotificationSocket } from "@/hooks/useNotificationSocket";
-import { markAsRead, setNotifications } from "@/redux/slices/notificationsSlice";
+import {
+  markAsRead,
+  setNotifications,
+} from "@/redux/slices/notificationsSlice";
 
 const SubMenuItem = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -90,22 +96,30 @@ export default function Navbar() {
     user?.userType
   )?.toLowerCase?.();
   const isProvider = derivedRole === "provider";
-  const isUser = derivedRole === "user";
+  const isUser = derivedRole === "user" || derivedRole === "customer";
   const { data: userProfileData } = useGetUserProfileQuery(undefined, {
     skip: !isAuthenticated,
   });
   const providerProfile = userProfileData?.user || reduxUser || user || {};
   // Fetch services from API using RTK Query
-  const { data: servicesData, isLoading: servicesLoading, error: servicesError } = useGetServicesQuery();
+  const {
+    data: servicesData,
+    isLoading: servicesLoading,
+    error: servicesError,
+  } = useGetServicesQuery();
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
   useNotificationSocket(isAuthenticated ? token : null);
 
   // Fetch persisted notifications on mount/login
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!isAuthenticated || !token) return;
-      const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/api\/?$/, "");
+      const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
+        /\/api\/?$/,
+        "",
+      );
       try {
         const res = await fetch(`${apiBase}/api/notifications/me`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -124,7 +138,7 @@ export default function Navbar() {
   // Handle logout with redirect
   const handleLogout = () => {
     logout();
-    router.push('/');
+    router.push("/");
   };
 
   // Prevent hydration mismatch by waiting for mount
@@ -153,13 +167,17 @@ export default function Navbar() {
     if (!isAuthenticated || !isProvider) return;
     if (balance !== null || balanceLoading) return;
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
     if (!token) return;
 
     setBalanceLoading(true);
-    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || ""}/providers/balance/my`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL || ""}/providers/balance/my`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
       .then(async (res) => {
         const text = await res.text();
         let parsed = text;
@@ -183,15 +201,17 @@ export default function Navbar() {
 
   // Debug balance display resolution
   useEffect(() => {
-    console.log('[Navbar] balanceDisplay resolved:', balanceDisplay, { rawBalance });
+    console.log("[Navbar] balanceDisplay resolved:", balanceDisplay, {
+      rawBalance,
+    });
   }, [balanceDisplay, rawBalance]);
 
- 
-  
   const providerName =
     providerProfile?.businessNameRegistered ||
     providerProfile?.businessName ||
-    [providerProfile?.firstName, providerProfile?.lastName].filter(Boolean).join(" ") ||
+    [providerProfile?.firstName, providerProfile?.lastName]
+      .filter(Boolean)
+      .join(" ") ||
     user?.name ||
     "Jacob";
 
@@ -448,149 +468,183 @@ export default function Navbar() {
               </Button>
 
               {isServiceOpen && (
-              <div
-                className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-[110]"
-                onMouseLeave={() => {
-                  setIsServiceOpen(false);
-                  setHoveredService(null);
-                }}
-              >
-                <div className="p-3 space-y-1">
-                  {servicesLoading ? (
-                    <div className="px-3 py-4 text-center text-sm text-gray-500">
-                      Loading services...
-                    </div>
-                  ) : servicesError ? (
-                    <div className="px-3 py-4 text-center text-sm text-red-500">
-                      Failed to load services
-                    </div>
-                  ) : (
-                    <>
-                      {/* Interior Section */}
-                      {services.some((s) => s.mainCategory === "Interior") && (
-                        <>
-                          <h3 className="font-semibold text-gray-900 text-base px-3 py-2">
-                            Interior
-                          </h3>
-                          {services
-                            .filter((s) => s.mainCategory === "Interior")
-                            .map((categoryType, idx) => (
-                              <div
-                                key={idx}
-                                className="relative"
-                                onMouseEnter={() => setHoveredService(idx)}
-                              >
-                                <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                                  <span className="group-hover:text-teal-600">
-                                    {categoryType.name}
-                                  </span>
-                                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                                </button>
-                                {hoveredService === idx && (
-                                  <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                                    <div className="p-2">
-                                      {categoryType.subServices.map((service, subIdx) => (
-                                        <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
-                                          <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                            {service.name}
-                                          </button>
-                                        </Link>
-                                      ))}
+                <div
+                  className="absolute top-full left-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-[110]"
+                  onMouseLeave={() => {
+                    setIsServiceOpen(false);
+                    setHoveredService(null);
+                  }}
+                >
+                  <div className="p-3 space-y-1">
+                    {servicesLoading ? (
+                      <div className="px-3 py-4 text-center text-sm text-gray-500">
+                        Loading services...
+                      </div>
+                    ) : servicesError ? (
+                      <div className="px-3 py-4 text-center text-sm text-red-500">
+                        Failed to load services
+                      </div>
+                    ) : (
+                      <>
+                        {/* Interior Section */}
+                        {services.some(
+                          (s) => s.mainCategory === "Interior",
+                        ) && (
+                          <>
+                            <h3 className="font-semibold text-gray-900 text-base px-3 py-2">
+                              Interior
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "Interior")
+                              .map((categoryType, idx) => (
+                                <div
+                                  key={idx}
+                                  className="relative"
+                                  onMouseEnter={() => setHoveredService(idx)}
+                                >
+                                  <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                    <span className="group-hover:text-teal-600">
+                                      {categoryType.name}
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                                  </button>
+                                  {hoveredService === idx && (
+                                    <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                                      <div className="p-2">
+                                        {categoryType.subServices.map(
+                                          (service, subIdx) => (
+                                            <Link
+                                              href={`/our-services?service=${encodeURIComponent(service.name)}`}
+                                              key={service.id || subIdx}
+                                            >
+                                              <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                {service.name}
+                                              </button>
+                                            </Link>
+                                          ),
+                                        )}
+                                      </div>
                                     </div>
+                                  )}
+                                </div>
+                              ))}
+                          </>
+                        )}
+
+                        {/* Exterior Section */}
+                        {services.some(
+                          (s) => s.mainCategory === "Exterior",
+                        ) && (
+                          <>
+                            <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
+                              Exterior
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "Exterior")
+                              .map((categoryType, idx) => {
+                                const exteriorIdx =
+                                  idx +
+                                  services.filter(
+                                    (s) => s.mainCategory === "Interior",
+                                  ).length;
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="relative"
+                                    onMouseEnter={() =>
+                                      setHoveredService(exteriorIdx)
+                                    }
+                                  >
+                                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                      <span className="group-hover:text-teal-600">
+                                        {categoryType.name}
+                                      </span>
+                                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                                    </button>
+                                    {hoveredService === exteriorIdx && (
+                                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                                        <div className="p-2">
+                                          {categoryType.subServices.map(
+                                            (service, subIdx) => (
+                                              <Link
+                                                href={`/our-services?service=${encodeURIComponent(service.name)}`}
+                                                key={service.id || subIdx}
+                                              >
+                                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                  {service.name}
+                                                </button>
+                                              </Link>
+                                            ),
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            ))}
-                        </>
-                      )}
+                                );
+                              })}
+                          </>
+                        )}
 
-                      {/* Exterior Section */}
-                      {services.some((s) => s.mainCategory === "Exterior") && (
-                        <>
-                          <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
-                            Exterior
-                          </h3>
-                          {services
-                            .filter((s) => s.mainCategory === "Exterior")
-                            .map((categoryType, idx) => {
-                              const exteriorIdx = idx + services.filter((s) => s.mainCategory === "Interior").length;
-                              return (
-                                <div
-                                  key={idx}
-                                  className="relative"
-                                  onMouseEnter={() => setHoveredService(exteriorIdx)}
-                                >
-                                  <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                                    <span className="group-hover:text-teal-600">
-                                      {categoryType.name}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                                  </button>
-                                  {hoveredService === exteriorIdx && (
-                                    <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                                      <div className="p-2">
-                                        {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
-                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                              {service.name}
-                                            </button>
-                                          </Link>
-                                        ))}
+                        {/* More Services Section */}
+                        {services.some(
+                          (s) => s.mainCategory === "More Services",
+                        ) && (
+                          <>
+                            <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
+                              More Services
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "More Services")
+                              .map((categoryType, idx) => {
+                                const moreServicesIdx =
+                                  idx +
+                                  services.filter(
+                                    (s) => s.mainCategory === "Interior",
+                                  ).length +
+                                  services.filter(
+                                    (s) => s.mainCategory === "Exterior",
+                                  ).length;
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="relative"
+                                    onMouseEnter={() =>
+                                      setHoveredService(moreServicesIdx)
+                                    }
+                                  >
+                                    <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
+                                      <span className="group-hover:text-teal-600">
+                                        {categoryType.name}
+                                      </span>
+                                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
+                                    </button>
+                                    {hoveredService === moreServicesIdx && (
+                                      <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
+                                        <div className="p-2">
+                                          {categoryType.subServices.map(
+                                            (service, subIdx) => (
+                                              <Link
+                                                href={`/our-services?service=${encodeURIComponent(service.name)}`}
+                                                key={service.id || subIdx}
+                                              >
+                                                <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
+                                                  {service.name}
+                                                </button>
+                                              </Link>
+                                            ),
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                        </>
-                      )}
-
-                      {/* More Services Section */}
-                      {services.some((s) => s.mainCategory === "More Services") && (
-                        <>
-                          <h3 className="font-semibold text-gray-900 text-base px-3 py-2 pt-3">
-                            More Services
-                          </h3>
-                          {services
-                            .filter((s) => s.mainCategory === "More Services")
-                            .map((categoryType, idx) => {
-                              const moreServicesIdx = idx +
-                                services.filter((s) => s.mainCategory === "Interior").length +
-                                services.filter((s) => s.mainCategory === "Exterior").length;
-                              return (
-                                <div
-                                  key={idx}
-                                  className="relative"
-                                  onMouseEnter={() => setHoveredService(moreServicesIdx)}
-                                >
-                                  <button className="w-full text-left px-2.5 py-2.5 hover:bg-[rgba(14,122,96,0.10)] rounded-md text-sm text-gray-900 transition-colors flex justify-between items-center gap-2.5 group">
-                                    <span className="group-hover:text-teal-600">
-                                      {categoryType.name}
-                                    </span>
-                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
-                                  </button>
-                                  {hoveredService === moreServicesIdx && (
-                                    <div className="absolute left-full top-0 -ml-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[120]">
-                                      <div className="p-2">
-                                        {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
-                                            <button className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-sm text-gray-900">
-                                              {service.name}
-                                            </button>
-                                          </Link>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                        </>
-                      )}
-                    </>
-                  )}
+                                    )}
+                                  </div>
+                                );
+                              })}
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
               )}
             </div>
           )}
@@ -890,7 +944,9 @@ export default function Navbar() {
                     ) : (
                       <>
                         {/* Interior Section */}
-                        {services.some((s) => s.mainCategory === "Interior") && (
+                        {services.some(
+                          (s) => s.mainCategory === "Interior",
+                        ) && (
                           <div className="space-y-1">
                             <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
                               Interior
@@ -903,70 +959,29 @@ export default function Navbar() {
                                     className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
                                     onClick={() =>
                                       setExpandedMobileService(
-                                        expandedMobileService === idx ? null : idx
+                                        expandedMobileService === idx
+                                          ? null
+                                          : idx,
                                       )
                                     }
                                   >
                                     <span>{categoryType.name}</span>
                                     <ChevronDown
                                       className={`w-4 h-4 transition-transform ${
-                                        expandedMobileService === idx ? "rotate-180" : ""
+                                        expandedMobileService === idx
+                                          ? "rotate-180"
+                                          : ""
                                       }`}
                                     />
                                   </button>
                                   {expandedMobileService === idx && (
                                     <div className="pl-4 space-y-1">
-                                      {categoryType.subServices.map((service, subIdx) => (
-                                        <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
-                                          <button
-                                            onClick={() => {
-                                              setIsMobileMenuOpen(false);
-                                              setMobileServiceOpen(false);
-                                            }}
-                                            className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                      {categoryType.subServices.map(
+                                        (service, subIdx) => (
+                                          <Link
+                                            href={`/our-services?service=${encodeURIComponent(service.name)}`}
+                                            key={service.id || subIdx}
                                           >
-                                            {service.name}
-                                          </button>
-                                        </Link>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                          </div>
-                        )}
-
-                        {/* Exterior Section */}
-                        {services.some((s) => s.mainCategory === "Exterior") && (
-                          <div className="space-y-1 pt-2">
-                            <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
-                              Exterior
-                            </h3>
-                            {services
-                              .filter((s) => s.mainCategory === "Exterior")
-                              .map((categoryType, idx) => {
-                                const exteriorIdx = idx + services.filter((s) => s.mainCategory === "Interior").length;
-                                return (
-                                  <div key={idx}>
-                                    <button
-                                      className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
-                                      onClick={() =>
-                                        setExpandedMobileService(
-                                          expandedMobileService === exteriorIdx ? null : exteriorIdx
-                                        )
-                                      }
-                                    >
-                                      <span>{categoryType.name}</span>
-                                      <ChevronDown
-                                        className={`w-4 h-4 transition-transform ${
-                                          expandedMobileService === exteriorIdx ? "rotate-180" : ""
-                                        }`}
-                                      />
-                                    </button>
-                                    {expandedMobileService === exteriorIdx && (
-                                      <div className="pl-4 space-y-1">
-                                        {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
                                             <button
                                               onClick={() => {
                                                 setIsMobileMenuOpen(false);
@@ -977,7 +992,72 @@ export default function Navbar() {
                                               {service.name}
                                             </button>
                                           </Link>
-                                        ))}
+                                        ),
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        )}
+
+                        {/* Exterior Section */}
+                        {services.some(
+                          (s) => s.mainCategory === "Exterior",
+                        ) && (
+                          <div className="space-y-1 pt-2">
+                            <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
+                              Exterior
+                            </h3>
+                            {services
+                              .filter((s) => s.mainCategory === "Exterior")
+                              .map((categoryType, idx) => {
+                                const exteriorIdx =
+                                  idx +
+                                  services.filter(
+                                    (s) => s.mainCategory === "Interior",
+                                  ).length;
+                                return (
+                                  <div key={idx}>
+                                    <button
+                                      className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
+                                      onClick={() =>
+                                        setExpandedMobileService(
+                                          expandedMobileService === exteriorIdx
+                                            ? null
+                                            : exteriorIdx,
+                                        )
+                                      }
+                                    >
+                                      <span>{categoryType.name}</span>
+                                      <ChevronDown
+                                        className={`w-4 h-4 transition-transform ${
+                                          expandedMobileService === exteriorIdx
+                                            ? "rotate-180"
+                                            : ""
+                                        }`}
+                                      />
+                                    </button>
+                                    {expandedMobileService === exteriorIdx && (
+                                      <div className="pl-4 space-y-1">
+                                        {categoryType.subServices.map(
+                                          (service, subIdx) => (
+                                            <Link
+                                              href={`/our-services?service=${encodeURIComponent(service.name)}`}
+                                              key={service.id || subIdx}
+                                            >
+                                              <button
+                                                onClick={() => {
+                                                  setIsMobileMenuOpen(false);
+                                                  setMobileServiceOpen(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                              >
+                                                {service.name}
+                                              </button>
+                                            </Link>
+                                          ),
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -987,7 +1067,9 @@ export default function Navbar() {
                         )}
 
                         {/* More Services Section */}
-                        {services.some((s) => s.mainCategory === "More Services") && (
+                        {services.some(
+                          (s) => s.mainCategory === "More Services",
+                        ) && (
                           <div className="space-y-1 pt-2">
                             <h3 className="font-semibold text-gray-900 text-sm px-2 py-1">
                               More Services
@@ -995,41 +1077,58 @@ export default function Navbar() {
                             {services
                               .filter((s) => s.mainCategory === "More Services")
                               .map((categoryType, idx) => {
-                                const moreServicesIdx = idx +
-                                  services.filter((s) => s.mainCategory === "Interior").length +
-                                  services.filter((s) => s.mainCategory === "Exterior").length;
+                                const moreServicesIdx =
+                                  idx +
+                                  services.filter(
+                                    (s) => s.mainCategory === "Interior",
+                                  ).length +
+                                  services.filter(
+                                    (s) => s.mainCategory === "Exterior",
+                                  ).length;
                                 return (
                                   <div key={idx}>
                                     <button
                                       className="w-full text-left px-3 py-2 hover:bg-teal-50 rounded-md text-sm text-gray-700 flex justify-between items-center"
                                       onClick={() =>
                                         setExpandedMobileService(
-                                          expandedMobileService === moreServicesIdx ? null : moreServicesIdx
+                                          expandedMobileService ===
+                                            moreServicesIdx
+                                            ? null
+                                            : moreServicesIdx,
                                         )
                                       }
                                     >
                                       <span>{categoryType.name}</span>
                                       <ChevronDown
                                         className={`w-4 h-4 transition-transform ${
-                                          expandedMobileService === moreServicesIdx ? "rotate-180" : ""
+                                          expandedMobileService ===
+                                          moreServicesIdx
+                                            ? "rotate-180"
+                                            : ""
                                         }`}
                                       />
                                     </button>
-                                    {expandedMobileService === moreServicesIdx && (
+                                    {expandedMobileService ===
+                                      moreServicesIdx && (
                                       <div className="pl-4 space-y-1">
-                                        {categoryType.subServices.map((service, subIdx) => (
-                                          <Link href={`/our-services?service=${encodeURIComponent(service.name)}`} key={service.id || subIdx}>
-                                            <button
-                                              onClick={() => {
-                                                setIsMobileMenuOpen(false);
-                                                setMobileServiceOpen(false);
-                                              }}
-                                              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                        {categoryType.subServices.map(
+                                          (service, subIdx) => (
+                                            <Link
+                                              href={`/our-services?service=${encodeURIComponent(service.name)}`}
+                                              key={service.id || subIdx}
                                             >
-                                              {service.name}
-                                            </button>
-                                          </Link>
-                                        ))}
+                                              <button
+                                                onClick={() => {
+                                                  setIsMobileMenuOpen(false);
+                                                  setMobileServiceOpen(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md text-xs text-gray-600"
+                                              >
+                                                {service.name}
+                                              </button>
+                                            </Link>
+                                          ),
+                                        )}
                                       </div>
                                     )}
                                   </div>

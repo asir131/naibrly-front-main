@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import BundlePublishedModal from "@/components/Global/Modals/BundlePublishedModa
 import ShareBundleModal from "@/components/Global/Modals/ShareBundleModal";
 import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
 import { useGetNearbyBundlesQuery } from "@/redux/api/servicesApi";
+import { io } from "socket.io-client";
 
 export default function NaibrlybundelOfferSection() {
   const { isAuthenticated } = useAuth();
@@ -32,13 +33,14 @@ export default function NaibrlybundelOfferSection() {
     isLoading,
     isError,
     error,
+    refetch,
   } = useGetNearbyBundlesQuery(
     { page, limit: pageSize },
     { skip: !isAuthenticated } // Skip the query if user is not authenticated
   );
 
   // Debug logging
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
       console.error("Bundle fetch error:", error);
     }
@@ -48,17 +50,56 @@ export default function NaibrlybundelOfferSection() {
   }, [error, bundlesData]);
 
   // Sync offers when data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (bundlesData?.bundles) {
-      setOffers(bundlesData.bundles.map(formatBundleForDisplay));
+      const sorted = [...bundlesData.bundles].sort((a, b) => {
+        const aTime = a?.serviceDate ? new Date(a.serviceDate).getTime() : Number.POSITIVE_INFINITY;
+        const bTime = b?.serviceDate ? new Date(b.serviceDate).getTime() : Number.POSITIVE_INFINITY;
+        return aTime - bTime;
+      });
+      setOffers(sorted.map(formatBundleForDisplay));
     }
   }, [bundlesData]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (bundlesData?.pagination?.pages && page > bundlesData.pagination.pages) {
       setPage(1);
     }
   }, [bundlesData, page]);
+
+  // Listen for new bundles via socket and refetch list
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("authToken")
+        : null;
+    if (!token) return;
+
+    const socketUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+    const socket = io(socketUrl, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 5,
+    });
+
+    const handleBundleUpdate = () => {
+      if (typeof refetch === "function") {
+        refetch();
+      }
+    };
+
+    socket.on("bundle_created", handleBundleUpdate);
+    socket.on("bundle_joined", handleBundleUpdate);
+
+    return () => {
+      socket.off("bundle_created", handleBundleUpdate);
+      socket.off("bundle_joined", handleBundleUpdate);
+      socket.disconnect();
+    };
+  }, [isAuthenticated, refetch]);
 
   // Helper function to format bundle data for display
   const formatBundleForDisplay = (bundle) => {
@@ -88,6 +129,8 @@ export default function NaibrlybundelOfferSection() {
           day: "numeric",
         })
       : "Date TBD";
+    const serviceTimeStart = bundle.serviceTimeStart || "Start TBD";
+    const serviceTimeEnd = bundle.serviceTimeEnd || "End TBD";
 
     // Calculate spots
     const spotsOpen = bundle.maxParticipants - bundle.currentParticipants;
@@ -98,12 +141,8 @@ export default function NaibrlybundelOfferSection() {
           } Open)`
         : `${bundle.maxParticipants}-Person Bundle (Full)`;
 
-    // Format location
-    const location = bundle.address
-      ? `${bundle.address.street}, ${bundle.address.city}, ${
-          bundle.address.state
-        } ${bundle.zipCode || ""}`
-      : `${bundle.zipCode || "Location TBD"}`;
+    // Format location (zipcode only)
+    const location = bundle.zipCode || bundle.address?.zipCode || "Location TBD";
 
     // Calculate time ago
     const createdAt = new Date(bundle.createdAt);
@@ -122,7 +161,7 @@ export default function NaibrlybundelOfferSection() {
       ...bundle,
       service: bundle.title || bundle.services?.[0]?.name || "Service Bundle",
       bundle: bundleText,
-      date: `Service Date: ${serviceDate}`,
+      date: `Service Date: ${serviceDate} (${serviceTimeStart} - ${serviceTimeEnd})`,
       location,
       rate: `${
         bundle.pricePerPerson ? `$${bundle.pricePerPerson}/person` : "Price TBD"

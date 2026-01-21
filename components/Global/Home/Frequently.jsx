@@ -1,33 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState(0);
+  const [faqs, setFaqs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const faqs = [
-    {
-      question: 'What is HomePro?',
-      answer: 'HomePro is a home care platform that connects homeowners with professional service providers offering a wide range of home services, including repairs, maintenance, cleaning, and more.'
-    },
-    {
-      question: 'Are the service providers on HomePro reliable and qualified?',
-      answer: 'Yes, all service providers on HomePro are thoroughly vetted, background-checked, and verified for their qualifications and expertise. We ensure that only trusted professionals join our platform to provide quality services.'
-    },
-    {
-      question: 'What if I have an issue or complaint about a service provider?',
-      answer: 'If you experience any issues with a service provider, you can contact our customer support team immediately. We take all complaints seriously and will work to resolve the issue promptly, including mediation or finding an alternative service provider if needed.'
-    },
-    {
-      question: 'How are payments handled on HomePro?',
-      answer: 'Payments are processed securely through our platform. You can pay using various methods including credit cards, debit cards, or digital wallets. Payment is typically made after the service is completed to your satisfaction.'
-    },
-    {
-      question: 'How do I leave a review for a service provider?',
-      answer: 'After your service is completed, you will receive a notification to rate and review the service provider. Simply log into your account, go to your service history, and submit your feedback. Your reviews help other customers make informed decisions.'
-    }
-  ];
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+        const response = await fetch(`${baseUrl}/faq`);
+        const data = await response.json();
+
+        if (response.ok && data?.success) {
+          const items = data?.data?.faqs || [];
+          setFaqs(items);
+          setOpenIndex(items.length > 0 ? 0 : -1);
+        } else {
+          setFaqs([]);
+          setOpenIndex(-1);
+        }
+      } catch (error) {
+        console.error('Failed to load FAQs:', error);
+        setFaqs([]);
+        setOpenIndex(-1);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFaqs();
+  }, []);
 
   const toggleAccordion = (index) => {
     setOpenIndex(openIndex === index ? -1 : index);
@@ -55,9 +62,19 @@ export default function FAQSection() {
 
           {/* Right Side - Accordion */}
           <div className="lg:col-span-3 space-y-3 sm:space-y-4">
-            {faqs.map((faq, index) => (
+            {isLoading && (
+              <div className="rounded-xl sm:rounded-2xl bg-gray-50 p-5 text-sm text-gray-600">
+                Loading FAQs...
+              </div>
+            )}
+            {!isLoading && faqs.length === 0 && (
+              <div className="rounded-xl sm:rounded-2xl bg-gray-50 p-5 text-sm text-gray-600">
+                No FAQs available yet.
+              </div>
+            )}
+            {!isLoading && faqs.map((faq, index) => (
               <div
-                key={index}
+                key={faq.id || index}
                 className={`rounded-xl sm:rounded-2xl transition-all ${
                   openIndex === index
                     ? 'bg-blue-50 shadow-md'

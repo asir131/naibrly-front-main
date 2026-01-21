@@ -63,7 +63,7 @@ export default function PayoutInfo() {
       await submitPayoutInformation(payoutData).unwrap();
 
       toast.success("Payout information saved successfully!");
-      router.push("/");
+      router.push("/provider/signup/analytics");
     } catch (error) {
       console.error("Payout submission error:", error);
 
