@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import toast from "react-hot-toast";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
@@ -81,6 +82,14 @@ function LoginFormContent() {
 
       // Store auth token if provided by backend
       // Backend returns token in data.token
+      const userData = data.data?.user || data.user;
+      const resolvedRole = userData?.role || userType;
+      if (userType === "user" && resolvedRole === "provider") {
+        toast.error("You are not a customer");
+        setIsLoading(false);
+        return;
+      }
+
       const token = data.data?.token || data.token;
       if (token) {
         console.log("LoginForm - Storing token:", token);
@@ -95,7 +104,6 @@ function LoginFormContent() {
 
       // Create user object from response
       // Backend returns user data in data.user
-      const userData = data.data?.user || data.user;
       const user = {
         id: userData?.id || data.id,
         name:
@@ -106,7 +114,7 @@ function LoginFormContent() {
         profileImage: userData?.profileImage || null,
         phone: userData?.phoneNumber || userData?.phone,
         address: userData?.address,
-        role: userData?.role || userType,
+        role: resolvedRole,
       };
 
       console.log("LoginForm - Calling login with:", {

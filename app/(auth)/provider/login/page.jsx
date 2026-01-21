@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import toast from "react-hot-toast";
 
 export default function ProviderLoginPage() {
   const [email, setEmail] = useState("");
@@ -43,6 +44,14 @@ export default function ProviderLoginPage() {
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || "Login failed");
+      }
+
+      const userData = data.data?.user || data.user;
+      const resolvedRole = userData?.role || "provider";
+      if (resolvedRole !== "provider") {
+        toast.error("You are not a provider");
+        setIsLoading(false);
+        return;
       }
 
       // Store token and user data
