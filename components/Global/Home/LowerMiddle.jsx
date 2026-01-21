@@ -33,16 +33,6 @@ const LocationIcon = () => (
   </svg>
 );
 
-// Helper function to shuffle array randomly
-const shuffleArray = (array) => {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
-
 // Helper function to format date
 const formatServiceDate = (dateString) => {
   const date = new Date(dateString);
@@ -69,9 +59,15 @@ export default function NaibrlybundelOfferSection() {
         const data = await response.json();
         // API returns { success: true, data: { bundles: [...] } }
         const bundlesArray = data?.data?.bundles || [];
-        // Shuffle and take only 6 bundles
-        const randomBundles = shuffleArray(bundlesArray).slice(0, 6);
-        setBundles(randomBundles);
+        const sortedBundles = [...bundlesArray].sort((a, b) => {
+          const aTime = new Date(a?.serviceDate).getTime();
+          const bTime = new Date(b?.serviceDate).getTime();
+          if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
+          if (Number.isNaN(aTime)) return 1;
+          if (Number.isNaN(bTime)) return -1;
+          return aTime - bTime;
+        });
+        setBundles(sortedBundles.slice(0, 6));
       } catch (err) {
         setError(err.message);
       } finally {

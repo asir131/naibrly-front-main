@@ -4,7 +4,10 @@ import React from 'react'
 import { useGetProviderServiceRequestsQuery } from '@/redux/api/servicesApi'
 
 const OrderPage = () => {
-    const { data: requestsData, isLoading } = useGetProviderServiceRequestsQuery()
+    const { data: requestsData, isLoading } = useGetProviderServiceRequestsQuery(undefined, {
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    })
 
     const deriveBundleParticipantStatus = (bundle) => {
         const participant = bundle?.participant;

@@ -106,7 +106,11 @@ export default function Navbar() {
     data: servicesData,
     isLoading: servicesLoading,
     error: servicesError,
-  } = useGetServicesQuery();
+  } = useGetServicesQuery(undefined, {
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMountOrArgChange: false,
+  });
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("authToken") : null;

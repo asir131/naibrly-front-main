@@ -247,6 +247,10 @@ export const servicesApi = createApi({
     // Get all services with categories
     getServices: builder.query({
       query: () => "/categories/services",
+      keepUnusedDataFor: 3600,
+      refetchOnMountOrArgChange: false,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
       providesTags: ["Services"],
       transformResponse: (response) => {
         // Transform the API response to organize services by hierarchy
@@ -370,6 +374,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 30,
     }),
 
     // Create a new service request
@@ -416,7 +421,10 @@ export const servicesApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "Bundles", id: "LIST" }],
+      invalidatesTags: [
+        { type: "Bundles", id: "LIST" },
+        { type: "ServiceRequests", id: "LIST" },
+      ],
     }),
 
     // Update bundle status (provider accepts/declines)
@@ -675,6 +683,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 30,
     }),
 
     // Join a bundle
@@ -687,6 +696,7 @@ export const servicesApi = createApi({
         { type: "Bundles", id: bundleId },
         { type: "Bundles", id: "LIST" },
         { type: "Bundles", id: "NEARBY" },
+        { type: "ServiceRequests", id: "LIST" },
       ],
       transformResponse: (response) => {
         console.log("Join bundle API response:", response);
@@ -695,6 +705,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 15,
     }),
 
     // Get bundle details by share token (view only, doesn't join)
@@ -726,6 +737,7 @@ export const servicesApi = createApi({
         { type: "Bundles", id: shareToken },
         { type: "Bundles", id: "LIST" },
         { type: "Bundles", id: "NEARBY" },
+        { type: "ServiceRequests", id: "LIST" },
       ],
       transformResponse: (response) => {
         console.log("Join bundle by token API response:", response);
@@ -762,6 +774,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 30,
     }),
 
     // Password Reset Endpoints
@@ -778,6 +791,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 60,
     }),
 
     verifyOtp: builder.mutation({
@@ -997,6 +1011,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 300,
     }),
 
     // Get verification information status
@@ -1250,6 +1265,7 @@ export const servicesApi = createApi({
         console.log("Returning analytics data:", response.data);
         return response.data;
       },
+      keepUnusedDataFor: 60,
     }),
 
     // Get provider balance
@@ -1267,6 +1283,7 @@ export const servicesApi = createApi({
         }
         return response.data;
       },
+      keepUnusedDataFor: 15,
     }),
 
     // Get provider finance history (money requests + withdrawals)
@@ -1290,6 +1307,7 @@ export const servicesApi = createApi({
           }
         );
       },
+      keepUnusedDataFor: 60,
     }),
 
     // Get customer payment history
@@ -1313,11 +1331,12 @@ export const servicesApi = createApi({
           }
         );
       },
+      keepUnusedDataFor: 60,
     }),
 
     // Get provider reviews (authenticated)
     getProviderReviews: builder.query({
-      query: () => "/providers/reviews/my",
+      query: () => "/providers/reviews/my/all",
       providesTags: ["Provider"],
       transformResponse: (response) => {
         console.log("Get provider reviews API response:", response);
@@ -1336,35 +1355,77 @@ export const servicesApi = createApi({
 
         const provider = response.data.provider || null;
         const reviews = response.data.reviews || {};
-        const statistics = reviews.statistics || {
-          averageRating: 0,
-          totalReviews: 0,
-          ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+
+        const getAvatar = (profileImage) => {
+          if (!profileImage) return "";
+          if (typeof profileImage === "string") return profileImage;
+          return profileImage.url || "";
         };
-        const pagination = reviews.pagination || {
+
+        const mapReview = (item) => ({
+          id: item.id || item._id,
+          rating: item.rating || 0,
+          comment: item.comment || "",
+          createdAt: item.createdAt,
+          serviceName: item.serviceName || item.bundleTitle || "",
+          serviceDate: item.serviceDate || null,
+          customerName:
+            `${item.customer?.firstName || ""} ${
+              item.customer?.lastName || ""
+            }`.trim() || "Anonymous",
+          customerAvatar: getAvatar(item.customer?.profileImage),
+        });
+
+        let list = [];
+        let pagination = {
           current: 1,
           total: 0,
           pages: 1,
           limit: 10,
         };
-        const list = Array.isArray(reviews.list)
-          ? reviews.list.map((item) => ({
-              id: item.id || item._id,
-              rating: item.rating || 0,
-              comment: item.comment || "",
-              createdAt: item.createdAt,
-              serviceName: item.serviceName,
-              serviceDate: item.serviceDate,
-              customerName:
-                `${item.customer?.firstName || ""} ${
-                  item.customer?.lastName || ""
-                }`.trim() || "Anonymous",
-              customerAvatar: item.customer?.profileImage?.url || "",
-            }))
-          : [];
+
+        if (Array.isArray(reviews.list)) {
+          list = reviews.list.map(mapReview);
+          pagination = reviews.pagination || pagination;
+        } else {
+          const serviceList = Array.isArray(reviews.service)
+            ? reviews.service
+            : [];
+          const bundleList = Array.isArray(reviews.bundle)
+            ? reviews.bundle
+            : [];
+          list = [...serviceList, ...bundleList].map(mapReview);
+          pagination = response.data.pagination || pagination;
+          pagination.total = list.length;
+          pagination.pages = Math.ceil(list.length / (pagination.limit || 10)) || 1;
+        }
+
+        const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        const totalReviews = list.length;
+        const averageRating = totalReviews
+          ? Number(
+              (
+                list.reduce((sum, item) => sum + (item.rating || 0), 0) /
+                totalReviews
+              ).toFixed(2)
+            )
+          : 0;
+        list.forEach((item) => {
+          const rounded = Math.round(item.rating || 0);
+          if (ratingDistribution[rounded] !== undefined) {
+            ratingDistribution[rounded] += 1;
+          }
+        });
+
+        const statistics = {
+          averageRating,
+          totalReviews,
+          ratingDistribution,
+        };
 
         return { provider, statistics, list, pagination };
       },
+      keepUnusedDataFor: 120,
     }),
 
     // Get single service request by id
@@ -1466,6 +1527,7 @@ export const servicesApi = createApi({
           },
         };
       },
+      keepUnusedDataFor: 30,
     }),
   }),
 });

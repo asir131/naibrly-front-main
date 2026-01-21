@@ -31,7 +31,11 @@ export default function CreateBundleModal({ isOpen, onClose, onPublish }) {
 
   // Fetch services from API
   const { data: servicesData, isLoading: servicesLoading } =
-    useGetServicesQuery();
+    useGetServicesQuery(undefined, {
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMountOrArgChange: false,
+    });
 
   // Create bundle mutation
   const [createBundle, { isLoading: isCreating }] = useCreateBundleMutation();

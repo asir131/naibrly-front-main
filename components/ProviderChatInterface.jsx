@@ -844,7 +844,7 @@ export default function ProviderChatInterface({
           isCreatingMoneyRequest
         }
         taskDoneHidden={
-          (localOrderData?.statusLabel || "").toLowerCase() === "completed"
+          (localOrderData?.statusLabel || "").toLowerCase() === "completed" || isPaid
         }
         amount={amount}
         setAmount={setAmount}
@@ -986,74 +986,83 @@ export default function ProviderChatInterface({
             </button>
           </div>
 
-          {/* Reviews under quick chats */}
-          {reviewData.length > 0 && (
-            <div className="mt-6 w-full space-y-3">
-              {reviewData.map((rev, idx) => (
-                <div
-                  key={rev.createdAt || idx}
-                  className="rounded-2xl border border-gray-200 bg-white/70 p-5 shadow-sm"
-                >
-                  <div className="mb-3">
-                    <p className="text-sm font-semibold text-gray-900">
-                      Received feedback from the customer.
+        </>
+      )}
+
+      {/* Reviews under quick chats */}
+      {reviewData.length > 0 && (
+        <div className="mt-6 w-full space-y-3">
+          {reviewData.map((rev, idx) => {
+            const profileImage =
+              typeof rev.customer?.profileImage === "string"
+                ? rev.customer.profileImage
+                : rev.customer?.profileImage?.url;
+            const customerName = rev.customer
+              ? `${rev.customer.firstName || ""} ${
+                  rev.customer.lastName || ""
+                }`.trim() || "Customer"
+              : "Customer";
+
+            return (
+              <div
+                key={rev.createdAt || idx}
+                className="rounded-2xl border border-gray-200 bg-white/70 p-5 shadow-sm"
+              >
+                <div className="mb-3">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Received feedback from the customer.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt={customerName}
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-teal-600 flex items-center justify-center text-white">
+                      <UserIcon className="h-6 w-6" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {customerName}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-1 text-amber-500">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                size={16}
+                                className={
+                                  star <= rev.rating
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "text-gray-300"
+                                }
+                              />
+                            ))}
+                          </div>
+                          <span className="text-gray-500">
+                            ({Number(rev.rating).toFixed(1)})
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {formatTimeAgo(rev.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-gray-700">
+                      {rev.comment || "No comment provided."}
                     </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700">
-                      {rev.customer?.profileImage?.url ? (
-                        <img
-                          src={rev.customer.profileImage.url}
-                          alt="Customer"
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        rev.customer?.firstName?.[0] || "C"
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {rev.customer
-                              ? `${rev.customer.firstName || ""} ${
-                                  rev.customer.lastName || ""
-                                }`.trim() || "Customer"
-                              : "Customer"}
-                          </p>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <div className="flex items-center gap-1 text-amber-500">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  size={16}
-                                  className={
-                                    star <= rev.rating
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "text-gray-300"
-                                  }
-                                />
-                              ))}
-                            </div>
-                            <span className="text-gray-500">
-                              ({Number(rev.rating).toFixed(1)})
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {formatTimeAgo(rev.createdAt)}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-gray-700">
-                        {rev.comment || "No comment provided."}
-                      </p>
-                    </div>
-                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <AddQuickChatModal

@@ -34,7 +34,11 @@ export default function OurServicesSection({ serviceType, zipCode }) {
   // Fetch nearby services from API (fallback when no specific service is selected)
   const { data, isLoading, isError } = useGetNearbyServicesQuery(
     { page, limit: pageSize },
-    { skip: !!serviceType } // Skip if serviceType is provided
+    {
+      skip: !!serviceType, // Skip if serviceType is provided
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    }
   );
 
   useEffect(() => {

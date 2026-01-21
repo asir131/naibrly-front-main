@@ -77,7 +77,10 @@ const ProviderMessagePage = () => {
   const slug = params.id; // format: requestId-customerId or bundleId-customerId
 
   // Fetch provider requests/bundles
-  const { data, isLoading, error } = useGetProviderServiceRequestsQuery();
+  const { data, isLoading, error } = useGetProviderServiceRequestsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
 
   // Parse slug
   const { requestId, bundleId, customerId } = useMemo(() => {

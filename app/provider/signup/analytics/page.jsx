@@ -3,9 +3,10 @@
 import BundleRequestCard from '@/components/BundleRequestCard'
 import ReviewsList from '@/components/ReviewsList'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import { User as UserIcon } from 'lucide-react'
 import CancelOrderConfirmModal from '@/components/CancelOrderConfirmModal'
 import { useGetProviderAnalyticsQuery, useGetProviderNearbyBundlesQuery, useGetProviderReviewsQuery, useGetProviderServiceRequestsQuery, useUpdateServiceRequestStatusMutation, useUpdateBundleStatusMutation } from '@/redux/api/servicesApi'
 
@@ -16,11 +17,27 @@ const Analytics = () => {
     const [selectedBundle, setSelectedBundle] = useState(null)
     const [hiddenRequestIds, setHiddenRequestIds] = useState([])
     const [hiddenBundleIds, setHiddenBundleIds] = useState([])
+    const [activeRequestPage, setActiveRequestPage] = useState(1)
+    const [activeBundlePage, setActiveBundlePage] = useState(1)
+    const activeRequestPageSize = 3
+    const activeBundlePageSize = 3
 
-    const { data: analytics, isLoading, isError, error } = useGetProviderAnalyticsQuery()
-    const { data: requestsData, isLoading: requestsLoading, refetch: refetchRequests } = useGetProviderServiceRequestsQuery()
-    const { data: providerReviews, isLoading: reviewsLoading, isError: reviewsError, error: reviewsErrorData, refetch: refetchReviews } = useGetProviderReviewsQuery()
-    const { data: nearbyBundlesData, isLoading: nearbyBundlesLoading, isError: nearbyBundlesError, error: nearbyBundlesErrorData, refetch: refetchNearbyBundles } = useGetProviderNearbyBundlesQuery()
+    const { data: analytics, isLoading, isError, error } = useGetProviderAnalyticsQuery(undefined, {
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    })
+    const { data: requestsData, isLoading: requestsLoading, refetch: refetchRequests } = useGetProviderServiceRequestsQuery(undefined, {
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    })
+    const { data: providerReviews, isLoading: reviewsLoading, isError: reviewsError, error: reviewsErrorData, refetch: refetchReviews } = useGetProviderReviewsQuery(undefined, {
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    })
+    const { data: nearbyBundlesData, isLoading: nearbyBundlesLoading, isError: nearbyBundlesError, error: nearbyBundlesErrorData, refetch: refetchNearbyBundles } = useGetProviderNearbyBundlesQuery(undefined, {
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+    })
     const [updateServiceRequestStatus, { isLoading: isUpdatingRequest }] = useUpdateServiceRequestStatusMutation()
     const [updateBundleStatus, { isLoading: isUpdatingBundle }] = useUpdateBundleStatusMutation()
 
@@ -96,6 +113,42 @@ const Analytics = () => {
             console.error('Failed to decline:', error)
         }
     }
+
+    const activeRequests = useMemo(() => (
+        requestsData?.serviceRequests?.items?.filter(
+            req => req.status === 'pending' && !hiddenRequestIds.includes(req._id)
+        ) || []
+    ), [requestsData, hiddenRequestIds])
+
+    const activeBundles = useMemo(() => (
+        (nearbyBundlesData?.bundles || []).filter(
+            bundle => !hiddenBundleIds.includes(bundle._id)
+        )
+    ), [nearbyBundlesData, hiddenBundleIds])
+
+    const activeRequestTotalPages = Math.max(1, Math.ceil(activeRequests.length / activeRequestPageSize))
+    const activeBundleTotalPages = Math.max(1, Math.ceil(activeBundles.length / activeBundlePageSize))
+
+    const pagedActiveRequests = activeRequests.slice(
+        (activeRequestPage - 1) * activeRequestPageSize,
+        activeRequestPage * activeRequestPageSize
+    )
+    const pagedActiveBundles = activeBundles.slice(
+        (activeBundlePage - 1) * activeBundlePageSize,
+        activeBundlePage * activeBundlePageSize
+    )
+
+    useEffect(() => {
+        if (activeRequestPage > activeRequestTotalPages) {
+            setActiveRequestPage(1)
+        }
+    }, [activeRequestPage, activeRequestTotalPages])
+
+    useEffect(() => {
+        if (activeBundlePage > activeBundleTotalPages) {
+            setActiveBundlePage(1)
+        }
+    }, [activeBundlePage, activeBundleTotalPages])
 
     return (
         <div className='analytics_layout md:px-[126px] md:py-[80px] max-sm:py-6 max-sm:px-6 flex flex-col gap-6'>
@@ -176,8 +229,8 @@ const Analytics = () => {
                     <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
                         <p className="text-center text-[#666]">Loading active requests...</p>
                     </div>
-                ) : requestsData?.serviceRequests?.items?.filter(req => req.status === 'pending' && !hiddenRequestIds.includes(req._id)).length > 0 ? (
-                    requestsData.serviceRequests.items.filter(req => req.status === 'pending' && !hiddenRequestIds.includes(req._id)).map((request) => {
+                ) : activeRequests.length > 0 ? (
+                    pagedActiveRequests.map((request) => {
                         const scheduledDate = new Date(request.scheduledDate);
                         const formattedDate = scheduledDate.toLocaleDateString('en-US', {
                             day: 'numeric',
@@ -210,11 +263,17 @@ const Analytics = () => {
 
                                 {/* user row */}
                                 <div className="mb-5 flex items-center gap-3">
-                                    <img
-                                        src={request.customer?.profileImage?.url || "https://i.pravatar.cc/64?img=1"}
-                                        alt="Client"
-                                        className="h-20 w-20 rounded-full object-cover"
-                                    />
+                                    {request.customer?.profileImage?.url ? (
+                                        <img
+                                            src={request.customer.profileImage.url}
+                                            alt="Client"
+                                            className="h-20 w-20 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-20 w-20 rounded-full bg-teal-600 flex items-center justify-center text-white">
+                                            <UserIcon className="h-10 w-10" />
+                                        </div>
+                                    )}
                                     <div className="flex flex-col">
                                         <span className="text-[24px] font-semibold text-black">
                                             {request.customer?.firstName} {request.customer?.lastName}
@@ -293,6 +352,31 @@ const Analytics = () => {
                         <p className="text-center text-[#666]">No active requests at the moment.</p>
                     </div>
                 )}
+                {activeRequests.length > 0 && activeRequestTotalPages > 1 && (
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => setActiveRequestPage((prev) => Math.max(prev - 1, 1))}
+                            className="page_number"
+                            disabled={activeRequestPage <= 1}
+                        >
+                            Previous
+                        </button>
+                        <span className="text-sm text-gray-600">
+                            Page {activeRequestPage} of {activeRequestTotalPages}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActiveRequestPage((prev) => Math.min(prev + 1, activeRequestTotalPages))
+                            }
+                            className="page_number"
+                            disabled={activeRequestPage >= activeRequestTotalPages}
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
             </div>
             {/* this is for active bundle request */}
             <div className='flex flex-col gap-[18px] w-full'>
@@ -316,9 +400,9 @@ const Analytics = () => {
                             Retry
                         </button>
                     </div>
-                ) : (nearbyBundlesData?.bundles || []).filter(bundle => !hiddenBundleIds.includes(bundle._id)).length > 0 ? (
+                ) : activeBundles.length > 0 ? (
                     <div className='flex flex-col md:flex-row items-center justify-between w-full gap-[10px]'>
-                        {nearbyBundlesData.bundles.filter(bundle => !hiddenBundleIds.includes(bundle._id)).map((bundle) => (
+                        {pagedActiveBundles.map((bundle) => (
                             <div key={bundle._id} className='w-full'>
                                 <BundleRequestCard
                                     bundle={bundle}
@@ -332,6 +416,31 @@ const Analytics = () => {
                 ) : (
                     <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
                         <p className="text-center text-[#666]">No active bundle requests at the moment.</p>
+                    </div>
+                )}
+                {activeBundles.length > 0 && activeBundleTotalPages > 1 && (
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => setActiveBundlePage((prev) => Math.max(prev - 1, 1))}
+                            className="page_number"
+                            disabled={activeBundlePage <= 1}
+                        >
+                            Previous
+                        </button>
+                        <span className="text-sm text-gray-600">
+                            Page {activeBundlePage} of {activeBundleTotalPages}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActiveBundlePage((prev) => Math.min(prev + 1, activeBundleTotalPages))
+                            }
+                            className="page_number"
+                            disabled={activeBundlePage >= activeBundleTotalPages}
+                        >
+                            Next
+                        </button>
                     </div>
                 )}
             </div>

@@ -61,7 +61,7 @@ const RequestRow = ({ item, type }) => {
     ? item.pricing?.finalPrice || item.finalPrice || item.services?.[0]?.hourlyRate || 0
     : item.price || 0;
   const customerImage = isBundle
-    ? participantCustomer?.profileImage?.url || item.creator?.profileImage?.url
+    ? participantCustomer?.profileImage?.url
     : item.customer?.profileImage?.url;
   const customerName = isBundle
     ? `${participantCustomer?.firstName || item.creator?.firstName || ''} ${participantCustomer?.lastName || item.creator?.lastName || ''}`.trim()

@@ -15,14 +15,22 @@ const PaymentsHistory = () => {
     isLoading: isLoadingProvider,
     isError: isErrorProvider,
     error: errorProvider,
-  } = useGetProviderFinanceHistoryQuery(undefined, { skip: isCustomer });
+  } = useGetProviderFinanceHistoryQuery(undefined, {
+    skip: isCustomer,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
 
   const {
     data: customerData,
     isLoading: isLoadingCustomer,
     isError: isErrorCustomer,
     error: errorCustomer,
-  } = useGetCustomerPaymentHistoryQuery(undefined, { skip: !isCustomer });
+  } = useGetCustomerPaymentHistoryQuery(undefined, {
+    skip: !isCustomer,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
 
   const history = isCustomer
     ? customerData?.payments || customerData?.data?.payments || []

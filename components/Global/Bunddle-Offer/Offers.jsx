@@ -14,6 +14,8 @@ import { io } from "socket.io-client";
 
 export default function NaibrlybundelOfferSection() {
   const { isAuthenticated } = useAuth();
+  const authToken =
+    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBundle, setSelectedBundle] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -36,7 +38,12 @@ export default function NaibrlybundelOfferSection() {
     refetch,
   } = useGetNearbyBundlesQuery(
     { page, limit: pageSize },
-    { skip: !isAuthenticated } // Skip the query if user is not authenticated
+    {
+      skip: !authToken, // Fetch as soon as a token is available
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMountOrArgChange: true,
+    }
   );
 
   // Debug logging

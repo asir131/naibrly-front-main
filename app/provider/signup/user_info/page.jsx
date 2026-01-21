@@ -67,7 +67,11 @@ export default function UserInfo() {
   const router = useRouter();
   const [registerProvider, { isLoading }] = useRegisterProviderMutation();
   const { data: allServicesData, isLoading: servicesLoading } =
-    useGetServicesQuery();
+    useGetServicesQuery(undefined, {
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMountOrArgChange: false,
+    });
   const { login } = useAuth();
   const serviceOptions = useMemo(
     () => allServicesData?.services || allServicesData?.data?.services || [],

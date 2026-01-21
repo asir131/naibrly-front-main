@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Clock, MapPin, Calendar, Search, ChevronDown } from "lucide-react";
+import { Clock, MapPin, Calendar, Search, ChevronDown, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Rectangle1 from "@/public/Home/Rectangle a.png";
@@ -9,7 +9,7 @@ import Rectangle3 from "@/public/Home/Rectangle c.png";
 import MapBg from "@/public/map image.png";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
-import { useGetServicesQuery, useGetProviderServicesQuery } from "@/redux/api/servicesApi";
+import { useGetServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 import { useAuth } from "@/hooks/useAuth";
 import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
@@ -28,7 +28,11 @@ export default function NaibrlyHeroSection({
 
   // Fetch services from API
   const { data: servicesData, isLoading: servicesLoading } =
-    useGetServicesQuery();
+    useGetServicesQuery(undefined, {
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMountOrArgChange: false,
+    });
 
   // Extract all service names from the API data
   const serviceOptions = useMemo(() => {
@@ -122,47 +126,9 @@ export default function NaibrlyHeroSection({
     };
   }, []);
 
-  const topProvider = providerResults?.providers?.[0] || null;
-  const showNaibrlyNow = hasSearched && !isSearching && !!topProvider;
-  const providerName =
-    topProvider?.provider?.businessName || "Service Provider";
-  const providerId = topProvider?.provider?.id;
-  const serviceName = topProvider?.service?.name || searchQuery.trim();
-  const hourlyRate = topProvider?.service?.hourlyRate;
-  const rating = topProvider?.provider?.rating || 0;
-  const reviewCount = topProvider?.provider?.totalReviews || 0;
-
-  const matchedService = useMemo(() => {
-    if (!servicesData?.services) return null;
-    const targetName = (serviceName || searchQuery || "").trim();
-    if (!targetName) return null;
-    return (
-      servicesData.services.find(
-        (service) => service?.name?.toLowerCase() === targetName.toLowerCase()
-      ) || null
-    );
-  }, [servicesData, serviceName, searchQuery]);
-
-  const matchedServiceImage = matchedService?.image?.url || null;
-
-  const shouldFetchProviderService =
-    Boolean(providerId) && Boolean(serviceName?.trim());
-  const { data: providerServiceData } = useGetProviderServicesQuery(
-    shouldFetchProviderService
-      ? { providerId, serviceName: serviceName.trim() }
-      : { providerId: null, serviceName: "" },
-    { skip: !shouldFetchProviderService }
-  );
-  const selectedServiceImage =
-    providerServiceData?.selectedService?.image?.url || null;
-
-  const providerImage =
-    selectedServiceImage ||
-    matchedServiceImage ||
-    topProvider?.service?.image?.url ||
-    topProvider?.provider?.businessLogo?.url ||
-    topProvider?.provider?.profileImage?.url ||
-    "https://randomuser.me/api/portraits/men/1.jpg";
+  const availableProviders = providerResults?.providers || [];
+  const showNaibrlyNow =
+    hasSearched && !isSearching && availableProviders.length > 0;
 
   return (
     <div className="bg-linear-to-br from-gray-50 to-teal-50 min-h-8 relative p-2 lg:p-10 overflow-hidden">
@@ -350,63 +316,100 @@ export default function NaibrlyHeroSection({
 
               {showNaibrlyNow && (
                 <div className="mt-4 rounded-2xl border border-gray-200 bg-white/90 p-4 shadow-sm">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                      <img
-                        src={providerImage}
-                        alt={providerName}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-base font-semibold text-gray-900">
-                            {serviceName || "Service"}
-                          </h3>
-                          <div className="mt-1 text-sm text-teal-600 font-semibold">
-                            {rating.toFixed(1)}{" "}
-                            <span className="text-amber-500">★</span>
-                            <span className="text-gray-500">
-                              {" "}
-                              ({reviewCount})
-                            </span>
+                  <div
+                    className={`space-y-4 ${
+                      availableProviders.length > 2
+                        ? "max-h-80 overflow-y-auto pr-1"
+                        : ""
+                    }`}
+                  >
+                    {availableProviders.map((provider, index) => {
+                      const providerName =
+                        provider?.provider?.businessName ||
+                        provider?.provider?.businessNameRegistered ||
+                        "Service Provider";
+                      const providerId = provider?.provider?.id;
+                      const serviceName =
+                        provider?.service?.name || searchQuery.trim();
+                      const hourlyRate = provider?.service?.hourlyRate;
+                      const rating =
+                        Number.isFinite(Number(provider?.provider?.rating))
+                          ? Number(provider?.provider?.rating)
+                          : 0;
+                      const reviewCount =
+                        Number.isFinite(Number(provider?.provider?.totalReviews))
+                          ? Number(provider?.provider?.totalReviews)
+                          : 0;
+                      const providerImage =
+                        provider?.service?.image?.url ||
+                        provider?.provider?.businessLogo?.url ||
+                        provider?.provider?.profileImage?.url ||
+                        "https://randomuser.me/api/portraits/men/1.jpg";
+
+                      return (
+                        <div
+                          key={providerId || index}
+                          className="flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                        >
+                          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                            <img
+                              src={providerImage}
+                              alt={providerName}
+                              className="h-full w-full object-cover"
+                            />
                           </div>
-                          <div className="mt-1 text-sm text-gray-600">
-                            {providerName}
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h3 className="text-base font-semibold text-gray-900">
+                                  {serviceName || "Service"}
+                                </h3>
+                                <div className="mt-1 text-sm text-teal-600 font-semibold">
+                                  {rating.toFixed(1)}{" "}
+                                  <Star className="inline-block h-4 w-4 text-amber-500" fill="currentColor" />
+                                  <span className="text-gray-500">
+                                    {" "}
+                                    ({reviewCount})
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-sm text-gray-600">
+                                  {providerName}
+                                </div>
+                              </div>
+                              {typeof hourlyRate === "number" && (
+                                <div className="text-right">
+                                  <div className="text-base font-semibold text-gray-900">
+                                    ${hourlyRate}/hr
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    Hourly Rate
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-3">
+                              <Button
+                                onClick={() => {
+                                  if (!providerId || !serviceName) return;
+                                  if (!isAuthenticated) {
+                                    setShowAuthPrompt(true);
+                                    return;
+                                  }
+                                  router.push(
+                                    `/providerprofile?id=${providerId}&service=${encodeURIComponent(
+                                      serviceName
+                                    )}`
+                                  );
+                                }}
+                                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-5 py-2 rounded-lg"
+                              >
+                                Naibrly Now
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                        {typeof hourlyRate === "number" && (
-                          <div className="text-right">
-                            <div className="text-base font-semibold text-gray-900">
-                              ${hourlyRate}/hr
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Hourly Rate
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-3">
-                        <Button
-                          onClick={() => {
-                            if (!providerId || !serviceName) return;
-                            if (!isAuthenticated) {
-                              setShowAuthPrompt(true);
-                              return;
-                            }
-                            router.push(
-                              `/providerprofile?id=${providerId}&service=${encodeURIComponent(
-                                serviceName
-                              )}`
-                            );
-                          }}
-                          className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-5 py-2 rounded-lg"
-                        >
-                          Naibrly Now
-                        </Button>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -493,7 +496,7 @@ export default function NaibrlyHeroSection({
       <AuthPromptModal
         isOpen={showAuthPrompt}
         onClose={() => setShowAuthPrompt(false)}
-        serviceData={{ title: serviceName || "Service" }}
+        serviceData={{ title: searchQuery.trim() || "Service" }}
       />
     </div>
   );

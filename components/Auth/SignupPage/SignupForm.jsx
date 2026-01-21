@@ -393,6 +393,12 @@ function SignupFormContent() {
                 )}
               </button>
             </div>
+            {formData.confirmPassword &&
+              formData.password !== formData.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">
+                  Passwords do not match
+                </p>
+              )}
           </div>
 
           {/* Phone Number with Country Code */}

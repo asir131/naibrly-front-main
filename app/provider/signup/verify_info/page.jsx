@@ -42,7 +42,7 @@ const VerifyInfo = () => {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error(
-          "File size too large. Please upload a file smaller than 10MB."
+          "File size too large. Please upload a file smaller than 10MB.",
         );
         e.target.value = "";
         return;
@@ -65,7 +65,7 @@ const VerifyInfo = () => {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error(
-          "File size too large. Please upload a file smaller than 10MB."
+          "File size too large. Please upload a file smaller than 10MB.",
         );
         e.target.value = "";
         return;
@@ -80,7 +80,7 @@ const VerifyInfo = () => {
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error(
-          "File size too large. Please upload a file smaller than 10MB."
+          "File size too large. Please upload a file smaller than 10MB.",
         );
         e.target.value = "";
         return;
@@ -127,7 +127,7 @@ const VerifyInfo = () => {
           : null;
       if (!token) {
         toast.error(
-          "Please log in to continue. You need to be authenticated to submit verification information."
+          "Please log in to continue. You need to be authenticated to submit verification information.",
         );
         console.error("No auth token found. User needs to log in.");
         return;
@@ -158,7 +158,7 @@ const VerifyInfo = () => {
       submitData.append("lastName", data.ownerLastName.trim());
       submitData.append(
         "businessRegisteredCountry",
-        data.businessRegisteredCountry
+        data.businessRegisteredCountry,
       );
 
       // All document files are REQUIRED
@@ -437,6 +437,21 @@ const VerifyInfo = () => {
                 </div>
               )}
             </div>
+            <div className="flex items-center gap-3 pb-5">
+              <input
+                className="verify_checkbox"
+                type="checkbox"
+                {...register("isAuthorizedRepresentative", { required: true })}
+              />
+              {errors.isAuthorizedRepresentative && (
+                <span className="text-red-500 text-[10px]">
+                  This field is required
+                </span>
+              )}
+              <p className="text-[11px] text-black">
+                I am authorized to represent the company.
+              </p>
+            </div>
 
             <div className="flex items-center gap-3 pb-5">
               <input
@@ -466,9 +481,7 @@ const VerifyInfo = () => {
                   This field is required
                 </span>
               )}
-              <p className="text-[11px] text-black">
-                I am owner/operator and authorized to represent the company
-              </p>
+              <p className="text-[11px] text-black">I am the owner-operator.</p>
             </div>
 
             <div className="nid_upload">
@@ -479,7 +492,7 @@ const VerifyInfo = () => {
                 <input
                   type="text"
                   className="input_box text-[#000] text-[16px] w-full"
-                  placeholder="Mina"
+                  placeholder="First Name"
                   {...register("ownerFirstName", { required: true })}
                 />
                 {errors.ownerFirstName && (
@@ -495,7 +508,7 @@ const VerifyInfo = () => {
                 <input
                   type="text"
                   className="input_box text-[#000] text-[16px] w-full"
-                  placeholder="Leo"
+                  placeholder="Last Name"
                   {...register("ownerLastName", { required: true })}
                 />
                 {errors.ownerLastName && (

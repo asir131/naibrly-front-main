@@ -41,7 +41,10 @@ export default function ConversationPage() {
     }
   }, [slug]);
 
-  const { data: myRequestsData, isLoading, error } = useGetMyServiceRequestsQuery();
+  const { data: myRequestsData, isLoading, error } = useGetMyServiceRequestsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
   const [cancelServiceRequest, { isLoading: isCancellingService }] = useCancelServiceRequestMutation();
   const [cancelBundleParticipation, { isLoading: isCancellingBundle }] = useCancelBundleParticipationMutation();
   const isCancelling = isCancellingService || isCancellingBundle;
@@ -91,6 +94,25 @@ export default function ConversationPage() {
     }
 
     if (requestType === 'bundle' && bundle) {
+      const pricing = bundle.pricing || {};
+      const discountPercent =
+        pricing.discountPercent ?? bundle.bundleDiscount ?? 0;
+      const finalPrice = pricing.finalPrice ?? bundle.finalPrice ?? 0;
+      const originalPrice =
+        pricing.originalPrice ??
+        (discountPercent
+          ? finalPrice / (1 - discountPercent / 100)
+          : finalPrice);
+      const discountAmount =
+        pricing.discountAmount ?? Math.max(originalPrice - finalPrice, 0);
+      console.log('Bundle offer calculation:', {
+        bundleId: bundle._id,
+        discountPercent,
+        originalPrice,
+        discountAmount,
+        finalPrice,
+      });
+
       return {
         id: itemId,
         type: 'bundle',
@@ -100,11 +122,13 @@ export default function ConversationPage() {
           bundle.coverImage ||
           bundle.provider?.businessLogo?.url ||
           'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=400&h=300&fit=crop',
-        avgPrice: bundle.pricing?.finalPrice
-          ? `$${bundle.pricing.finalPrice}`
-          : bundle.finalPrice
-            ? `$${bundle.finalPrice}`
-            : 'N/A',
+        avgPrice: finalPrice ? `$${finalPrice}` : 'N/A',
+        pricing: {
+          originalPrice,
+          discountAmount,
+          finalPrice,
+          discountPercent,
+        },
         rating: bundle.rating || bundle.provider?.rating || 0,
         reviews: bundle.reviews || 0,
         date: bundle.serviceDate

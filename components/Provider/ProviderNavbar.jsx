@@ -38,6 +38,8 @@ export default function ProviderNavbar() {
     // Fetch live provider balance (availableBalance, pendingPayout, etc.)
     const { data: balanceData } = useGetProviderBalanceQuery(undefined, {
         skip: !isAuthenticated || !isProvider,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
     });
 
     // Fetch provider profile to get latest profile image/name

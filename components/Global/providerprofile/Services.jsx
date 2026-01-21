@@ -20,7 +20,11 @@ const Services = () => {
   const { data: servicesData, refetch, isLoading } = useGetProviderServicesListQuery();
   const [addService, { isLoading: isAdding }] = useAddProviderServiceMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteProviderServiceMutation();
-  const { data: allServicesData } = useGetServicesQuery();
+  const { data: allServicesData } = useGetServicesQuery(undefined, {
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMountOrArgChange: false,
+  });
 
   // Available options (from API, fallback static)
   const availableServices = useMemo(() => {

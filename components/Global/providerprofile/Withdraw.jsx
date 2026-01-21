@@ -30,7 +30,10 @@ const Withdraw = () => {
   } = useGetProviderPayoutInformationQuery();
 
   // Fetch balances
-  const { data: balanceData } = useGetProviderBalanceQuery();
+  const { data: balanceData } = useGetProviderBalanceQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
   const [updatePayout, { isLoading: isUpdating }] =
     useUpdatePayoutInformationMutation();
   const { data: profileData } = useGetUserProfileQuery();
@@ -224,12 +227,6 @@ const Withdraw = () => {
               placeholder="0123456789"
             />
           </div>
-
-          {payoutInformation && payoutInformation.isVerified === false && (
-            <p className="text-sm text-amber-600">
-              Verification is pending admin approval.
-            </p>
-          )}
 
           <div className="bg-teal-50 border border-teal-200 rounded-md p-4 flex items-start gap-3">
             <svg className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">

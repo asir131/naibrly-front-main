@@ -149,7 +149,11 @@ export default function ChatInterface({
     data: moneyReqData,
     isLoading: moneyReqLoading,
     refetch: refetchMoneyReq,
-  } = useGetCustomerMoneyRequestsQuery(moneyReqArgs, { skip: !shouldFetchMoneyReq });
+  } = useGetCustomerMoneyRequestsQuery(moneyReqArgs, {
+    skip: !shouldFetchMoneyReq,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
 
   const [acceptMoneyRequest, { isLoading: isAccepting }] = useAcceptMoneyRequestMutation();
   const [cancelMoneyRequest, { isLoading: isCancelling }] = useCancelMoneyRequestMutation();
@@ -478,6 +482,16 @@ export default function ChatInterface({
     }
   }, [searchParams, refetchMoneyReq]);
 
+  const baseAmount = parseFloat(acceptedRequest?.amount) || 0;
+  const discountPercent =
+    request?.type === 'bundle' ? Number(request?.pricing?.discountPercent || 0) : 0;
+  const inferredOriginal =
+    request?.type === 'bundle' && discountPercent > 0
+      ? baseAmount / (1 - discountPercent / 100)
+      : baseAmount;
+  const inferredDiscount = Math.max(inferredOriginal - baseAmount, 0);
+  const totalAmount = baseAmount + (parseFloat(tipAmount) || 0);
+
   return (
     <div className="min-h-[calc(100vh-140px)] bg-[#F6F7FB] p-4 sm:p-6">
       <div className=" mx-auto space-y-4">
@@ -499,41 +513,48 @@ export default function ChatInterface({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Header with title, status, and cancel button */}
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
+            <div>
               <h3 className="text-base font-semibold text-gray-900">{request.title}</h3>
-              {/* Connection Status */}
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                isConnected ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-600'
-              }`}>
-                {isConnected ? '• Connected' : '• Connecting...'}
-              </span>
-              {localStatus === 'accepted' && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-600">
-                  • Accepted
+            </div>
+            <div className="flex flex-col items-start sm:items-end gap-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                {/* Connection Status */}
+                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+                  isConnected ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  {isConnected ? 'Connected' : 'Connecting...'}
                 </span>
-              )}
-              {localStatus === 'completed' && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                  • Done
-                </span>
-              )}
-              {localStatus === 'cancelled' && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">
-                  • Cancelled
-                </span>
+                {localStatus === 'accepted' && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-600">
+                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    Accepted
+                  </span>
+                )}
+                {localStatus === 'completed' && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                    <span className="h-2 w-2 rounded-full bg-gray-500" />
+                    Done
+                  </span>
+                )}
+                {localStatus === 'cancelled' && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">
+                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                    Cancelled
+                  </span>
+                )}
+              </div>
+              {['pending', 'accepted'].includes((localStatus || '').toLowerCase()) && onCancel && (
+                <Button
+                  onClick={onCancel}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 h-8 text-sm rounded-md"
+                >
+                  Cancel
+                </Button>
               )}
             </div>
-            {['pending', 'accepted'].includes((localStatus || '').toLowerCase()) && onCancel && (
-              <Button
-                onClick={onCancel}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 h-8 text-sm rounded-md"
-              >
-                Cancel
-              </Button>
-            )}
           </div>
-
           {/* Description */}
           <p className="text-xs text-gray-600 mb-2 line-clamp-2">
             {request.description}
@@ -744,6 +765,16 @@ export default function ChatInterface({
       {acceptedRequest?.status === 'accepted' && (
         <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-3">
           <div className="text-sm font-semibold text-gray-900">Review and confirm</div>
+          {request?.type === 'bundle' && acceptedRequest?.amount ? (
+            <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+              <span className="font-semibold">Bundle offer: </span>
+              <span>
+                {discountPercent > 0
+                  ? `$${inferredOriginal.toFixed(2)} - $${inferredDiscount.toFixed(2)} (${discountPercent}% off) = $${baseAmount.toFixed(2)}`
+                  : `$${baseAmount.toFixed(2)}`}
+              </span>
+            </div>
+          ) : null}
           <div className="flex flex-col gap-3">
             <div className="flex flex-col md:flex-row md:items-center md:gap-3">
               <div className="flex-1">
@@ -759,7 +790,7 @@ export default function ChatInterface({
               <div className="w-full md:w-40">
                 <div className="text-xs font-medium text-gray-700 mb-1">Total:</div>
                 <div className="h-10 rounded-md border border-gray-200 px-3 flex items-center text-sm font-semibold text-gray-900 bg-gray-50">
-                  ${((parseFloat(acceptedRequest.amount) || 0) + (parseFloat(tipAmount) || 0)).toFixed(2)}
+                  ${totalAmount.toFixed(2)}
                 </div>
               </div>
             </div>

@@ -46,11 +46,17 @@ function ReviewItem({ review }) {
             <div className="client_feedback_card">
                 {/* left: avatar + content */}
                 <div className="flex items-start gap-3">
-                    <img
-                        src={review.customerAvatar || "https://i.pravatar.cc/80"}
-                        alt={name}
-                        className="h-[80px] w-[80px] rounded-full object-cover"
-                    />
+                    {review.customerAvatar ? (
+                        <img
+                            src={review.customerAvatar}
+                            alt={name}
+                            className="h-[80px] w-[80px] rounded-full object-cover"
+                        />
+                    ) : (
+                        <div className="h-[80px] w-[80px] rounded-full bg-teal-600 flex items-center justify-center text-white text-2xl font-semibold">
+                            {name.charAt(0).toUpperCase()}
+                        </div>
+                    )}
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                             <span className="text-[16px] font-semibold text-[#1D1D1F]">
