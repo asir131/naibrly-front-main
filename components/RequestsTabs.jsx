@@ -57,6 +57,11 @@ const RequestRow = ({ item, type }) => {
   const description = isBundle
     ? item.description
     : `${item.problem}${item.note ? ` - ${item.note}` : ''}`;
+  const bundleServiceList = isBundle
+    ? item.services?.map((service) => service?.name).filter(Boolean) || []
+    : [];
+  const bundleServiceNames = bundleServiceList.join(", ");
+  const bundleServiceLabel = bundleServiceList.length === 1 ? "Service" : "Services";
   const price = isBundle
     ? item.pricing?.finalPrice || item.finalPrice || item.services?.[0]?.hourlyRate || 0
     : item.price || 0;
@@ -114,6 +119,11 @@ const RequestRow = ({ item, type }) => {
           <p className="mt-1 text-[14px] leading-6 text-[#7F7F7F] line-clamp-2 md:line-clamp-none">
             {description}
           </p>
+          {isBundle && bundleServiceNames && (
+            <p className="mt-1 text-[13px] text-[#0E7A60] font-medium">
+              {bundleServiceLabel}: {bundleServiceNames}
+            </p>
+          )}
 
           <div className="mt-2 text-[15px]">
             <span className="text-[#71717A]">Customer: </span>

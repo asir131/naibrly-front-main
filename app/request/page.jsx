@@ -142,12 +142,25 @@ export default function RequestPage() {
 
 
 
+  const isValidImageUrl = (val) => {
+    if (typeof val !== "string") return false;
+    const trimmed = val.trim();
+    if (!trimmed) return false;
+    return trimmed.startsWith("/") || /^https?:\/\//i.test(trimmed);
+  };
+
+  const normalizeImageUrl = (img) => {
+    if (!img) return null;
+    if (typeof img === "string") return img;
+    if (typeof img === "object") return img.url || null;
+    return null;
+  };
+
   const getCategoryImage = (request) => {
 
-    if (request?.coverImage) {
-
-      return request.coverImage;
-
+    const coverImage = normalizeImageUrl(request?.coverImage);
+    if (coverImage) {
+      return coverImage;
     }
 
     const categoryType = getCategoryTypeName(request);
@@ -162,9 +175,9 @@ export default function RequestPage() {
 
     return (
 
-      request.provider?.profileImage?.url ||
+      normalizeImageUrl(request.provider?.profileImage) ||
 
-      request.provider?.businessLogo?.url ||
+      normalizeImageUrl(request.provider?.businessLogo) ||
 
       "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop"
 
@@ -294,6 +307,14 @@ export default function RequestPage() {
 
 
 
+    const getBundleCategoryTypeName = (bundle) => {
+      if (bundle?.categoryTypeName) return bundle.categoryTypeName;
+      const firstService = bundle?.services?.[0];
+      if (firstService?.categoryTypeName) return firstService.categoryTypeName;
+      const firstServiceName = firstService?.name;
+      return SERVICE_CATEGORY_MAP[firstServiceName] || null;
+    };
+
     const transformBundle = (bundle) => {
 
       const participantEntry = currentUserId
@@ -404,9 +425,9 @@ export default function RequestPage() {
 
       // Combine service names
 
-      const serviceNames =
-
-        bundle.services?.map((s) => s.name).join(", ") || "Bundle Services";
+      const serviceList = bundle.services?.map((s) => s.name).filter(Boolean) || [];
+      const serviceNames = serviceList.join(", ") || "Bundle Service";
+      const serviceLabel = serviceList.length === 1 ? "Service" : "Services";
 
 
 
@@ -435,13 +456,9 @@ export default function RequestPage() {
         statusBg: statusInfo.bg,
 
         image:
-
-          bundle.coverImage ||
-
-          CATEGORY_TYPE_IMAGES[bundle.categoryTypeName] ||
-
-          bundle.provider?.businessLogo?.url ||
-
+          normalizeImageUrl(bundle.coverImage) ||
+          CATEGORY_TYPE_IMAGES[getBundleCategoryTypeName(bundle)] ||
+          normalizeImageUrl(bundle.provider?.businessLogo) ||
           "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop",
 
         amount: bundle.pricing?.finalPrice || bundle.finalPrice || 0,
@@ -453,6 +470,7 @@ export default function RequestPage() {
         businessName: bundle.provider?.businessNameRegistered || "",
 
         services: serviceNames,
+        servicesLabel: serviceLabel,
 
         participants: bundle.currentParticipants || 0,
 
@@ -628,7 +646,11 @@ export default function RequestPage() {
 
               <Image
 
-                src={request.image}
+                src={
+                  isValidImageUrl(normalizeImageUrl(request.image))
+                    ? normalizeImageUrl(request.image)
+                    : "https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=200&h=200&fit=crop"
+                }
 
                 alt={request.title}
 
@@ -724,7 +746,7 @@ export default function RequestPage() {
 
               <p className="text-xs text-teal-600 mb-2 font-medium">
 
-                Services: {request.services}
+                {request.servicesLabel || "Services"}: {request.services}
 
               </p>
 

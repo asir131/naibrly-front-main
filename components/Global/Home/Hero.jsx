@@ -12,6 +12,7 @@ import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card";
 import { useGetServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "react-hot-toast";
 
 export default function NaibrlyHeroSection() {
   const router = useRouter();
@@ -255,6 +256,10 @@ export default function NaibrlyHeroSection() {
                     // Navigate to find-area page with search parameters (trim whitespace)
                     const trimmedService = searchQuery.trim();
                     const trimmedZip = zipCode.trim();
+                    if (trimmedService && !trimmedZip) {
+                      toast.error("Please enter a zip code to search");
+                      return;
+                    }
                     if (trimmedService || trimmedZip) {
                       const params = new URLSearchParams();
                       if (trimmedService) params.set("service", trimmedService);

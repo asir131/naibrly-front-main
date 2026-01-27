@@ -59,7 +59,7 @@ export default function ProviderNavbar() {
         getImageUrl(profileUser?.profileImage) ||
         getImageUrl(profileUser?.businessLogo) ||
         getImageUrl(user?.profileImage) ||
-        '/provider/Ellipse  (2).png';
+        null;
 
     const providerName =
         profileUser?.businessNameRegistered ||
@@ -192,13 +192,19 @@ export default function ProviderNavbar() {
                                 className="flex items-center gap-2 px-1 py-1 pr-4 bg-[#E8F5F3] rounded-full hover:bg-[#D1EBE7] transition-colors border border-transparent hover:border-teal-200"
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                             >
-                                <Image
-                                    src={profileImageSrc}
-                                    alt="Provider Profile"
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full w-10 h-10 object-cover"
-                                />
+                                {profileImageSrc ? (
+                                    <Image
+                                        src={profileImageSrc}
+                                        alt="Provider Profile"
+                                        width={40}
+                                        height={40}
+                                        className="rounded-full w-10 h-10 object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 bg-linear-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
+                                        <UserIcon className="w-6 h-6 text-white" />
+                                    </div>
+                                )}
                                
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"

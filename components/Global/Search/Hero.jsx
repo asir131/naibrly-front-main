@@ -13,6 +13,7 @@ import { useGetServicesQuery } from "@/redux/api/servicesApi";
 import useCustomerZipCode from "@/hooks/useCustomerZipCode";
 import { useAuth } from "@/hooks/useAuth";
 import AuthPromptModal from "@/components/Global/Modals/AuthPromptModal";
+import { toast } from "react-hot-toast";
 
 export default function NaibrlyHeroSection({
   onSearch,
@@ -290,6 +291,10 @@ export default function NaibrlyHeroSection({
                   const params = new URLSearchParams();
                   const trimmedService = searchQuery.trim();
                   const trimmedZip = zipCode.trim();
+                  if (trimmedService && !trimmedZip) {
+                    toast.error("Please enter a zip code to search");
+                    return;
+                  }
                   if (trimmedService) params.set("service", trimmedService);
                   if (trimmedZip) params.set("zip", trimmedZip);
                   router.push(`/find-area?${params.toString()}`);

@@ -85,6 +85,10 @@ export default function NaibrlybundelOfferSection({
   const transformedBundles = useMemo(() => {
     if (!bundles || bundles.length === 0) return [];
     return bundles.map((bundle) => {
+      const serviceList =
+        bundle.services?.map((service) => service?.name).filter(Boolean) || [];
+      const serviceNames = serviceList.join(", ") || bundle.title;
+      const serviceLabel = serviceList.length === 1 ? "Service" : "Services";
       // Get participant images
       const participantImages = bundle.participants?.map(p =>
         p.customer?.profileImage?.url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
@@ -97,7 +101,8 @@ export default function NaibrlybundelOfferSection({
 
       return {
         id: bundle._id,
-        service: bundle.title,
+        service: serviceNames,
+        serviceLabel,
         description: bundle.description,
         bundle: `${bundle.maxParticipants}-Person Bundle (${bundle.currentParticipants} Joined, ${bundle.availableSpots} Spot${bundle.availableSpots !== 1 ? 's' : ''} Open)`,
         location: bundle.zipCode || bundle.address?.zipCode || 'ZIP not provided',
@@ -107,6 +112,7 @@ export default function NaibrlybundelOfferSection({
         savings: `-$${bundle.pricing?.discountAmount || 0}`,
         serviceDate,
         serviceTime: `${bundle.serviceTimeStart || ''} - ${bundle.serviceTimeEnd || ''}`,
+        coverImage: bundle.coverImage || null,
         images: participantImages.length > 0 ? participantImages : [
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
         ],
@@ -132,7 +138,7 @@ export default function NaibrlybundelOfferSection({
     if (!isAuthenticated) {
       const serviceData = {
         title: offer.service,
-        image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=600&fit=crop',
+        image: offer.coverImage || offer.modalImage || null,
       };
       setSelectedBundle(serviceData);
       setIsAuthModalOpen(true);
@@ -336,6 +342,11 @@ export default function NaibrlybundelOfferSection({
                   <p className="text-base font-semibold text-gray-900 mb-2">
                     {offer.bundle}
                   </p>
+                  {offer.service && (
+                    <p className="text-sm text-teal-600 font-medium mb-3">
+                      {offer.serviceLabel || "Services"}: {offer.service}
+                    </p>
+                  )}
 
                   {/* Service Date & Time */}
                   {hasSearched && offer.serviceDate && (

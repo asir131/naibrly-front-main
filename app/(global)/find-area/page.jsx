@@ -8,12 +8,14 @@ import Mobileapp from '@/components/User/LandingPage/Mobileapp';
 import TopProsSectionNotBlured from '@/components/User/FindArea/TopProsSectionNotBlured';
 import AboutUs from '@/components/Global/Home/AboutUs';
 import { useSearchProvidersMutation, useLazySearchBundlesQuery } from '@/redux/api/servicesApi';
+import { toast } from 'react-hot-toast';
 
 function SearchPageContent() {
     const searchParams = useSearchParams();
     const [searchProviders, { data: providerResults, isLoading: isLoadingProviders }] = useSearchProvidersMutation();
     const [searchBundles, { data: bundleResults, isLoading: isLoadingBundles }] = useLazySearchBundlesQuery();
     const [hasSearched, setHasSearched] = useState(false);
+    const [missingZipShown, setMissingZipShown] = useState(false);
 
     // Get search params from URL (trim whitespace to handle accidental spaces)
     const serviceParam = searchParams.get('service')?.trim() || null;
@@ -27,7 +29,11 @@ function SearchPageContent() {
         if (serviceParam && zipParam) {
             handleSearch(serviceParam, zipParam);
         }
-    }, [serviceParam, zipParam]);
+        if (serviceParam && !zipParam && !missingZipShown) {
+            toast.error('Please enter a zip code to search');
+            setMissingZipShown(true);
+        }
+    }, [serviceParam, zipParam, missingZipShown]);
 
     const handleSearch = async (serviceName, zipCode) => {
         if (!serviceName || !zipCode) return;

@@ -10,7 +10,9 @@ function BundleRequestCard({ bundle, handleCencelOrderConfirm, handleAccept, isU
         year: 'numeric'
     });
 
-    const serviceName = bundle.services?.[0]?.name || 'Service';
+    const serviceList = bundle.services?.map((service) => service?.name).filter(Boolean) || [];
+    const serviceNames = serviceList.join(', ') || 'Service';
+    const serviceLabel = serviceList.length === 1 ? 'Service' : 'Services';
     const hourlyRate = bundle.services?.[0]?.hourlyRate || 0;
     const participantCount = bundle.currentParticipants || 0;
     const maxParticipants = bundle.maxParticipants || 0;
@@ -24,6 +26,9 @@ function BundleRequestCard({ bundle, handleCencelOrderConfirm, handleAccept, isU
                     <h3 className="text-[18px] font-semibold text-[#000]">
                         {bundle.title}
                     </h3>
+                    <p className="text-[14px] text-[#0E7A60] font-medium">
+                        {serviceLabel}: {serviceNames}
+                    </p>
 
                     <div className="mt-2">
                         <p className="text-[16px] font-medium text-[#333]">

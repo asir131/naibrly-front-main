@@ -45,8 +45,23 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
 
   // Treat known placeholder URLs as "no image"
-  const isValidImageUrl = (val) =>
-    typeof val === "string" && val.trim().length > 0;
+  const normalizeImageUrl = (img) => {
+    if (!img) return null;
+    if (typeof img === "string") return img;
+    if (typeof img === "object") return img.url || null;
+    return null;
+  };
+
+  const isValidImageUrl = (val) => {
+    if (typeof val !== "string") return false;
+    const trimmed = val.trim();
+    if (!trimmed) return false;
+    if (!(trimmed.startsWith("/") || /^https?:\/\//i.test(trimmed))) return false;
+    if (trimmed.endsWith("/")) return false;
+    const lastSegment = trimmed.split("/").pop() || "";
+    if (!lastSegment.includes(".")) return false;
+    return true;
+  };
 
   const isPlaceholderImage = (url) => {
     if (!isValidImageUrl(url)) return false;
@@ -208,23 +223,34 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
 
   const getCategoryTypeName = (bundle) => {
     if (bundle?.categoryTypeName) return bundle.categoryTypeName;
-    const firstServiceName = bundle?.services?.[0]?.name;
+    const firstService = bundle?.services?.[0];
+    if (firstService?.categoryTypeName) return firstService.categoryTypeName;
+    const firstServiceName = firstService?.name;
     return SERVICE_CATEGORY_MAP[firstServiceName] || null;
   };
 
   const getCategoryImage = (bundle) => {
-    const categoryType = getCategoryTypeName(bundle);
-    if (categoryType && CATEGORY_TYPE_IMAGES[categoryType]) {
-      return CATEGORY_TYPE_IMAGES[categoryType];
+    // Prefer bundle cover image when valid
+    const coverImage = normalizeImageUrl(bundle?.coverImage);
+    if (coverImage && isValidImageUrl(coverImage) && !isPlaceholderImage(coverImage)) {
+      return coverImage;
     }
-    const candidate =
-      bundle?.coverImage ||
-      bundle?.modalImage ||
-      bundle?.heroImage ||
-      bundle?.images?.[0] ||
-      null;
-    if (!candidate || isPlaceholderImage(candidate)) return null;
-    return candidate;
+
+    // Next, prefer the categoryType image derived from the bundle's services
+    const categoryTypeImage =
+      normalizeImageUrl(bundle?.categoryTypeImage) ||
+      normalizeImageUrl(bundle?.categoryTypeImage?.url) ||
+      normalizeImageUrl(bundle?.categoryTypeImage?.image);
+    if (categoryTypeImage && isValidImageUrl(categoryTypeImage)) {
+      return categoryTypeImage;
+    }
+    const categoryType = getCategoryTypeName(bundle);
+    const categoryImage =
+      (categoryType && CATEGORY_TYPE_IMAGES[categoryType]) || null;
+    if (categoryImage && isValidImageUrl(categoryImage)) {
+      return categoryImage;
+    }
+    return null;
   };
 
   const heroImage = getCategoryImage(bundleData);
@@ -272,6 +298,10 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
   const serviceDateDisplay = bundleData.serviceDate
     ? new Date(bundleData.serviceDate).toISOString().split("T")[0]
     : null;
+  const serviceList =
+    bundleData.services?.map((service) => service?.name).filter(Boolean) || [];
+  const serviceNames = serviceList.join(", ");
+  const serviceLabel = serviceList.length === 1 ? "Service" : "Services";
 
   // Show only ZIP code for location
   const locationDisplay = bundleData.zipCode || bundleData.address?.zipCode || "ZIP not provided";
@@ -291,7 +321,7 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
           <div className="md:w-2/5 relative h-64 md:h-auto">
             {heroImage ? (
               <Image
-                src={bundleData.coverImage}
+                src={heroImage}
                 alt={bundleData.service}
                 width={400}
                 height={600}
@@ -315,6 +345,11 @@ export default function BundleDetailModal({ isOpen, onClose, bundleData }) {
                 <p className="text-base text-gray-700 font-medium mb-1">
                   {bundleData.bundle}
                 </p>
+                {serviceNames && (
+                  <p className="text-sm text-teal-600 font-medium mb-1">
+                    {serviceLabel}: {serviceNames}
+                  </p>
+                )}
                 {(serviceDateDisplay || bundleData.serviceTimeStart || bundleData.serviceTimeEnd) && (
                   <p className="text-sm text-gray-600">
                     Service Date: {serviceDateDisplay || "TBD"}

@@ -116,9 +116,12 @@ export default function NaibrlybundelOfferSection() {
     };
 
     // Pass the full bundle data to the modal
+    const serviceNames =
+      bundle.services?.map((service) => service?.name).filter(Boolean).join(", ") ||
+      bundle.title;
     const bundleWithModalData = {
       ...bundle,
-      service: bundle.title,
+      service: serviceNames,
       location: location,
       originalPrice: `$${bundle.pricing?.originalPrice || 0}`,
       discountedPrice: `${
@@ -178,6 +181,10 @@ export default function NaibrlybundelOfferSection() {
 
               // Format location (zip only)
               const location = bundle.zipCode || bundle.address?.zipCode || "ZIP not specified";
+              const serviceList =
+                bundle.services?.map((service) => service?.name).filter(Boolean) || [];
+              const serviceNames = serviceList.join(", ");
+              const serviceLabel = serviceList.length === 1 ? "Service" : "Services";
 
               return (
                 <div
@@ -190,6 +197,11 @@ export default function NaibrlybundelOfferSection() {
                       <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                         {bundle.title}
                       </h3>
+                      {serviceNames && (
+                        <p className="text-sm text-teal-600 font-medium mb-1">
+                          {serviceLabel}: {serviceNames}
+                        </p>
+                      )}
                       <p className="text-xs sm:text-sm text-gray-500">
                         {timeAgoText}
                       </p>

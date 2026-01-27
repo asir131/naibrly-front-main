@@ -242,7 +242,7 @@ export default function NaibrlybundelOfferSection() {
     const bundleWithParticipants = {
       ...bundle,
       participants: participantsForModal,
-      modalImage: bundle.images?.[0] || bundle.coverImage || null,
+      modalImage: bundle.coverImage || null,
     };
     setSelectedBundle(bundleWithParticipants);
     setIsModalOpen(true);
