@@ -75,7 +75,7 @@ export default function UserInfo() {
   const { login } = useAuth();
   const serviceOptions = useMemo(
     () => allServicesData?.services || allServicesData?.data?.services || [],
-    [allServicesData]
+    [allServicesData],
   );
 
   const [formData, setFormData] = useState({
@@ -118,7 +118,7 @@ export default function UserInfo() {
     rate: "",
   });
   const [selectedServicesWithRates, setSelectedServicesWithRates] = useState(
-    []
+    [],
   );
 
   const handleClick = () => {
@@ -197,25 +197,25 @@ export default function UserInfo() {
       if (formData.businessAddressStreet?.trim()) {
         submitData.append(
           "businessAddressStreet",
-          formData.businessAddressStreet.trim()
+          formData.businessAddressStreet.trim(),
         );
       }
       if (formData.businessAddressCity?.trim()) {
         submitData.append(
           "businessAddressCity",
-          formData.businessAddressCity.trim()
+          formData.businessAddressCity.trim(),
         );
       }
       if (formData.businessAddressState?.trim()) {
         submitData.append(
           "businessAddressState",
-          formData.businessAddressState.trim()
+          formData.businessAddressState.trim(),
         );
       }
       if (formData.businessAddressZipCode?.trim()) {
         submitData.append(
           "businessAddressZipCode",
-          formData.businessAddressZipCode.trim()
+          formData.businessAddressZipCode.trim(),
         );
       }
 
@@ -336,7 +336,7 @@ export default function UserInfo() {
     <div className="">
       <form
         onSubmit={handleSubmit}
-        className="w-[90%] mx-auto user_info_input md:px-[200px] md:py-[50px] overflow-x-hidden"
+        className="w-[90%] mx-auto user_info_input md:px-[200px] md:py-[50px] overflow-x-hidden mb-10"
       >
         <div className="user_info_heading flex items-center gap-[18px] pb-5"></div>
         <div className="flex items-center justify-center">
@@ -796,7 +796,7 @@ export default function UserInfo() {
                   if (!serviceSelection.name || !serviceSelection.rate) return;
                   setSelectedServicesWithRates((prev) => {
                     const filtered = prev.filter(
-                      (s) => s.name !== serviceSelection.name
+                      (s) => s.name !== serviceSelection.name,
                     );
                     return [
                       ...filtered,
@@ -833,7 +833,7 @@ export default function UserInfo() {
                           type="button"
                           onClick={() =>
                             setSelectedServicesWithRates((prev) =>
-                              prev.filter((item) => item.name !== svc.name)
+                              prev.filter((item) => item.name !== svc.name),
                             )
                           }
                           className="text-teal-700 hover:text-teal-900"
@@ -850,7 +850,7 @@ export default function UserInfo() {
             <button
               type="submit"
               disabled={isLoading}
-              className="next_button w-full mt-[32px] text-[16px] font-semibold text-white cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+              className="next_button w-full mt-[32px]  text-[16px] font-semibold text-white cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
