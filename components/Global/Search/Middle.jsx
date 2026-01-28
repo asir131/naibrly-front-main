@@ -419,7 +419,7 @@ export default function NaibrlybundelOfferSection({
                       onClick={() => handleViewDetails(offer)}
                       className="bg-[#E8F5F3] hover:bg-[#D0EBE7] text-teal-600 font-semibold rounded-lg px-5 py-2 text-sm transition-colors border-0 shadow-none"
                     >
-                      {offer.canJoin === false ? 'View details' : 'Join Bundle'}
+                      View details
                     </Button>
                   </div>
                 </div>

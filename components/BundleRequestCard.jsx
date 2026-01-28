@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { User as UserIcon } from "lucide-react";
 
 function BundleRequestCard({ bundle, handleCencelOrderConfirm, handleAccept, isUpdating }) {
     if (!bundle) return null;
@@ -66,14 +67,28 @@ function BundleRequestCard({ bundle, handleCencelOrderConfirm, handleAccept, isU
 
                 {/* avatar group */}
                 <div className="flex -space-x-2">
-                    {bundle.participants?.slice(0, 3).map((participant, index) => (
-                        <img
-                            key={participant._id || index}
-                            src={participant.customer?.profileImage?.url || `https://i.pravatar.cc/40?img=${index + 1}`}
-                            alt="member"
-                            className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-[#0E7A60]"
-                        />
-                    ))}
+                    {bundle.participants?.slice(0, 3).map((participant, index) => {
+                        const avatarUrl = participant.customer?.profileImage?.url;
+                        const showImage =
+                            typeof avatarUrl === "string" &&
+                            avatarUrl.trim() &&
+                            !avatarUrl.includes("placehold.co");
+                        return showImage ? (
+                            <img
+                                key={participant._id || index}
+                                src={avatarUrl}
+                                alt="member"
+                                className="h-[50px] w-[50px] rounded-full object-cover ring-2 ring-[#0E7A60]"
+                            />
+                        ) : (
+                            <div
+                                key={participant._id || index}
+                                className="h-[50px] w-[50px] rounded-full bg-teal-600 ring-2 ring-[#0E7A60] flex items-center justify-center"
+                            >
+                                <UserIcon className="w-6 h-6 text-white" />
+                            </div>
+                        );
+                    })}
                     {participantCount > 3 && (
                         <div className="h-[50px] w-[50px] rounded-full bg-[#0E7A60] ring-2 ring-[#0E7A60] flex items-center justify-center text-white text-sm font-semibold">
                             +{participantCount - 3}

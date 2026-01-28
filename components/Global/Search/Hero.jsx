@@ -1,6 +1,13 @@
 "use client";
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Clock, MapPin, Calendar, Search, ChevronDown, Star } from "lucide-react";
+import {
+  Clock,
+  MapPin,
+  Calendar,
+  Search,
+  ChevronDown,
+  Star,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Rectangle1 from "@/public/Home/Rectangle a.png";
@@ -82,7 +89,7 @@ export default function NaibrlyHeroSection({
       return;
     }
     const filtered = serviceOptions.filter((service) =>
-      service.toLowerCase().includes(value.toLowerCase())
+      service.toLowerCase().includes(value.toLowerCase()),
     );
     setFilteredServices(filtered);
     setSearchOpen(true);
@@ -257,7 +264,7 @@ export default function NaibrlyHeroSection({
                         setZipOpen(true);
                         setSearchOpen(false);
                       }}
-                      placeholder="152643"
+                      placeholder="Zip Code"
                       className="flex-1 sm:w-24 bg-transparent border-none outline-none text-gray-900 font-medium placeholder:text-gray-900 placeholder:font-medium text-sm sm:text-base"
                     />
                   </div>
@@ -337,14 +344,16 @@ export default function NaibrlyHeroSection({
                       const serviceName =
                         provider?.service?.name || searchQuery.trim();
                       const hourlyRate = provider?.service?.hourlyRate;
-                      const rating =
-                        Number.isFinite(Number(provider?.provider?.rating))
-                          ? Number(provider?.provider?.rating)
-                          : 0;
-                      const reviewCount =
-                        Number.isFinite(Number(provider?.provider?.totalReviews))
-                          ? Number(provider?.provider?.totalReviews)
-                          : 0;
+                      const rating = Number.isFinite(
+                        Number(provider?.provider?.rating),
+                      )
+                        ? Number(provider?.provider?.rating)
+                        : 0;
+                      const reviewCount = Number.isFinite(
+                        Number(provider?.provider?.totalReviews),
+                      )
+                        ? Number(provider?.provider?.totalReviews)
+                        : 0;
                       const providerImage =
                         provider?.service?.image?.url ||
                         provider?.provider?.businessLogo?.url ||
@@ -371,7 +380,10 @@ export default function NaibrlyHeroSection({
                                 </h3>
                                 <div className="mt-1 text-sm text-teal-600 font-semibold">
                                   {rating.toFixed(1)}{" "}
-                                  <Star className="inline-block h-4 w-4 text-amber-500" fill="currentColor" />
+                                  <Star
+                                    className="inline-block h-4 w-4 text-amber-500"
+                                    fill="currentColor"
+                                  />
                                   <span className="text-gray-500">
                                     {" "}
                                     ({reviewCount})
@@ -402,8 +414,8 @@ export default function NaibrlyHeroSection({
                                   }
                                   router.push(
                                     `/providerprofile?id=${providerId}&service=${encodeURIComponent(
-                                      serviceName
-                                    )}`
+                                      serviceName,
+                                    )}`,
                                   );
                                 }}
                                 className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-5 py-2 rounded-lg"

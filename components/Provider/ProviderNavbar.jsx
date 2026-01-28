@@ -278,7 +278,8 @@ export default function ProviderNavbar() {
                     )}
 
                     {/* Help Button */}
-                    <button
+                    <Link
+                        href="/contact"
                         className="p-2 hover:bg-gray-100 rounded-full transition-colors flex items-center gap-1"
                         title="Help"
                     >
@@ -299,7 +300,7 @@ export default function ProviderNavbar() {
                             <path d="M12 17h.01" />
                         </svg>
                         <span className="text-gray-700 font-medium">Help</span>
-                    </button>
+                    </Link>
                 </div>
             </div>
 

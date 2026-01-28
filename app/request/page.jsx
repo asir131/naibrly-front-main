@@ -45,6 +45,9 @@ export default function RequestPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const [showTaskCompletedModal, setShowTaskCompletedModal] = useState(false);
+  const [openPage, setOpenPage] = useState(1);
+  const [closedPage, setClosedPage] = useState(1);
+  const pageSize = 5;
 
 
 
@@ -524,6 +527,18 @@ export default function RequestPage() {
 
   }, [data, user]);
 
+  const currentPage = activeTab === "open" ? openPage : closedPage;
+  const currentList = activeTab === "open" ? openRequests : closedRequests;
+  const totalPages = Math.max(1, Math.ceil(currentList.length / pageSize));
+  const pagedOpenRequests = openRequests.slice(
+    (openPage - 1) * pageSize,
+    openPage * pageSize
+  );
+  const pagedClosedRequests = closedRequests.slice(
+    (closedPage - 1) * pageSize,
+    closedPage * pageSize
+  );
+
 
 
   const handlePendingClick = () => {
@@ -808,11 +823,11 @@ export default function RequestPage() {
 
     <>
 
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8 flex flex-col">
 
         {/* Main Content */}
 
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-4xl mx-auto px-6 flex flex-col min-h-[calc(100vh-200px)] w-full">
 
           {/* Tabs */}
 
@@ -1032,7 +1047,7 @@ export default function RequestPage() {
 
                     {activeTab === "open" &&
 
-                      openRequests.map((request) => (
+                      pagedOpenRequests.map((request) => (
 
                         <RequestCard key={request.id} request={request} />
 
@@ -1040,7 +1055,7 @@ export default function RequestPage() {
 
                     {activeTab === "closed" &&
 
-                      closedRequests.map((request) => (
+                      pagedClosedRequests.map((request) => (
 
                         <RequestCard key={request.id} request={request} />
 
@@ -1068,6 +1083,41 @@ export default function RequestPage() {
 
                     </div>
 
+                  )}
+
+                {!selectedAcceptedRequest &&
+                  !isLoading &&
+                  !error &&
+                  currentList.length > pageSize && (
+                    <div className="mt-auto pt-8 flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          activeTab === "open"
+                            ? setOpenPage((p) => Math.max(1, p - 1))
+                            : setClosedPage((p) => Math.max(1, p - 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Prev
+                      </button>
+                      <span className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          activeTab === "open"
+                            ? setOpenPage((p) => Math.min(totalPages, p + 1))
+                            : setClosedPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        disabled={currentPage === totalPages}
+                        className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
                   )}
 
               </>

@@ -118,21 +118,32 @@ const VerifyInfo = () => {
     return { firstName: "", lastName: "" };
   };
 
+  const getProviderBusinessState = () => {
+    const profileState = profileData?.user?.businessAddress?.state;
+    if (profileState) return profileState;
+    const authState = user?.businessAddress?.state || user?.state;
+    if (authState) return authState;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return (
+            parsed?.businessAddress?.state ||
+            parsed?.businessAddressState ||
+            parsed?.state ||
+            ""
+          );
+        }
+      } catch (error) {
+        console.error("Error reading provider state:", error);
+      }
+    }
+    return "";
+  };
+
   const onSubmit = async (data) => {
     try {
-      // Check if user is authenticated
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("authToken")
-          : null;
-      if (!token) {
-        toast.error(
-          "Please log in to continue. You need to be authenticated to submit verification information.",
-        );
-        console.error("No auth token found. User needs to log in.");
-        return;
-      }
-
       // Validate required fields
       if (!data.insuranceFile) {
         toast.error("Insurance document is required");
@@ -340,6 +351,12 @@ const VerifyInfo = () => {
                   <span>Please select a country</span>
                 </div>
               )}
+              <div className="text-xs text-gray-600">
+                Business Registered State:{" "}
+                <span className="font-semibold text-gray-800">
+                  {getProviderBusinessState() || "Not provided"}
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-col gap-2 mb-4">

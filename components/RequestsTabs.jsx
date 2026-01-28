@@ -162,6 +162,9 @@ export default function RequestsTabs({
   isLoading = false
 }) {
   const [tab, setTab] = useState("open");
+  const [openPage, setOpenPage] = useState(1);
+  const [closedPage, setClosedPage] = useState(1);
+  const pageSize = 5;
 
   const openList = useMemo(() => {
     const requests = openRequests.map(req => ({ ...req, type: 'request' }));
@@ -176,9 +179,15 @@ export default function RequestsTabs({
   }, [closedRequests, closedBundles]);
 
   const list = tab === "open" ? openList : closedList;
+  const currentPage = tab === "open" ? openPage : closedPage;
+  const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+  const pagedList = list.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
-    <div className="w-full">
+    <div className="w-full min-h-[calc(100vh-260px)] flex flex-col">
       {/* Tabs */}
       <div className="mb-6 flex items-center gap-2">
         <button
@@ -209,8 +218,8 @@ export default function RequestsTabs({
           <div className="relative w-full rounded-2xl bg-white shadow-sm ring-1 ring-black/5 p-6 md:p-7">
             <p className="text-center text-[#666]">Loading requests...</p>
           </div>
-        ) : list.length > 0 ? (
-          list.map((item) => {
+        ) : pagedList.length > 0 ? (
+          pagedList.map((item) => {
             const participantCustomerId = item.type === 'bundle'
               ? item.participantCustomer?._id || item.customer?._id || item.creator?._id
               : item.customer?._id;
@@ -239,6 +248,38 @@ export default function RequestsTabs({
           </div>
         )}
       </div>
+
+      {!isLoading && list.length > pageSize && (
+        <div className="mt-auto pt-8 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              tab === "open"
+                ? setOpenPage((p) => Math.max(1, p - 1))
+                : setClosedPage((p) => Math.max(1, p - 1))
+            }
+            disabled={currentPage === 1}
+            className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              tab === "open"
+                ? setOpenPage((p) => Math.min(totalPages, p + 1))
+                : setClosedPage((p) => Math.min(totalPages, p + 1))
+            }
+            disabled={currentPage === totalPages}
+            className="rounded-lg border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -136,6 +136,11 @@ function SignupFormContent() {
     e.preventDefault();
     setError("");
 
+    if (!formData.phoneNumber?.trim()) {
+      setError("Phone number is required!");
+      return;
+    }
+
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
@@ -417,6 +422,7 @@ function SignupFormContent() {
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
+                required
               />
             </div>
           </div>

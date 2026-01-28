@@ -300,7 +300,7 @@ const FindAreaContent = () => {
                     <input
                       className="rounded-[20px] h-full text-end pr-5 text-[16px] font-medium text-[#000]"
                       type="text"
-                      placeholder="152643"
+                      placeholder="Zip Code"
                       value={zipCode}
                       onChange={(e) => setZipCode(e.target.value)}
                     />
