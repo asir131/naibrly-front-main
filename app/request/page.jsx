@@ -827,7 +827,7 @@ export default function RequestPage() {
 
         {/* Main Content */}
 
-        <div className="max-w-4xl mx-auto px-6 flex flex-col min-h-[calc(100vh-200px)] w-full">
+        <div className="max-w-4xl mx-auto px-6 flex flex-col min-h-[calc(100vh-200px)] w-full flex-1">
 
           {/* Tabs */}
 
@@ -879,7 +879,7 @@ export default function RequestPage() {
 
           {/* Request Cards or Messaging */}
 
-          <div className="space-y-6">
+          <div className="space-y-6 flex-1 flex flex-col">
 
             {/* Loading State */}
 
@@ -1089,7 +1089,7 @@ export default function RequestPage() {
                   !isLoading &&
                   !error &&
                   currentList.length > pageSize && (
-                    <div className="mt-auto pt-8 flex items-center justify-center gap-3">
+                    <div className="mt-auto pt-8 pb-6 flex items-center justify-center gap-3">
                       <button
                         type="button"
                         onClick={() =>
