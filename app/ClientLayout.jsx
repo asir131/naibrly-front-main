@@ -5,8 +5,10 @@ import Footer from "@/components/Global/Global/Footer";
 import { ReduxProvider } from "@/redux/ReduxProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from 'react-hot-toast';
+import { useFcmNotifications } from "@/hooks/useFcmNotifications";
 
 export default function ClientLayout({ children }) {
+  useFcmNotifications();
   return (
     <AuthProvider>
       <ReduxProvider>

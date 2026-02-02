@@ -187,14 +187,12 @@ export default function ChatInterface({
             },
           ];
         });
-      }
-      if (shouldFetchMoneyReq) {
-        refetchMoneyReq();
+        toast.success(`New payment request: $${payload.amount || 0}`);
       }
     };
     window.addEventListener('money-request-created', handleMoneyReqCreated);
     return () => window.removeEventListener('money-request-created', handleMoneyReqCreated);
-  }, [shouldFetchMoneyReq, refetchMoneyReq]);
+  }, []);
 
   useEffect(() => {
     fetchQuickChats();
