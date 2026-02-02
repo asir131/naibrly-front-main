@@ -1,12 +1,19 @@
 import React from 'react';
 
-const Sidebar = ({ activeItem = 'Account', onItemClick, isMobileMenuOpen, setIsMobileMenuOpen }) => {
+const Sidebar = ({
+  activeItem = 'Account',
+  onItemClick,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+  showChangePassword = false,
+}) => {
   const menuItems = [
     'Account',
     'Notifications',
     'Payments History',
     'Contact Support',
-    'Delete Account'
+    ...(showChangePassword ? ['Change Password'] : []),
+    'Delete Account',
   ];
 
   const handleItemClick = (item) => {

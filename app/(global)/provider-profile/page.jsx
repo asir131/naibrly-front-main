@@ -13,11 +13,14 @@ import PaymentsHistory from '@/components/Global/Profile/PaymentsHistory';
 import ContactSupport from '@/components/Global/Profile/ContactSupport';
 import DeleteAccount from '@/components/Global/Profile/DeleteAccount';
 import BundleSetup from '@/components/Global/providerprofile/BundleSetup';
+import ChangePassword from '@/components/Global/Profile/ChangePassword';
+import useAuth from '@/hooks/useAuth';
 
 function ProviderAccountSettingsContent() {
   const [activeSection, setActiveSection] = useState('Account');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const searchParams = useSearchParams();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const section = searchParams.get('section');
@@ -44,6 +47,8 @@ function ProviderAccountSettingsContent() {
         return <BundleSetup />;
       case 'Contact Support':
         return <ContactSupport />;
+      case 'Change Password':
+        return isAuthenticated ? <ChangePassword /> : <Account />;
       case 'Delete Account':
         return <DeleteAccount />;
       default:
@@ -72,6 +77,7 @@ function ProviderAccountSettingsContent() {
             onItemClick={setActiveSection}
             isMobileMenuOpen={isMobileMenuOpen}
             setIsMobileMenuOpen={setIsMobileMenuOpen}
+            showChangePassword={isAuthenticated}
           />
           <div className="flex-1 overflow-y-auto">
             {renderContent()}

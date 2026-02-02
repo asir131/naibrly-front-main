@@ -163,10 +163,14 @@ const VerifyInfo = () => {
       // Create FormData for file upload - matching backend expectations exactly
       const submitData = new FormData();
 
-      // Required fields from backend: einNumber, firstName, lastName, businessRegisteredCountry, insuranceDocument, idFront, idBack
+      // Required fields from backend: einNumber, businessRegisteredCountry, insuranceDocument, idFront, idBack
       submitData.append("einNumber", data.einNumber.trim());
-      submitData.append("firstName", data.ownerFirstName.trim());
-      submitData.append("lastName", data.ownerLastName.trim());
+      if (data.ownerFirstName?.trim()) {
+        submitData.append("firstName", data.ownerFirstName.trim());
+      }
+      if (data.ownerLastName?.trim()) {
+        submitData.append("lastName", data.ownerLastName.trim());
+      }
       submitData.append(
         "businessRegisteredCountry",
         data.businessRegisteredCountry,
@@ -458,13 +462,8 @@ const VerifyInfo = () => {
               <input
                 className="verify_checkbox"
                 type="checkbox"
-                {...register("isAuthorizedRepresentative", { required: true })}
+                {...register("isAuthorizedRepresentative")}
               />
-              {errors.isAuthorizedRepresentative && (
-                <span className="text-red-500 text-[10px]">
-                  This field is required
-                </span>
-              )}
               <p className="text-[11px] text-black">
                 I am authorized to represent the company.
               </p>
@@ -475,7 +474,6 @@ const VerifyInfo = () => {
                 className="verify_checkbox"
                 type="checkbox"
                 {...register("isDifferentOwner", {
-                  required: true,
                   onChange: (event) => {
                     const checked = event.target.checked;
                     if (checked) {
@@ -493,11 +491,6 @@ const VerifyInfo = () => {
                   },
                 })}
               />
-              {errors.isDifferentOwner && (
-                <span className="text-red-500 text-[10px]">
-                  This field is required
-                </span>
-              )}
               <p className="text-[11px] text-black">I am the owner-operator.</p>
             </div>
 
@@ -510,13 +503,8 @@ const VerifyInfo = () => {
                   type="text"
                   className="input_box text-[#000] text-[16px] w-full"
                   placeholder="First Name"
-                  {...register("ownerFirstName", { required: true })}
+                  {...register("ownerFirstName")}
                 />
-                {errors.ownerFirstName && (
-                  <span className="text-red-500 text-[10px]">
-                    This field is required
-                  </span>
-                )}
               </div>
               <div className="relative w-full">
                 <label className="text-[#1C5941] text-[10px] font-medium absolute left-4 -top-[6px] bg-white">
@@ -526,13 +514,8 @@ const VerifyInfo = () => {
                   type="text"
                   className="input_box text-[#000] text-[16px] w-full"
                   placeholder="Last Name"
-                  {...register("ownerLastName", { required: true })}
+                  {...register("ownerLastName")}
                 />
-                {errors.ownerLastName && (
-                  <span className="text-red-500 text-[10px]">
-                    This field is required
-                  </span>
-                )}
               </div>
               <div className="flex flex-col gap-4 w-full">
                 <div className="flex items-center gap-2 pb-2 border-b border-gray-200">

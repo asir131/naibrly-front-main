@@ -1,6 +1,12 @@
 import React from 'react';
 
-const ProviderSidebar = ({ activeItem = 'Account', onItemClick, isMobileMenuOpen, setIsMobileMenuOpen }) => {
+const ProviderSidebar = ({
+  activeItem = 'Account',
+  onItemClick,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+  showChangePassword = false,
+}) => {
   const menuItems = [
     'Account',
     'Services',
@@ -9,7 +15,8 @@ const ProviderSidebar = ({ activeItem = 'Account', onItemClick, isMobileMenuOpen
     'Notifications',
     'Payments History',
     'Bundle setup',
-    'Delete Account'
+    ...(showChangePassword ? ['Change Password'] : []),
+    'Delete Account',
   ];
 
   const handleItemClick = (item) => {

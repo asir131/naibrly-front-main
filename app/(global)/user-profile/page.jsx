@@ -8,10 +8,13 @@ import Notifications from '@/components/Global/Profile/Notifications';
 import PaymentsHistory from '@/components/Global/Profile/PaymentsHistory';
 import ContactSupport from '@/components/Global/Profile/ContactSupport';
 import DeleteAccount from '@/components/Global/Profile/DeleteAccount';
+import ChangePassword from '@/components/Global/Profile/ChangePassword';
+import useAuth from '@/hooks/useAuth';
 
 export default function AccountSettings() {
   const [activeSection, setActiveSection] = useState('Account');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const renderContent = () => {
     switch (activeSection) {
@@ -23,6 +26,8 @@ export default function AccountSettings() {
         return <PaymentsHistory />;
       case 'Contact Support':
         return <ContactSupport />;
+      case 'Change Password':
+        return isAuthenticated ? <ChangePassword /> : <Account />;
       case 'Delete Account':
         return <DeleteAccount />;
       default:
@@ -51,6 +56,7 @@ export default function AccountSettings() {
             onItemClick={setActiveSection}
             isMobileMenuOpen={isMobileMenuOpen}
             setIsMobileMenuOpen={setIsMobileMenuOpen}
+            showChangePassword={isAuthenticated}
           />
           <div className="flex-1 overflow-y-auto">
             {renderContent()}

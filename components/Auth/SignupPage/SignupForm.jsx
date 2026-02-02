@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Upload, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/useAuth";
+import { useSendEmailVerificationOtpMutation } from "@/redux/api/servicesApi";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api";
@@ -87,8 +87,13 @@ function SignupFormContent() {
   const [userType, setUserType] = useState("user"); // Default to 'user'
   const [error, setError] = useState("");
   const [redirectPath, setRedirectPath] = useState(null);
+  const isPasswordRequirementMet =
+    formData.password.length >= 6 &&
+    /[a-z]/.test(formData.password) &&
+    /[A-Z]/.test(formData.password) &&
+    /[^A-Za-z0-9]/.test(formData.password);
 
-  const { login } = useAuth();
+  const [sendEmailVerificationOtp] = useSendEmailVerificationOtpMutation();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -136,8 +141,13 @@ function SignupFormContent() {
     e.preventDefault();
     setError("");
 
-    if (!formData.phoneNumber?.trim()) {
+    const phoneDigits = (formData.phoneNumber || "").replace(/\D/g, "");
+    if (!phoneDigits) {
       setError("Phone number is required!");
+      return;
+    }
+    if (phoneDigits.length !== 10) {
+      setError("Phone number must be exactly 10 digits!");
       return;
     }
 
@@ -159,10 +169,7 @@ function SignupFormContent() {
       formDataToSend.append("email", formData.email);
       formDataToSend.append("password", formData.password);
       formDataToSend.append("confirmPassword", formData.confirmPassword);
-      formDataToSend.append(
-        "phone",
-        `${formData.countryCode}${formData.phoneNumber}`,
-      );
+      formDataToSend.append("phone", `${formData.countryCode}${phoneDigits}`);
       formDataToSend.append("street", formData.streetAddress);
       formDataToSend.append("city", formData.city);
       formDataToSend.append("state", formData.state);
@@ -195,19 +202,8 @@ function SignupFormContent() {
 
       console.log("SignupForm - Account created successfully:", data);
 
-      // Store auth token if provided by backend
-      // Backend returns token in data.token
+      // Store auth token temporarily (complete after email verification)
       const token = data.data?.token || data.token;
-      if (token) {
-        console.log("SignupForm - Storing token:", token);
-        localStorage.setItem("authToken", token);
-        console.log(
-          "SignupForm - Token stored. Verifying:",
-          localStorage.getItem("authToken"),
-        );
-      } else {
-        console.error("SignupForm - No token received from backend!");
-      }
 
       // Create user object from response
       // Backend returns user data in data.user
@@ -228,17 +224,24 @@ function SignupFormContent() {
         role: userType,
       };
 
-      // Call the login function to set authenticated state
-      login({ user, userType });
-
-      // Redirect based on user type
-      if (userType === "provider") {
-        console.log("SignupForm - Redirecting to /business");
-        window.location.href = "/business";
-      } else {
-        console.log("SignupForm - Redirecting to /");
-        window.location.href = "/";
+      if (!token) {
+        throw new Error("No token received from backend. Please try again.");
       }
+
+      const pendingSignup = {
+        token,
+        user,
+        userType,
+        redirect: userType === "provider" ? "/business" : "/",
+      };
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("pendingSignup", JSON.stringify(pendingSignup));
+      }
+
+      await sendEmailVerificationOtp({ email: formData.email }).unwrap();
+
+      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
       console.error("Signup error:", err);
       setError(
@@ -369,6 +372,16 @@ function SignupFormContent() {
                 )}
               </button>
             </div>
+            <div
+              className={`mt-2 text-xs rounded-lg px-3 py-2 border ${
+                isPasswordRequirementMet
+                  ? "bg-green-50 border-green-200 text-green-700"
+                  : "bg-slate-50 border-slate-200 text-slate-600"
+              }`}
+            >
+              please use minimum 6 characters + 1 letter + capital letter + 1
+              special character
+            </div>
           </div>
 
           {/* Confirm Password */}
@@ -421,6 +434,9 @@ function SignupFormContent() {
                 placeholder="(239) 555-0108"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
                 className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-slate-50 text-slate-900"
                 required
               />

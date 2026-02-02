@@ -7,7 +7,7 @@ import {
   useGetServicesQuery,
 } from "@/redux/api/servicesApi";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useSendEmailVerificationOtpMutation } from "@/redux/api/servicesApi";
 
 const US_STATES = [
   "AL",
@@ -72,7 +72,7 @@ export default function UserInfo() {
       refetchOnReconnect: false,
       refetchOnMountOrArgChange: false,
     });
-  const { login } = useAuth();
+  const [sendEmailVerificationOtp] = useSendEmailVerificationOtpMutation();
   const serviceOptions = useMemo(
     () => allServicesData?.services || allServicesData?.data?.services || [],
     [allServicesData],
@@ -151,9 +151,23 @@ export default function UserInfo() {
       return;
     }
 
-    // Validate password length (minimum 6 characters as per backend)
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+    // Validate password requirements
+    const passwordMeetsRules =
+      formData.password.length >= 6 &&
+      /[a-z]/.test(formData.password) &&
+      /[A-Z]/.test(formData.password) &&
+      /[^A-Za-z0-9]/.test(formData.password);
+    if (!passwordMeetsRules) {
+      toast.error(
+        "Password must be at least 6 characters and include a lowercase, uppercase, and special character",
+      );
+      return;
+    }
+
+    // Validate phone number (exactly 10 digits)
+    const phoneDigits = (formData.phone || "").replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
       return;
     }
 
@@ -177,7 +191,7 @@ export default function UserInfo() {
       submitData.append("email", formData.businessEmail.toLowerCase().trim());
       submitData.append("password", formData.password);
       submitData.append("confirmPassword", formData.confirmPassword); // Backend requires this!
-      submitData.append("phone", formData.phone);
+      submitData.append("phone", phoneDigits);
       submitData.append("businessNameRegistered", formData.businessName.trim());
       submitData.append("providerRole", formData.role);
 
@@ -267,19 +281,36 @@ export default function UserInfo() {
 
       // Success handling
       const token = result?.token || result?.data?.token;
-      if (token) {
-        localStorage.setItem("authToken", token);
-      }
-      // Persist user type for downstream API calls (RTK Query header prep)
-      localStorage.setItem("userType", "provider");
       const userPayload = result?.data?.user || result?.user;
-      if (userPayload) {
-        localStorage.setItem("user", JSON.stringify(userPayload));
-        login({ user: userPayload, userType: "provider" });
+
+      if (!token) {
+        throw new Error("No token received from backend. Please try again.");
       }
 
-      toast.success("Registration successful!");
-      router.push("/provider/signup/verify_info");
+      const pendingSignup = {
+        token,
+        user: userPayload || null,
+        userType: "provider",
+        redirect: "/provider/signup/verify_info",
+      };
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          "pendingProviderSignup",
+          JSON.stringify(pendingSignup),
+        );
+      }
+
+      await sendEmailVerificationOtp({
+        email: formData.businessEmail.toLowerCase().trim(),
+      }).unwrap();
+
+      toast.success("OTP sent to your email. Please verify.");
+      router.push(
+        `/provider/signup/verify-email?email=${encodeURIComponent(
+          formData.businessEmail.toLowerCase().trim(),
+        )}`,
+      );
     } catch (error) {
       console.error("Registration error:", {
         status: error?.status,
@@ -506,7 +537,8 @@ export default function UserInfo() {
                 required
               />
               <p className="text-xs text-gray-500 mt-1 ml-1">
-                Minimum 8 characters
+                please use minimum 6 characters + 1 letter + capital letter + 1
+                special character
               </p>
             </div>
             <div className="mb-4 relative">
@@ -640,6 +672,9 @@ export default function UserInfo() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
                 className="w-full h-full focus:outline-none text-[#999] text-[16px] flex-5"
                 placeholder="Phone Number *"
                 required

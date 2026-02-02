@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import BundleDetailModal from "@/components/Global/Modals/BundleDetailModal";
@@ -176,8 +177,8 @@ export default function NaibrlybundelOfferSection() {
               // Get participant images
               const participantImages =
                 bundle.participants
-                  ?.map((p) => p.customer?.profileImage?.url || null)
-                  .filter(Boolean) || [];
+                  ?.slice(0, 3)
+                  .map((p) => p.customer?.profileImage?.url || null) || [];
 
               // Format location (zip only)
               const location = bundle.zipCode || bundle.address?.zipCode || "ZIP not specified";
@@ -207,14 +208,26 @@ export default function NaibrlybundelOfferSection() {
                       </p>
                     </div>
                     <div className="flex -space-x-2 ml-3">
-                      {participantImages.slice(0, 3).map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`Participant ${idx + 1}`}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
-                        />
-                      ))}
+                      {participantImages.slice(0, 3).map((img, idx) => {
+                        if (!img || img.includes("placehold.co")) {
+                          return (
+                            <div
+                              key={`placeholder-${idx}`}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm"
+                            >
+                              <UserIcon className="w-5 h-5 text-white" />
+                            </div>
+                          );
+                        }
+                        return (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt={`Participant ${idx + 1}`}
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
+                          />
+                        );
+                      })}
                       {bundle.availableSpots > 0 && (
                         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white bg-gray-200 flex items-center justify-center text-xs text-gray-500">
                           +{bundle.availableSpots}

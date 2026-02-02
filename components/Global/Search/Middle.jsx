@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { MapPin, Calendar, Clock, Users } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -90,9 +90,8 @@ export default function NaibrlybundelOfferSection({
       const serviceNames = serviceList.join(", ") || bundle.title;
       const serviceLabel = serviceList.length === 1 ? "Service" : "Services";
       // Get participant images
-      const participantImages = bundle.participants?.map(p =>
-        p.customer?.profileImage?.url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-      ) || [];
+      const participantImages =
+        bundle.participants?.slice(0, 3).map((p) => p.customer?.profileImage?.url || null) || [];
 
       // Format service date
       const serviceDate = bundle.serviceDate
@@ -113,9 +112,7 @@ export default function NaibrlybundelOfferSection({
         serviceDate,
         serviceTime: `${bundle.serviceTimeStart || ''} - ${bundle.serviceTimeEnd || ''}`,
         coverImage: bundle.coverImage || null,
-        images: participantImages.length > 0 ? participantImages : [
-          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
-        ],
+        images: participantImages,
         participants: bundle.participants || [],
         services: bundle.services || [],
         category: bundle.category,
@@ -322,15 +319,27 @@ export default function NaibrlybundelOfferSection({
                       </p>
                     </div>
                     <div className="flex -space-x-2 ml-3">
-                      {offer.images.slice(0, 3).map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`Participant ${idx + 1}`}
-                          className="w-10 h-10 rounded-full border-2 border-white object-cover"
-                        />
-                      ))}
-                      {offer.images.length > 3 && (
+                      {(offer.images || []).slice(0, 3).map((img, idx) => {
+                        if (!img || img.includes("placehold.co")) {
+                          return (
+                            <div
+                              key={`placeholder-${idx}`}
+                              className="w-10 h-10 rounded-full border-2 border-white bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center"
+                            >
+                              <UserIcon className="w-5 h-5 text-white" />
+                            </div>
+                          );
+                        }
+                        return (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt={`Participant ${idx + 1}`}
+                            className="w-10 h-10 rounded-full border-2 border-white object-cover"
+                          />
+                        );
+                      })}
+                      {(offer.images || []).length > 3 && (
                         <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs text-gray-600">
                           +{offer.images.length - 3}
                         </div>

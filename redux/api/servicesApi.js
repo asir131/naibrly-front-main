@@ -847,6 +847,66 @@ export const servicesApi = createApi({
       },
     }),
 
+    // Email verification (signup)
+    sendEmailVerificationOtp: builder.mutation({
+      query: (data) => ({
+        url: "/auth/email-verification/send-otp",
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log("Send email verification OTP response:", response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || "Failed to send OTP");
+        }
+        return response.data;
+      },
+    }),
+    verifyEmailVerificationOtp: builder.mutation({
+      query: (data) => ({
+        url: "/auth/email-verification/verify-otp",
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log("Verify email OTP response:", response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || "Failed to verify OTP");
+        }
+        return response.data;
+      },
+    }),
+    resendEmailVerificationOtp: builder.mutation({
+      query: (data) => ({
+        url: "/auth/email-verification/resend-otp",
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response) => {
+        console.log("Resend email OTP response:", response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || "Failed to resend OTP");
+        }
+        return response.data;
+      },
+    }),
+
+    // Update password (authenticated)
+    updatePassword: builder.mutation({
+      query: (body) => ({
+        url: "/users/password",
+        method: "PUT",
+        body,
+      }),
+      transformResponse: (response) => {
+        console.log("Update password API response:", response);
+        if (!response || !response.success) {
+          throw new Error(response?.message || "Failed to update password");
+        }
+        return response.data;
+      },
+    }),
+
     // Search Providers by service and zip code (POST)
     searchProviders: builder.mutation({
       query: (data) => ({
@@ -1573,6 +1633,10 @@ export const {
   useVerifyOtpMutation,
   useResendOtpMutation,
   useResetPasswordMutation,
+  useSendEmailVerificationOtpMutation,
+  useVerifyEmailVerificationOtpMutation,
+  useResendEmailVerificationOtpMutation,
+  useUpdatePasswordMutation,
   // Search hooks
   useSearchProvidersMutation,
   useSearchProvidersByServiceQuery,

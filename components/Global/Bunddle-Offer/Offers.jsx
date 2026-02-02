@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import BundleDetailModal from "@/components/Global/Modals/BundleDetailModal";
@@ -377,16 +377,33 @@ export default function NaibrlybundelOfferSection() {
                       Published {offer.timeAgo}
                     </p>
                   </div>
-                  {offer.cardImages.length > 0 && (
+                  {(offer.images?.length > 0 || offer.maxParticipants) && (
                     <div className="flex -space-x-2 ml-3">
-                      {offer.cardImages.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`Person ${idx + 1}`}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
-                        />
-                      ))}
+                      {(offer.images || []).slice(0, 3).map((img, idx) => {
+                        if (!img || img.includes("placehold.co")) {
+                          return (
+                            <div
+                              key={`placeholder-${idx}`}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm"
+                            >
+                              <UserIcon className="w-5 h-5 text-white" />
+                            </div>
+                          );
+                        }
+                        return (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt={`Participant ${idx + 1}`}
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white object-cover shadow-sm"
+                          />
+                        );
+                      })}
+                      {(offer.images || []).length < 1 && (
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-3 border-white bg-linear-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-sm">
+                          <UserIcon className="w-5 h-5 text-white" />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
